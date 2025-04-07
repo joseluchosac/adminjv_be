@@ -82,7 +82,7 @@ class Catalogos
         id,
         codigo,
         descripcion,
-        descripcion_abv,
+        descripcion_ext,
         estado
       FROM tipos_documento 
     ";
