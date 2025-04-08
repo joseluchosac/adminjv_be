@@ -60,118 +60,44 @@ class ClientesController
     return $res;
   }
 
-  public function get_user()
+  public function create_cliente()
   {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
-    $registro = Users::getUser($pJson['id']);
-    return $registro;
-  }
-
-  public function get_user_session()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
-    $registro = Users::getUserSession();
-    return $registro;
-  }
-
-  public function create_user()
-  {
-    
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     $params = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "username" => $pJson['username'],
-      "password" => $pJson['password'],
-      "password_repeat" => $pJson['password_repeat'], // eliminar despues de validar
-      "email" => $pJson['email'] ? $pJson['email'] : null,
-      "rol_id" => $pJson['rol_id'] ?? 19,
-      "caja_id" => $pJson['caja_id'] ?? 1,
+      "tipo_documento_cod" => $pJson['tipo_documento_cod'],
+      "nro_documento" => $pJson['nro_documento'] ? $pJson['nro_documento'] : null,
+      "nombre_razon_social" => trimSpaces($pJson['nombre_razon_social']),
+      "direccion" => trimSpaces($pJson['direccion']),
+      "ubigeo_inei" => $pJson['ubigeo_inei'],
+      "email" => $pJson['email'],
+      "telefono" => $pJson['telefono'],
     ];
     // Validacion
-    $this->validateCreateUser($params);
-
-    $params["password"] = crypt($params['password'], $_ENV['SALT_PSW']);
-    unset($params["password_repeat"]);
+    //$this->validateCreateUser($params);
 
     // Buscando duplicados
-    $count = Users::countRecordsBy(["username" => $pJson['username']]);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
+    $count = Clientes::countRecordsBy(["nro_documento" => $pJson['nro_documento']]);
+    if ($count) throwMiExcepcion("El nro de documento: " . $pJson['nro_documento'] . ", ya existe!", "warning");
     if ($pJson['email']) {
-      $count = Users::countRecordsBy(["email" => $pJson['email']]);
+      $count = Clientes::countRecordsBy(["email" => $pJson['email']]);
       if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
     }
 
-    $lastId = Users::registrarUser($params);
+    $lastId = Clientes::createCliente($params);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
-    Users::setActivityLog("Creación de registro en la tabla usuarios: " . $params["username"]);
-    $registro = Users::getUser($lastId);
+    Users::setActivityLog("Creación de registro en la tabla clientes con nro doc: " . $params["nro_documento"]);
+    $registro = Clientes::getCliente($lastId);
     $response['error'] = false;
     $response['msgType'] = "success";
-    $response['msg'] = "Usuario registrado";
+    $response['msg'] = "Cliente registrado";
     $response['registro'] = $registro;
     return $response;
   }
 
-  public function sign_up() // registrarse
-  {
-    // throwMiExcepcion("error de prueba", "error");
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
-
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
-    // Validacion de user
-    if (trim($pJson['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
-    if (trim($pJson['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
-
-    // Buscando duplicados
-    $count = Users::countRecordsBy(["username" => $pJson['username']]);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
-    if ($pJson['email']) {
-      $count = Users::countRecordsBy(["email" => $pJson['email']]);
-      if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
-    }
-
-    $params = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "username" => $pJson['username'],
-      "password" => crypt($pJson['password'], $_ENV['SALT_PSW']),
-      "email" => $pJson['email'] ? $pJson['email'] : null,
-      "rol_id" => 19,
-      "caja_id" => 1,
-    ];
-
-    $lastId = Users::registrarUser($params);
-    $curUser = ["id" => $lastId, "rol_id" => $params["rol_id"]];
-    Users::setCurUser($curUser);
-
-    $jwt = $this->generateToken($lastId, $params["rol_id"]);
-    Users::setToken($jwt, $lastId);
-    $modulosSesion = Modulos::obtenerModulosSesion();
-    unset($params["password"]);
-    $params["id"] = $lastId;
-
-    $response['error'] = false;
-    $response['msg'] = "Registro satisfactorio";
-    $response['msgType'] = "success";
-    $response['token'] = $jwt;
-    $response['registro'] = $params;
-    $response['modulosSesion'] = $modulosSesion;
-    return $response;
-  }
-
-  public function update_user()
+  public function update_cliente()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
@@ -179,30 +105,34 @@ class ClientesController
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     $paramCampos = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "rol_id" => $pJson['rol_id'],
-      "caja_id" => $pJson['caja_id'],
-      "estado" => $pJson['estado'],
+      "tipo_documento_cod" => $pJson['tipo_documento_cod'],
+      "nro_documento" => $pJson['nro_documento'] ? $pJson['nro_documento'] : null,
+      "nombre_razon_social" => trimSpaces($pJson['nombre_razon_social']),
+      "direccion" => trimSpaces($pJson['direccion']),
+      "ubigeo_inei" => $pJson['ubigeo_inei'],
+      "email" => $pJson['email'],
+      "telefono" => $pJson['telefono'],
     ];
 
     // Validacion
-    $this->validateUpdateUser($paramCampos);
+    // $this->validateUpdateUser($paramCampos);
 
     // Buscando duplicados
     $exclude = ["id" => $pJson['id']];
-    $count = Users::countRecordsBy(["username" => $pJson['username']], $exclude);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
-    $count = Users::countRecordsBy(["email" => $pJson['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
+    $count = Clientes::countRecordsBy(["nro_documento" => $pJson['nro_documento']], $exclude);
+    if ($count) throwMiExcepcion("El nro de documento: " . $pJson['nro_documento'] . ", ya existe!", "warning");
+    if($pJson['email']){
+      $count = Clientes::countRecordsBy(["email" => $pJson['email']], $exclude);
+      if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
+    }
 
     $paramWhere = ["id" => $pJson['id']];
 
-    $resp = Users::actualizarUser("users", $paramCampos, $paramWhere);
+    $resp = Clientes::updateCliente("clientes", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    $registro = Users::getUser($pJson['id']);
-    Users::setActivityLog("Modificación de registro en la tabla usuarios: " . $registro["username"]);
+    $registro = Clientes::getCliente($pJson['id']);
+    Users::setActivityLog("Modificación de registro en la tabla clientes con nro doc: " . $registro["nro_documento"]);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
@@ -210,48 +140,29 @@ class ClientesController
     return $response;
   }
 
-  public function update_user_session()
+  public function get_cliente()
   {
-    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
-
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    if (trim($pJson['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
-    if (trim($pJson['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
-    if (trim($pJson['username']) == "") throwMiExcepcion("El usuario es requerido", "warning", 200);
-
-    // Buscando duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Users::countRecordsBy(["username" => $pJson['username']], $exclude);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
-    $count = Users::countRecordsBy(["email" => $pJson['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
-
-    $paramCampos = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "username" => trimSpaces($pJson['username']),
-      "email" => $pJson['email'],
-    ];
-
-    if ($pJson['password']) {
-      $paramCampos["password"] = crypt($pJson['password'], $_ENV['SALT_PSW']);
-    }
-
-    $paramWhere = ["id" => $pJson['id']];
-
-
-    $resp = Users::actualizarUser("users", $paramCampos, $paramWhere);
-    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
-
-    $registro = Users::getUser($pJson['id']);
-
-    $response['msgType'] = "success";
-    $response['msg'] = "Datos actualizados";
-    $response['registro'] = $registro;
-    return $response;
+    $registro = Clientes::getCliente($pJson['id']);
+    return $registro;
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   public function delete_user()
   {

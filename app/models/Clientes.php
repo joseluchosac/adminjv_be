@@ -51,6 +51,72 @@ class Clientes
     return $response;
   }
 
+  static function countRecordsBy($equal, $exclude = []){
+    $where = " WHERE " . array_keys($equal)[0] . " = :". array_keys($equal)[0];
+    if($exclude){
+      $where .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
+    }
+    $sql = "SELECT COUNT(*) AS count FROM clientes" . $where;
+    $param = array_merge($equal, $exclude);
+
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($param);
+    $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+    $response = $registro['count'];
+    return $response;
+  }
+
+  static function createCliente($params)
+  {
+    $sql = sqlInsert("clientes", $params);
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($params);
+    $lastId = $dbh->lastInsertId();
+    $resp = $stmt->rowCount();
+    return $lastId;
+  }
+
+  static function updateCliente($table, $paramCampos, $paramWhere)
+  {
+    $sql = sqlUpdate($table, $paramCampos, $paramWhere);
+    $params = array_merge($paramCampos, $paramWhere);
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($params);
+    $resp = $stmt->rowCount();
+    return $resp;
+  }
+
+  static function getCliente($id){
+    $sql = "SELECT 
+        c.id,
+        c.tipo_documento_cod,
+        td.descripcion AS tipo_documento,
+        ifnull(c.nro_documento,'') AS nro_documento,
+        c.nombre_razon_social,
+        c.direccion,
+        c.ubigeo_inei,
+        ifnull(u.departamento,'') AS departamento,
+        ifnull(u.provincia, '') AS provincia,
+        ifnull(u.distrito, '') AS distrito,
+        c.email,
+        c.telefono,
+        c.api,
+        c.estado
+      FROM clientes c
+      LEFT JOIN ubigeos u ON c.ubigeo_inei = u.ubigeo_inei
+      LEFT JOIN tipos_documento td ON c.tipo_documento_cod = td.codigo
+      WHERE c.id = :id;
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(['id' => $id]);
+    $record = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $record;
+  }
+
 
 
 
@@ -75,34 +141,6 @@ class Clientes
     $stmt->execute($bindWhere);
     $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $records;
-  }
-
-
-  
-  static function getUser($id){
-    $sql = "SELECT
-        u.id,
-        u.nombres,
-        u.apellidos,
-        u.username,
-        ifnull(u.email,'') AS email,
-        u.rol_id,
-        r.rol,
-        u.caja_id,
-        c.descripcion AS caja,
-        u.estado,
-        u.created_at,
-        ifnull(u.updated_at, '') AS updated_at
-      FROM users u
-      LEFT JOIN roles r ON u.rol_id = r.id
-      LEFT JOIN cajas c ON u.caja_id = c.id
-      WHERE u.id = :id;
-    ";
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute(['id' => $id]);
-    $record = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $record;
   }
 
   static function getUserBy($param){
@@ -134,49 +172,7 @@ class Clientes
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
     return $record;
   }
- 
-  static function actualizarUser($table, $paramCampos, $paramWhere)
-  {
-    $sql = sqlUpdate($table, $paramCampos, $paramWhere);
-    $params = array_merge($paramCampos, $paramWhere);
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($params);
-    $resp = $stmt->rowCount();
-    return $resp;
-  }
-
-  static function registrarUser($params)
-  {
-    $sql = sqlInsert("users", $params);
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($params);
-    $lastId = $dbh->lastInsertId();
-    $resp = $stmt->rowCount();
-    return $lastId;
-  }
-
-  static function countRecordsBy($equal, $exclude = []){
-    $where = " WHERE " . array_keys($equal)[0] . " = :". array_keys($equal)[0];
-    if($exclude){
-      $where .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
-    }
-    $sql = "SELECT COUNT(*) AS count FROM users" . $where;
-    $param = array_merge($equal, $exclude);
-
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($param);
-    $registro = $stmt->fetch(PDO::FETCH_ASSOC);
-    $response = $registro['count'];
-    return $response;
-  }
-
-
-
-
-  
+   
   static function eliminarUser($params){
     $sql = "DELETE FROM users WHERE id = :id";
     $dbh = Conexion::conectar();
