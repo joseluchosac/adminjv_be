@@ -23,6 +23,9 @@ class Middleware{
           if($route['accion'] == 'sign_in') break;
           if($route['accion'] == 'sign_up') break;
         }
+        case 'clientes':{
+          if($route['accion'] == 'prueba') break;
+        }
         default:{
           throwMiExcepcion("authErr: token empty", "error", 200);  
         }

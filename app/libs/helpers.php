@@ -440,101 +440,14 @@ function numeroALetra($arg)
 }
 
 
-// CONSTRUCTION DE LA SENTENCIA WHERE EN MYSQL
-// function getWhere($pLike, $pEquals, $pBetween)
-// {
-//   if (!function_exists('sqlLike')) {
-//     function sqlLike($like, $operator = " OR ")
-//     {
-//       if (!$like) return "";
-//       $sql = "";
-//       foreach ($like as $key => $value) {
-//         if (strlen($value) === 0) continue;
-//         $sql = $sql . $key . " LIKE :" . $key . $operator;
-//       }
-//       if (!$sql) return "";
-//       $sql = substr_replace($sql, "", strrpos($sql, $operator), strlen($operator));
-//       return "(" . $sql . ")";
-//     }
-//   }
-//   if (!function_exists('sqlEquals')) {
-//     function sqlEquals($equals, $operator = " AND "){
-//       if (!$equals) return "";
-//       $sql = "";
-//       foreach ($equals as $item) {
-//         if (strlen(trim($item["value"])) === 0) continue;
-//         $sql = $sql . $item["campo_name"] . " = :" . $item["campo_name"] . $operator;
-//       }
-//       if (!$sql) return "";
-//       $sql = substr_replace($sql, "", strrpos($sql, $operator), strlen($operator));
-//       return "(" . $sql . ")";
-//     }
-//   }
-//   if (!function_exists('sqlBetween')) {
-//     function sqlBetween($between)
-//     {
-//       if (!$between) return "";
-//       if (!$between['rango']) return "";
-//       if (!$between['campo']) return "";
-//       return "(" . $between['campo'] . " BETWEEN :date_from AND :date_to)";
-//     }
-//   }
-
-//   if (!function_exists('sqlWhere')) {
-//     function sqlWhere($where, $operator = ' AND ')
-//     {
-//       if (!$where) return "";
-//       $sql = "";
-//       foreach ($where as $value) {
-//         if (strlen($value) === 0) continue;
-//         $sql = $sql . $value . $operator;
-//       }
-//       if (!$sql) return "";
-//       $sql = substr_replace($sql, "", strrpos($sql, $operator), strlen($operator));
-//       return " WHERE " . $sql;
-//     }
-//   }
-
-//   if (!function_exists('bindWhere')) {
-//     function bindWhere($pLike, $pEquals, $pBetween){
-//       $pLike = $pLike ? $pLike : [];
-//       $pEquals = $pEquals ? $pEquals : [];
-//       $pBetween = $pBetween ? $pBetween : [];
-
-//       $between = [];
-//       if ($pBetween && $pBetween['campo'] && $pBetween['rango']) {
-//         $between['date_from'] = explode(", ", $pBetween['rango'])[0];
-//         $between['date_to'] = explode(", ", $pBetween['rango'])[1];
-//       }
-//       $equals = [];
-//       foreach($pEquals as $item){
-//         if (strlen(trim($item["value"])) === 0) continue;
-//         $equals[$item["campo_name"]] = $item["value"];
-//       }
-//       $array = array_merge($pLike, $equals, $between);
-//       $array_filtrado = array_filter($array, function ($valor) {
-//         return !is_string($valor) || strlen(trim($valor)) > 0;
-//       });
-//       return $array_filtrado;
-//     }
-//   }
-//   $sqlLike = sqlLike($pLike);
-
-//   $sqlEquals = sqlEquals($pEquals);
-//   $sqlBetween = sqlBetween($pBetween);
-
-//   $sqlWhere = sqlWhere([$sqlLike, $sqlEquals, $sqlBetween]);
-//   $bindWhere = bindWhere($pLike, $pEquals, $pBetween);
-//   return ['sqlWhere' => $sqlWhere, 'bindWhere' => $bindWhere];
-// }
-
-
-
-// "d/m/Y" -> 15/03/2013
-// "d/m/Y H:i:s" -> 15/03/2013 15:45:02
-// "d/m/Y h:i:s a" -> 15/03/2013 03:45:02 pm
-// "d/m/Y h:i a" -> 15/03/2013 03:45 pm
-// DEVUELVE FACHA DE UTC A LOCAL
+function array_find($array, $callback) {
+  foreach ($array as $value) {
+      if ($callback($value)) {
+          return $value;
+      }
+  }
+  return null; // Si no encuentra nada, retorna null.
+}
 
 function dateUTCToLocal($format, $strTimezone, $date = 'now')
 {

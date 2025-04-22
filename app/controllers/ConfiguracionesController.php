@@ -100,5 +100,69 @@ class ConfiguracionesController
     $response['msg'] = "Registro actualizado";
     return $response;
   }
+
+
+
+  
+  public function obtener_cpe_fact(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $resp = Configuraciones::getConfigDb("cpe_fact");
+    return $resp;
+  }
+
+  public function actualizar_cpe_fact(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $parJson = file_get_contents('php://input');
+    $count = Configuraciones::setConfigDb($parJson, "cpe_fact");
+    if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['registro'] = $parJson;
+    return $response;
+  }
+
+  public function obtener_cpe_guia(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $resp = Configuraciones::getConfigDb("cpe_guia");
+    return $resp;
+  }
+
+  public function actualizar_cpe_guia(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $parJson = file_get_contents('php://input');
+    $count = Configuraciones::setConfigDb($parJson, "cpe_guia");
+    if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['registro'] = $parJson;
+    return $response;
+  }
+
+  public function obtener_apis_nro_doc(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $resp = Configuraciones::getConfigDb("apis_nro_doc");
+    return $resp;
+  }
+
+  public function actualizar_apis_nro_doc(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $parJson = file_get_contents('php://input');
+    $count = Configuraciones::setConfigDb($parJson, "apis_nro_doc");
+    if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['registro'] = $parJson;
+    return $response;
+  }
+
+  public function prueba(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $resp = Configuraciones::getConfigDb("apis_nro_doc")['doc_value'];
+    $arr = json_decode($resp, true);
+    $api = $arr[$arr["default"]];
+    echo "<pre>";
+    print_r($api);
+    echo "</pre>";
+  }
 }
 

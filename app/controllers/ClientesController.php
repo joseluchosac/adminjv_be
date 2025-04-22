@@ -1,6 +1,7 @@
 <?php
 // require_once('../../app/models/Configuraciones.php');
 require_once('../../app/models/Clientes.php');
+require_once('../../app/services/Services.php');
 
 use Firebase\JWT\JWT;
 use Valitron\Validator;
@@ -68,12 +69,13 @@ class ClientesController
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     $params = [
       "tipo_documento_cod" => $pJson['tipo_documento_cod'],
-      "nro_documento" => $pJson['nro_documento'] ? $pJson['nro_documento'] : null,
+      "nro_documento" => trim($pJson['nro_documento']) ? trim($pJson['nro_documento']) : null,
       "nombre_razon_social" => trimSpaces($pJson['nombre_razon_social']),
       "direccion" => trimSpaces($pJson['direccion']),
       "ubigeo_inei" => $pJson['ubigeo_inei'],
       "email" => $pJson['email'],
       "telefono" => $pJson['telefono'],
+      "api" => $pJson['api'],
     ];
     // Validacion
     //$this->validateCreateUser($params);
@@ -106,7 +108,7 @@ class ClientesController
 
     $paramCampos = [
       "tipo_documento_cod" => $pJson['tipo_documento_cod'],
-      "nro_documento" => $pJson['nro_documento'] ? $pJson['nro_documento'] : null,
+      "nro_documento" => trim($pJson['nro_documento']) ? trim($pJson['nro_documento']) : null,
       "nombre_razon_social" => trimSpaces($pJson['nombre_razon_social']),
       "direccion" => trimSpaces($pJson['direccion']),
       "ubigeo_inei" => $pJson['ubigeo_inei'],
@@ -140,6 +142,23 @@ class ClientesController
     return $response;
   }
 
+  public function delete_cliente()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
+    $pJson = json_decode(file_get_contents('php://input'), true);
+    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+
+    // OJO, antes de eliminar verificar si el cliente tiene una venta asociada
+    $params = [ "id" => $pJson['id'] ];
+    $resp = Clientes::deleteCliente($params);
+    if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
+
+    $response['msgType'] = "success";
+    $response['error'] = false;
+    $response['msg'] = "Registro eliminado";
+    return $response;
+  }
+
   public function get_cliente()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
@@ -150,36 +169,37 @@ class ClientesController
     return $registro;
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  public function delete_user()
+  public function consultar_nro_documento()
   {
-    if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
-    $params = [
-      "id" => $pJson['id'],
-    ];
-    $resp = Users::eliminarUser($params);
-    if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
-
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro eliminado";
-    return $response;
+    $api = $pJson["api"];
+    // Verificar si el nro de documento ya esta registrado
+    $tipo_documento_cod = $pJson["tipo_documento_cod"];
+    $nro_documento = trim($pJson["nro_documento"]);
+    $data = Services::consultarNroDoc($nro_documento, $tipo_documento_cod);
+    return $data;
   }
+
+
+  public function prueba(){
+
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   public function get_email_by_username()
   {

@@ -89,6 +89,15 @@ class Clientes
     return $resp;
   }
 
+  static function deleteCliente($params){
+    $sql = "DELETE FROM clientes WHERE id = :id";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($params);
+    $resp = $stmt->rowCount();
+    return $resp;
+  }
+
   static function getCliente($id){
     $sql = "SELECT 
         c.id,
@@ -173,14 +182,7 @@ class Clientes
     return $record;
   }
    
-  static function eliminarUser($params){
-    $sql = "DELETE FROM users WHERE id = :id";
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($params);
-    $resp = $stmt->rowCount();
-    return $resp;
-  }
+
   
   static function setCurUser($curUser){
     self::$curUser = $curUser;

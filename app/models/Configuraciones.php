@@ -180,4 +180,31 @@ class Configuraciones
       throwMiExcepcion($e->getMessage(), "error", 200);
     }
   }
+  
+  static function getConfigDb($doc_name){
+    $sql = "SELECT
+      doc_value
+      FROM config_db
+      WHERE doc_name = :doc_name
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["doc_name"=>$doc_name]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $data;
+  }
+
+  static function setConfigDb($doc_value, $doc_name){
+    $sql = "UPDATE config_db
+      SET doc_value = :doc_value
+      WHERE doc_name = :doc_name
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["doc_value"=>$doc_value, "doc_name"=>$doc_name]);
+    $count = $stmt->rowCount();
+    return $count;
+  }
+
+
 }
