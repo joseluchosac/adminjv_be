@@ -79,29 +79,6 @@ class ConfiguracionesController
     return $response;
   }
 
-  public function obtener_configuraciones(){
-    $response['modoFacturacion'] = transponerArreglo(Configuraciones::obtenerModoFacturacion());
-    $response['modoGuiaDeRemision'] = transponerArreglo(Configuraciones::obtenerModoGuiaDeRemision());
-    $response['usuarioSolSecundario'] = transponerArreglo(Configuraciones::obtenerUsuarioSolSecundario());
-    $response['servidorCorreo'] = transponerArreglo(Configuraciones::obtenerServidorCorreo());
-    return $response;
-  }
-
-  public function actualizar_configuraciones(){
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $parJson = json_decode(file_get_contents('php://input'), true) ?? [];
-    $entidadId = explode(";", $parJson["entidad"])[0]; // 200
-    unset($parJson["entidad"]);
-
-    $resp = Configuraciones::actualizarConfiguraciones($entidadId, $parJson);
-    if(!$resp) throwMiExcepcion("Error al actualizar", "error", 405);
-
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro actualizado";
-    return $response;
-  }
-
-
 
   
   public function obtener_cpe_fact(){
@@ -154,6 +131,41 @@ class ConfiguracionesController
     $response['registro'] = $parJson;
     return $response;
   }
+
+  public function obtener_usuario_sol_sec(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $resp = Configuraciones::getConfigDb("usuario_sol_sec");
+    return $resp;
+  }
+
+  public function actualizar_usuario_sol_sec(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $parJson = file_get_contents('php://input');
+    $count = Configuraciones::setConfigDb($parJson, "usuario_sol_sec");
+    if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['registro'] = $parJson;
+    return $response;
+  }
+  public function obtener_email_config(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $resp = Configuraciones::getConfigDb("email_config");
+    return $resp;
+  }
+
+  public function actualizar_email_config(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $parJson = file_get_contents('php://input');
+    $count = Configuraciones::setConfigDb($parJson, "email_config");
+    if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['registro'] = $parJson;
+    return $response;
+  }
+
+
 
   public function prueba(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
