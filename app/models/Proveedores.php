@@ -1,14 +1,14 @@
 <?php
 require_once("Conexion.php");
 
-class Clientes
+class Proveedores
 {
   static private $curUser = null;
   static private $activity = [];
 
-  static public function filtrarClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
+  static public function filtrarProveedores($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
-    $table = "clientes_v";
+    $table = "proveedores_v";
 
     $sqlWhere = SqlWhere::and([
       SqlWhere::likeOr($paramWhere['paramLike']),
@@ -56,7 +56,7 @@ class Clientes
     if($exclude){
       $where .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
     }
-    $sql = "SELECT COUNT(*) AS count FROM clientes" . $where;
+    $sql = "SELECT COUNT(*) AS count FROM proveedores" . $where;
     $param = array_merge($equal, $exclude);
 
     $dbh = Conexion::conectar();
@@ -67,9 +67,9 @@ class Clientes
     return $response;
   }
 
-  static function createCliente($params)
+  static function createProveedor($params)
   {
-    $sql = sqlInsert("clientes", $params);
+    $sql = sqlInsert("proveedores", $params);
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
@@ -78,7 +78,7 @@ class Clientes
     return $lastId;
   }
 
-  static function updateCliente($table, $paramCampos, $paramWhere)
+  static function updateProveedor($table, $paramCampos, $paramWhere)
   {
     $sql = sqlUpdate($table, $paramCampos, $paramWhere);
     $params = array_merge($paramCampos, $paramWhere);
@@ -89,8 +89,8 @@ class Clientes
     return $resp;
   }
 
-  static function deleteCliente($params){
-    $sql = "DELETE FROM clientes WHERE id = :id";
+  static function deleteProveedor($params){
+    $sql = "DELETE FROM proveedores WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
@@ -98,26 +98,26 @@ class Clientes
     return $resp;
   }
 
-  static function getCliente($id){
+  static function getProveedor($id){
     $sql = "SELECT 
-        c.id,
-        c.tipo_documento_cod,
+        p.id,
+        p.tipo_documento_cod,
         td.descripcion AS tipo_documento,
-        ifnull(c.nro_documento,'') AS nro_documento,
-        c.nombre_razon_social,
-        c.direccion,
-        c.ubigeo_inei,
+        ifnull(p.nro_documento,'') AS nro_documento,
+        p.nombre_razon_social,
+        p.direccion,
+        p.ubigeo_inei,
         ifnull(u.departamento,'') AS departamento,
         ifnull(u.provincia, '') AS provincia,
         ifnull(u.distrito, '') AS distrito,
-        c.email,
-        c.telefono,
-        c.api,
-        c.estado
-      FROM clientes c
-      LEFT JOIN ubigeos u ON c.ubigeo_inei = u.ubigeo_inei
-      LEFT JOIN tipos_documento td ON c.tipo_documento_cod = td.codigo
-      WHERE c.id = :id;
+        p.email,
+        p.telefono,
+        p.api,
+        p.estado
+      FROM proveedores p
+      LEFT JOIN ubigeos u ON p.ubigeo_inei = u.ubigeo_inei
+      LEFT JOIN tipos_documento td ON p.tipo_documento_cod = td.codigo
+      WHERE p.id = :id;
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

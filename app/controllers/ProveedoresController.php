@@ -1,14 +1,14 @@
 <?php
 // require_once('../../app/models/Configuraciones.php');
-require_once('../../app/models/Clientes.php');
+require_once('../../app/models/Proveedores.php');
 require_once('../../app/services/Services.php');
 
 use Firebase\JWT\JWT;
 use Valitron\Validator;
 
-class ClientesController
+class ProveedoresController
 {
-  public function filtrar_clientes($isPaginated = true)
+  public function filtrar_proveedores($isPaginated = true)
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
@@ -48,13 +48,13 @@ class ClientesController
       "offset" => $pJson['offset']
     ];
 
-    $res = Clientes::filtrarClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $res = Proveedores::filtrarProveedores($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
     return $res;
   }
 
   public function filter_users_full() // sin paginacion
   {
-    $res =  self::filtrar_clientes(false);
+    $res =  self::filtrar_proveedores(false);
     unset($res["next"]);
     unset($res["offset"]);
     unset($res["page"]);
@@ -63,7 +63,7 @@ class ClientesController
     return $res;
   }
 
-  public function create_cliente()
+  public function create_proveedor()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
@@ -83,25 +83,25 @@ class ClientesController
     //$this->validateCreateUser($params);
 
     // Buscando duplicados
-    $count = Clientes::countRecordsBy(["nro_documento" => $pJson['nro_documento']]);
+    $count = Proveedores::countRecordsBy(["nro_documento" => $pJson['nro_documento']]);
     if ($count) throwMiExcepcion("El nro de documento: " . $pJson['nro_documento'] . ", ya existe!", "warning");
     if ($pJson['email']) {
-      $count = Clientes::countRecordsBy(["email" => $pJson['email']]);
+      $count = Proveedores::countRecordsBy(["email" => $pJson['email']]);
       if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
     }
 
-    $lastId = Clientes::createCliente($params);
+    $lastId = Proveedores::createProveedor($params);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
-    Users::setActivityLog("Creación de registro en la tabla clientes con nro doc: " . $params["nro_documento"]);
-    $registro = Clientes::getCliente($lastId);
+    Users::setActivityLog("Creación de registro en la tabla proveedores con nro doc: " . $params["nro_documento"]);
+    $registro = Proveedores::getProveedor($lastId);
     $response['error'] = false;
     $response['msgType'] = "success";
-    $response['msg'] = "Cliente registrado";
+    $response['msg'] = "Proveedor registrado";
     $response['registro'] = $registro;
     return $response;
   }
 
-  public function update_cliente()
+  public function update_proveedor()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
@@ -123,20 +123,20 @@ class ClientesController
 
     // Buscando duplicados
     $exclude = ["id" => $pJson['id']];
-    $count = Clientes::countRecordsBy(["nro_documento" => $pJson['nro_documento']], $exclude);
+    $count = Proveedores::countRecordsBy(["nro_documento" => $pJson['nro_documento']], $exclude);
     if ($count) throwMiExcepcion("El nro de documento: " . $pJson['nro_documento'] . ", ya existe!", "warning");
     if($pJson['email']){
-      $count = Clientes::countRecordsBy(["email" => $pJson['email']], $exclude);
+      $count = Proveedores::countRecordsBy(["email" => $pJson['email']], $exclude);
       if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
     }
 
     $paramWhere = ["id" => $pJson['id']];
 
-    $resp = Clientes::updateCliente("clientes", $paramCampos, $paramWhere);
+    $resp = Proveedores::updateProveedor("proveedores", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    $registro = Clientes::getCliente($pJson['id']);
-    Users::setActivityLog("Modificación de registro en la tabla clientes con nro doc: " . $registro["nro_documento"]);
+    $registro = Proveedores::getProveedor($pJson['id']);
+    Users::setActivityLog("Modificación de registro en la tabla proveedores con nro doc: " . $registro["nro_documento"]);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
@@ -144,15 +144,15 @@ class ClientesController
     return $response;
   }
 
-  public function delete_cliente()
+  public function delete_proveedor()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    // OJO, antes de eliminar verificar si el cliente tiene una venta asociada
+    // OJO, antes de eliminar verificar si el proveedor tiene una venta asociada
     $params = [ "id" => $pJson['id'] ];
-    $resp = Clientes::deleteCliente($params);
+    $resp = Proveedores::deleteProveedor($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $response['msgType'] = "success";
@@ -161,13 +161,13 @@ class ClientesController
     return $response;
   }
 
-  public function get_cliente()
+  public function get_proveedor()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $registro = Clientes::getCliente($pJson['id']);
+    $registro = Proveedores::getProveedor($pJson['id']);
     return $registro;
   }
 
