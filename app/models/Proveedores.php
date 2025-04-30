@@ -6,7 +6,7 @@ class Proveedores
   static private $curUser = null;
   static private $activity = [];
 
-  static public function filtrarProveedores($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
+  static public function filterProveedores($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
     $table = "proveedores_v";
 

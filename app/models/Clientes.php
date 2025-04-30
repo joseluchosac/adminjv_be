@@ -6,7 +6,7 @@ class Clientes
   static private $curUser = null;
   static private $activity = [];
 
-  static public function filtrarClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
+  static public function filterClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
     $table = "clientes_v";
 

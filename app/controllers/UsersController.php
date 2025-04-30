@@ -115,7 +115,7 @@ class UsersController
       if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
     }
 
-    $lastId = Users::registrarUser($params);
+    $lastId = Users::createUser($params);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
     Users::setActivityLog("Creación de registro en la tabla usuarios: " . $params["username"]);
     $registro = Users::getUser($lastId);
@@ -156,13 +156,13 @@ class UsersController
       "caja_id" => 1,
     ];
 
-    $lastId = Users::registrarUser($params);
+    $lastId = Users::createUser($params);
     $curUser = ["id" => $lastId, "rol_id" => $params["rol_id"]];
     Users::setCurUser($curUser);
 
     $jwt = $this->generateToken($lastId, $params["rol_id"]);
     Users::setToken($jwt, $lastId);
-    $modulosSesion = Modulos::obtenerModulosSesion();
+    $modulosSesion = Modulos::getModulosSesion();
     unset($params["password"]);
     $params["id"] = $lastId;
 
@@ -202,7 +202,7 @@ class UsersController
 
     $paramWhere = ["id" => $pJson['id']];
 
-    $resp = Users::actualizarUser("users", $paramCampos, $paramWhere);
+    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
     $registro = Users::getUser($pJson['id']);
@@ -246,7 +246,7 @@ class UsersController
     $paramWhere = ["id" => $pJson['id']];
 
 
-    $resp = Users::actualizarUser("users", $paramCampos, $paramWhere);
+    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
     $registro = Users::getUser($pJson['id']);
@@ -266,7 +266,7 @@ class UsersController
     $params = [
       "id" => $pJson['id'],
     ];
-    $resp = Users::eliminarUser($params);
+    $resp = Users::deleteUser($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $response['msgType'] = "success";
@@ -312,7 +312,7 @@ class UsersController
     if ($respuesta['error']) throwMiExcepcion($respuesta['msg'], "error");
 
     // Actualizando el usuario con el código de restauración
-    $count = Users::actualizarUser("users", ["code_restore" => $code], ["username" => $username]);
+    $count = Users::updateUser("users", ["code_restore" => $code], ["username" => $username]);
     if (!$count) throwMiExcepcion("No se pudo completar la operación", "error");
     $response['error'] = false;
     $response['msgType'] = "success";
@@ -340,7 +340,7 @@ class UsersController
       "password" => $password,
       "code_restore" => null
     ];
-    $count = Users::actualizarUser("users", $paramCampos, ["id" => $id]);
+    $count = Users::updateUser("users", $paramCampos, ["id" => $id]);
     if (!$count) throwMiExcepcion("No se pudo completar la operación", "error");
     $response['error'] = false;
     $response['msgType'] = "success";
@@ -392,7 +392,7 @@ class UsersController
     Users::setCurUser($curUser);
     // Obteniendo el usuario y los modulos asociados al rol
     $registro = Users::getUserSession();
-    $modulosSesion = Modulos::obtenerModulosSesion();
+    $modulosSesion = Modulos::getModulosSesion();
 
     $empresaSession = Configuraciones::getEmpresaSession();
 

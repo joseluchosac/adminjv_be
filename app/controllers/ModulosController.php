@@ -32,7 +32,7 @@ class ModulosController
     return $registros;
   }
 
-  public function registrar_modulo()
+  public function create_modulo()
   {
     if($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
@@ -63,7 +63,7 @@ class ModulosController
       "orden" => $pJson['orden'] ? $pJson['orden'] : 0,
     ];
 
-    $lastId = Modulos::registrarModulo( $params );
+    $lastId = Modulos::createModulo( $params );
     if(!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
 
     $registro = Modulos::getModulo($lastId);
@@ -73,7 +73,7 @@ class ModulosController
     return $response;
   }
 
-  public function actualizar_modulo()
+  public function update_modulo()
   {
     if($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 200);
 
@@ -97,7 +97,7 @@ class ModulosController
     ];
 
 
-    $resp = Modulos::actualizarModulo( $params );
+    $resp = Modulos::updateModulo( $params );
     if(!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
     $registro = Modulos::getModulo($params['id']);
@@ -108,7 +108,7 @@ class ModulosController
     return $response;
   }
 
-  public function eliminar_modulo()
+  public function delete_modulo()
   {
     if($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 200);
 
@@ -122,7 +122,7 @@ class ModulosController
     $params = [
       "id" => $pJson['id'],
     ];
-    $resp = Modulos::eliminarModulo( $params );
+    $resp = Modulos::deleteModulo( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $response['msgType'] = "success";
@@ -166,17 +166,17 @@ class ModulosController
 
   public function get_modulos_sesion()
   {
-    $modulosSesion = Modulos::obtenerModulosSesion();
+    $modulosSesion = Modulos::getModulosSesion();
     return $modulosSesion;
   }
 
-  public function actualizar_modulos_roles()
+  public function update_modulos_roles()
   {
     $pJson = json_decode(file_get_contents('php://input'), true);
     $rol_id = $pJson["rol_id"];
     if(!$rol_id) throwMiExcepcion("No se guardaron los cambios", "warning", 200);
     $modulos = $pJson["modulos"];
-    Modulos::actualizarModulosRoles($rol_id, $modulos);
+    Modulos::updateModulosRoles($rol_id, $modulos);
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Modulos del rol actualizados";

@@ -39,7 +39,7 @@ class Modulos
     return $record;
   }
 
-  static function registrarModulo($params)
+  static function createModulo($params)
   {
     $sql = "INSERT INTO modulos
       (nombre, descripcion, padre_id, icon_menu, orden)
@@ -54,7 +54,7 @@ class Modulos
     return $lastId;
   }
 
-  static function actualizarModulo($params)
+  static function updateModulo($params)
   {
     $sql = "UPDATE modulos SET
         nombre = :nombre,
@@ -71,7 +71,7 @@ class Modulos
     return $resp;
   }
 
-  static function eliminarModulo($params){
+  static function deleteModulo($params){
     $sql = "DELETE FROM modulos WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
@@ -129,7 +129,7 @@ class Modulos
     return $records;
   }
 
-  static function obtenerModulosSesion(){
+  static function getModulosSesion(){
     $sql = "SELECT DISTINCT
 	      m.id,
 	      IFNULL(m.nombre,'') AS nombre,
@@ -164,7 +164,7 @@ class Modulos
     return $records;
   }
 
-  static function actualizarModulosRoles($rol_id, $modulos){
+  static function updateModulosRoles($rol_id, $modulos){
     try {
       $sqlDelete = "DELETE FROM modulos_roles WHERE rol_id = :rol_id";
       $sqlInsert = "INSERT INTO modulos_roles

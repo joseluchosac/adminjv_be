@@ -143,7 +143,7 @@ class Users
     return $record;
   }
 
-  static function actualizarUser($table, $paramCampos, $paramWhere)
+  static function updateUser($table, $paramCampos, $paramWhere)
   {
     $sql = sqlUpdate($table, $paramCampos, $paramWhere);
     $params = array_merge($paramCampos, $paramWhere);
@@ -154,7 +154,7 @@ class Users
     return $resp;
   }
 
-  static function registrarUser($params)
+  static function createUser($params)
   {
     $sql = sqlInsert("users", $params);
     $dbh = Conexion::conectar();
@@ -232,7 +232,7 @@ class Users
 
   }
   
-  static function eliminarUser($params){
+  static function deleteUser($params){
     $sql = "DELETE FROM users WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

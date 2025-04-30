@@ -81,7 +81,7 @@ class Configuraciones
       return $empresa;
   }
 
-  static function actualizarEmpresa($table, $paramCampos, $paramWhere){
+  static function updateEmpresa($table, $paramCampos, $paramWhere){
     $sql = sqlUpdate($table, $paramCampos, $paramWhere);
     $params = array_merge($paramCampos, $paramWhere);
     $dbh = Conexion::conectar();

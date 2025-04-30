@@ -34,7 +34,7 @@ class Roles
     return $record;
   }
 
-  static function registrarRol($params)
+  static function createRol($params)
   {
     $sql = "INSERT INTO roles
       (rol) values (:rol)
@@ -46,7 +46,7 @@ class Roles
     return $lastId;
   }
 
-  static function actualizarRol($params)
+  static function updateRol($params)
   {
     $sql = "UPDATE roles SET
         rol = :rol
@@ -59,7 +59,7 @@ class Roles
     return $resp;
   }
 
-  static function eliminarRol($params){
+  static function deleteRol($params){
     $sql = "DELETE FROM roles WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

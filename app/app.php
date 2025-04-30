@@ -62,7 +62,7 @@ try {
     ////// MIDDLEWARE
     Middleware::check($authorization, $nombreModulo, $route);
     $currentController = new $route['controllerName'](); // ej: new ModulosController()
-    $response = $currentController->{$route['accion']}(); // ej: $currentController->obtener_modulos()
+    $response = $currentController->{$route['accion']}(); // ej: $currentController->get_modulos()
   } else {
     throwMiExcepcion("Accion no encontrada en controlador", "error", 404);
   }

@@ -8,7 +8,7 @@ use Valitron\Validator;
 
 class ClientesController
 {
-  public function filtrar_clientes($isPaginated = true)
+  public function filter_clientes($isPaginated = true)
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
@@ -48,13 +48,13 @@ class ClientesController
       "offset" => $pJson['offset']
     ];
 
-    $res = Clientes::filtrarClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $res = Clientes::filterClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
     return $res;
   }
 
   public function filter_users_full() // sin paginacion
   {
-    $res =  self::filtrar_clientes(false);
+    $res =  self::filter_clientes(false);
     unset($res["next"]);
     unset($res["offset"]);
     unset($res["page"]);
@@ -184,56 +184,51 @@ class ClientesController
     return $data;
   }
 
+  // private function validateCreateUser($params){
+  //   $v = new Validator($params);
+  //   $v->addRule('iguales', function ($field, $value, array $params, array $fields) {
+  //     return $fields['password'] === $fields["password_repeat"];
+  //   });
+  //   $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
+  //     return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
+  //   });
+  //   $v->rule('required', 'nombres')->message('El nombre es requerido');
+  //   $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
+  //   $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
+  //   $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
+  //   $v->rule('required', 'username')->message('El usuario es requerido');
+  //   $v->rule('lengthMin', 'username', 3)->message('El usuario debe tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'username', 50)->message('El usuario no puede exceder los 50 caracteres.');
+  //   $v->rule('sinEspacios', 'username')->message('El usuario no puede tener espacios');
+  //   $v->rule('email', 'email')->message('Ingrese un formato de email válido');
+  //   $v->rule('required', 'password')->message('La contraseña es obligatoria');
+  //   $v->rule('regex', 'password', '/^[A-Za-z\d@$!%*?&]{6,}$/')->message('La contraseña debe tener al menos 6 caracteres, sin espacios');
+  //   $v->rule('iguales', 'password')->message('Los passwords no son iguales');;
+  //   if (!$v->validate()) {
+  //     foreach ($v->errors() as $campo => $errores) {
+  //       foreach ($errores as $error) {
+  //         throwMiExcepcion($error, "warning", 200);
+  //       }
+  //     }
+  //   }
+  // }
 
-  public function prueba(){
-
-  }
-
-  private function validateCreateUser($params){
-    $v = new Validator($params);
-    $v->addRule('iguales', function ($field, $value, array $params, array $fields) {
-      return $fields['password'] === $fields["password_repeat"];
-    });
-    $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
-      return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
-    });
-    $v->rule('required', 'nombres')->message('El nombre es requerido');
-    $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
-    $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
-    $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
-    $v->rule('required', 'username')->message('El usuario es requerido');
-    $v->rule('lengthMin', 'username', 3)->message('El usuario debe tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'username', 50)->message('El usuario no puede exceder los 50 caracteres.');
-    $v->rule('sinEspacios', 'username')->message('El usuario no puede tener espacios');
-    $v->rule('email', 'email')->message('Ingrese un formato de email válido');
-    $v->rule('required', 'password')->message('La contraseña es obligatoria');
-    $v->rule('regex', 'password', '/^[A-Za-z\d@$!%*?&]{6,}$/')->message('La contraseña debe tener al menos 6 caracteres, sin espacios');
-    $v->rule('iguales', 'password')->message('Los passwords no son iguales');;
-    if (!$v->validate()) {
-      foreach ($v->errors() as $campo => $errores) {
-        foreach ($errores as $error) {
-          throwMiExcepcion($error, "warning", 200);
-        }
-      }
-    }
-  }
-
-  private function validateUpdateUser($params){
-    $v = new Validator($params);
-    $v->rule('required', 'nombres')->message('El nombre es requerido');
-    $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
-    $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
-    $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
-    if (!$v->validate()) {
-      foreach ($v->errors() as $campo => $errores) {
-        foreach ($errores as $error) {
-          throwMiExcepcion($error, "warning", 200);
-        }
-      }
-    }
-  }
+  // private function validateUpdateUser($params){
+  //   $v = new Validator($params);
+  //   $v->rule('required', 'nombres')->message('El nombre es requerido');
+  //   $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
+  //   $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
+  //   $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
+  //   if (!$v->validate()) {
+  //     foreach ($v->errors() as $campo => $errores) {
+  //       foreach ($errores as $error) {
+  //         throwMiExcepcion($error, "warning", 200);
+  //       }
+  //     }
+  //   }
+  // }
 }

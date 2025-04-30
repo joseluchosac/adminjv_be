@@ -8,7 +8,7 @@ class ConfiguracionesController
     return $empresa;
   }
 
-  public function actualizar_empresa(){
+  public function update_empresa(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
 
     $campos = [
@@ -23,7 +23,7 @@ class ConfiguracionesController
       "usuario_sol" => $_POST["usuario_sol"],
       "clave_sol" => $_POST["clave_sol"],
     ];
-    // obtener logo y certificado anterior
+    // obtiene logo y certificado anterior
     $prev = Configuraciones::getEmpresaBy(["logo","certificado_digital"], [["campo_name" => "id", "value"=>1]]);
     $folderLogo = "../store/img/empresa/";
     $folderCertificado = "../../app/files/certificado/";
@@ -69,7 +69,7 @@ class ConfiguracionesController
         }
       }
     }
-    $resp = Configuraciones::actualizarEmpresa("empresa", $campos, ["id" => 1]);
+    $resp = Configuraciones::updateEmpresa("empresa", $campos, ["id" => 1]);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     $registro = Configuraciones::getEmpresa();
 
@@ -85,7 +85,7 @@ class ConfiguracionesController
     return $resp;
   }
 
-  public function actualizar_cpe_fact(){
+  public function update_cpe_fact(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $parJson = file_get_contents('php://input');
     $count = Configuraciones::setConfigDb($parJson, "cpe_fact");
@@ -102,7 +102,7 @@ class ConfiguracionesController
     return $resp;
   }
 
-  public function actualizar_cpe_guia(){
+  public function update_cpe_guia(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $parJson = file_get_contents('php://input');
     $count = Configuraciones::setConfigDb($parJson, "cpe_guia");
@@ -119,7 +119,7 @@ class ConfiguracionesController
     return $resp;
   }
 
-  public function actualizar_apis_nro_doc(){
+  public function update_apis_nro_doc(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $parJson = file_get_contents('php://input');
     $count = Configuraciones::setConfigDb($parJson, "apis_nro_doc");
@@ -136,7 +136,7 @@ class ConfiguracionesController
     return $resp;
   }
 
-  public function actualizar_usuario_sol_sec(){
+  public function update_usuario_sol_sec(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $parJson = file_get_contents('php://input');
     $count = Configuraciones::setConfigDb($parJson, "usuario_sol_sec");
@@ -146,13 +146,14 @@ class ConfiguracionesController
     $response['registro'] = $parJson;
     return $response;
   }
+
   public function get_email_config(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $resp = Configuraciones::getConfigDb("email_config");
     return $resp;
   }
 
-  public function actualizar_email_config(){
+  public function update_email_config(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $parJson = file_get_contents('php://input');
     $count = Configuraciones::setConfigDb($parJson, "email_config");
@@ -161,18 +162,6 @@ class ConfiguracionesController
     $response['msg'] = "Registro actualizado";
     $response['registro'] = $parJson;
     return $response;
-  }
-
-
-
-  public function prueba(){
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $resp = Configuraciones::getConfigDb("apis_nro_doc")['doc_value'];
-    $arr = json_decode($resp, true);
-    $api = $arr[$arr["default"]];
-    echo "<pre>";
-    print_r($api);
-    echo "</pre>";
   }
 }
 
