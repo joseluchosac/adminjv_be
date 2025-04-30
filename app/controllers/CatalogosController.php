@@ -4,7 +4,7 @@ require_once('../../app/models/Catalogos.php');
 
 class CatalogosController
 {
-  public function obtener_catalogos(){
+  public function get_catalogos(){
     $tablas = [
       ["table" => "roles", "sql" => "SELECT id, rol, estado FROM roles"],
       ["table" => "cajas", "sql" => "SELECT id, descripcion, estado FROM cajas"],
@@ -98,7 +98,7 @@ class CatalogosController
         FROM ubigeos"
       ],
     ];
-    $catalogos = Catalogos::obtenerCatalogos($tablas);
+    $catalogos = Catalogos::getCatalogos($tablas);
     return $catalogos;
   }
 
@@ -123,7 +123,7 @@ class CatalogosController
         estado
       FROM tipos_comprobante"
     ],];
-    $registros = Catalogos::obtenerCatalogos($tablas);
+    $registros = Catalogos::getCatalogos($tablas);
     $response['msgType'] = "success";
     $response['msg'] = "Registro creado";
     $response['registro'] = $registros["tipos_comprobante"];
@@ -155,7 +155,7 @@ class CatalogosController
         estado
       FROM tipos_comprobante"
     ],];
-    $registros = Catalogos::obtenerCatalogos($tablas);
+    $registros = Catalogos::getCatalogos($tablas);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
@@ -179,15 +179,15 @@ class CatalogosController
     return $response;
   }
 
-  public function obtener_provincias(){
+  public function get_provincias(){
     $params = json_decode(file_get_contents('php://input'), true);
-    $provincias = Catalogos::obtenerProvincias($params['departamento']);
+    $provincias = Catalogos::getProvincias($params['departamento']);
     return $provincias;
   }
 
-  public function obtener_distritos(){
+  public function get_distritos(){
     $params = json_decode(file_get_contents('php://input'), true);
-    $distritos = Catalogos::obtenerDistritos($params['departamento'], $params['provincia']);
+    $distritos = Catalogos::getDistritos($params['departamento'], $params['provincia']);
     return $distritos;
   }
 }

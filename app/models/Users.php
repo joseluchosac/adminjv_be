@@ -7,7 +7,7 @@ class Users
   static private $curUser = null;
   static private $activity = [];
 
-  static public function filtrarUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
+  static public function filterUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
     $table = "users_v";
 

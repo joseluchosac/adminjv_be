@@ -99,7 +99,7 @@ class Modulos
     }
   }
 
-  static function obtenerModuloRol($rol_id){
+  static function getModuloRol($rol_id){
     $sql = "SELECT
         m.id,
         ifnull(m.nombre,'') AS nombre,

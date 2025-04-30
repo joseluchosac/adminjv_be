@@ -6,7 +6,7 @@ use Valitron\Validator;
 
 class UsersController
 {
-  public function filtrar_users($isPaginated = true)
+  public function filter_users($isPaginated = true)
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
@@ -49,13 +49,13 @@ class UsersController
       "offset" => $pJson['offset']
     ];
 
-    $res = Users::filtrarUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $res = Users::filterUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
     return $res;
   }
 
   public function filter_users_full() // sin paginacion
   {
-    $res =  self::filtrar_users(false);
+    $res =  self::filter_users(false);
     unset($res["next"]);
     unset($res["offset"]);
     unset($res["page"]);
@@ -394,7 +394,7 @@ class UsersController
     $registro = Users::getUserSession();
     $modulosSesion = Modulos::obtenerModulosSesion();
 
-    $empresaSession = Configuraciones::obtenerEmpresaSession();
+    $empresaSession = Configuraciones::getEmpresaSession();
 
     $response['error'] = false;
     $response['msg'] = "Usuario logueado";
@@ -413,7 +413,7 @@ class UsersController
   {
     $userSession = Users::getUserSession();
 
-    $empresaSession = Configuraciones::obtenerEmpresaSession();
+    $empresaSession = Configuraciones::getEmpresaSession();
 
     $response['msgType'] = "success";
     $response['error'] = false;

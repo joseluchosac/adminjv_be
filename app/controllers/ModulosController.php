@@ -15,7 +15,7 @@ class ModulosController
     return $response;
   }
 
-  public function obtener_modulos()
+  public function get_modulos()
   {
     $campos = [
       "id",
@@ -142,7 +142,7 @@ class ModulosController
     return $response;
   }
 
-  public function obtener_modulo_rol()
+  public function get_modulo_rol()
   {
     // $_SERVER['HTTP_ORIGIN'] ->http://localhost:5173
     setcookie("nombre", "Panchito",[
@@ -157,14 +157,14 @@ class ModulosController
     $pJson = json_decode(file_get_contents('php://input'), true);
     $rol_id = $pJson["rol_id"];
     if($rol_id){
-      $response = Modulos::obtenerModuloRol($rol_id);
+      $response = Modulos::getModuloRol($rol_id);
     }else{
       $response = null;
     }
     return $response;
   }
 
-  public function obtener_modulos_sesion()
+  public function get_modulos_sesion()
   {
     $modulosSesion = Modulos::obtenerModulosSesion();
     return $modulosSesion;

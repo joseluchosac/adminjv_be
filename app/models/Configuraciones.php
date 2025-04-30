@@ -3,7 +3,7 @@ require_once("Conexion.php");
 class Configuraciones
 {
 
-  static function getEmpresa($campos, $whereEquals)
+  static function getEmpresaBy($campos, $whereEquals)
   {
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos) : "";
 
@@ -19,7 +19,7 @@ class Configuraciones
     return $records;
   }
 
-  static function obtenerEmpresa(){
+  static function getEmpresa(){
     $sql = "SELECT
         e.razon_social,
         e.nombre_comercial,
@@ -53,7 +53,7 @@ class Configuraciones
       return $empresa;
   }
 
-  static function obtenerEmpresaSession(){
+  static function getEmpresaSession(){
     $sql = "SELECT
         e.razon_social,
         e.nombre_comercial,

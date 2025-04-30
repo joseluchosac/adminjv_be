@@ -41,7 +41,7 @@
     "offset" => $params['offset']
   ];
 
-  $res = Users::filtrarUsers($campos, $paramWhere, $paramOrders, $pagination, false);
+  $res = Users::filterUsers($campos, $paramWhere, $paramOrders, $pagination, false);
 
 ?>
 <!DOCTYPE html>
