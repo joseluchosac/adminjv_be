@@ -18,7 +18,7 @@ class Middleware{
       Users::setCurUser($userSession);
       Users::setActivity($activity);
     }else{
-      switch ($route['prefixController']) {
+      switch ($route['prefixController']) { // Evita comprobación de autorization (token)
         case 'users':{
           if($route['accion'] == 'sign_in') break;
           if($route['accion'] == 'sign_up') break;

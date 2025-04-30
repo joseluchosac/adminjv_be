@@ -161,7 +161,7 @@ class Users
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
     $lastId = $dbh->lastInsertId();
-    $resp = $stmt->rowCount();
+    // $resp = $stmt->rowCount();
     return $lastId;
   }
 
