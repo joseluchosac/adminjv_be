@@ -1,5 +1,5 @@
 <?php
-require_once('../../app/models/Configuraciones.php');
+require_once('../../app/models/Config.php');
 
 use Firebase\JWT\JWT;
 use Valitron\Validator;
@@ -394,7 +394,7 @@ class UsersController
     $registro = Users::getUserSession();
     $modulosSesion = Modulos::getModulosSesion();
 
-    $empresaSession = Configuraciones::getEmpresaSession();
+    $empresaSession = Config::getEmpresaSession();
 
     $response['error'] = false;
     $response['msg'] = "Usuario logueado";
@@ -413,7 +413,7 @@ class UsersController
   {
     $userSession = Users::getUserSession();
 
-    $empresaSession = Configuraciones::getEmpresaSession();
+    $empresaSession = Config::getEmpresaSession();
 
     $response['msgType'] = "success";
     $response['error'] = false;
@@ -454,10 +454,13 @@ class UsersController
 
   private function generateToken($id, $rolId)
   {
+    $dias = 1;
+    $exp = strtotime(date('Y-m-d', time() + ($dias*24*60*60))); // Dia entero (00:00:00)
     $payload = [
       'iat' => time(),
-      'exp' => time() + (60 * 60 * 3), // 3 horas
-      // 'exp' => time() + (60 * 5), // 5 min
+      'exp' => $exp, 
+      // 'exp' => time() + (3 * 60 * 60), // 3 h
+      // 'exp' => time() + (5 * 60), // 5 min
       // 'exp' => time() + (60), // 1 min
       'nbf' => time(),
       'data' => array(

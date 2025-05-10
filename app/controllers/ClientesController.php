@@ -1,5 +1,4 @@
 <?php
-// require_once('../../app/models/Configuraciones.php');
 require_once('../../app/models/Clientes.php');
 require_once('../../app/services/Services.php');
 

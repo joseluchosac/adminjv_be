@@ -5,7 +5,7 @@ class Services {
 
   static public function consultarNroDoc($nro_documento, $tipo_documento_cod){
     // Obtener la api por defecto para hacer la consulta
-    $sql = "SELECT doc_value FROM config_db WHERE doc_name = 'apis_nro_doc'";
+    $sql = "SELECT doc_value FROM config WHERE doc_name = 'apis_nro_doc'";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute();

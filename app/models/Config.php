@@ -1,6 +1,6 @@
 <?php
 require_once("Conexion.php");
-class Configuraciones
+class Config
 {
 
   static function getEmpresaBy($campos, $whereEquals)
@@ -94,7 +94,7 @@ class Configuraciones
   static function getConfigDb($doc_name){
     $sql = "SELECT
       doc_value
-      FROM config_db
+      FROM config
       WHERE doc_name = :doc_name
     ";
     $dbh = Conexion::conectar();
@@ -105,7 +105,7 @@ class Configuraciones
   }
 
   static function setConfigDb($doc_value, $doc_name){
-    $sql = "UPDATE config_db
+    $sql = "UPDATE config
       SET doc_value = :doc_value
       WHERE doc_name = :doc_name
     ";
@@ -116,5 +116,43 @@ class Configuraciones
     return $count;
   }
 
+  static function getEstablecimientos(){
+    $sql = "SELECT
+        id,
+        tipo,
+        nombre,
+        direccion_sucursal,
+        direccion_almacen,
+        ubigeo_inei,
+        telefono,
+        email,
+        estado
+      FROM establecimientos
+    ";
+      $dbh = Conexion::conectar();
+      $stmt = $dbh->prepare($sql);
+      $stmt->execute();
+      $establecimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      return $establecimientos;
+  }
 
+  static function getSeriesEstablecimiento($establecimiento_id){
+    $sql = "SELECT 
+        id,
+        establecimiento_id,
+        descripcion,
+        serie,
+        serie_prefix,
+        serie_suffix,
+        correlativo,
+        estado
+      FROM series
+      WHERE establecimiento_id = :establecimiento_id
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["establecimiento_id" => $establecimiento_id]);
+    $seriesEstablecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $seriesEstablecimiento;
+  }
 }
