@@ -73,10 +73,13 @@ class Modulos
 
   static function deleteModulo($params){
     $sql = "DELETE FROM modulos WHERE id = :id";
+    $sql2 = "DELETE FROM modulos_roles WHERE modulo_id = :modulo_id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
     $resp = $stmt->rowCount();
+    $stmt = $dbh->prepare($sql2);
+    $stmt->execute(["modulo_id" => $params['id']]);
     return $resp;
   }
 
@@ -90,7 +93,7 @@ class Modulos
       $dbh->beginTransaction();
       $stmt = $dbh->prepare($sql);
       foreach ($params as $fila) {
-        $stmt->execute($fila);
+        $stmt->execute(["orden"=>$fila['orden'], "id"=>$fila["id"]]);
       }
       $dbh->commit();
     } catch (PDOException $e) {

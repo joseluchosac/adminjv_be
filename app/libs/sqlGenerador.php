@@ -87,6 +87,7 @@ class SqlWhere{
     //   ["campo_name" => "estado", "value"=>1],
     //   ["campo_name" => "sexo", "value"=>"f"],
     // ];
+    
     // $between = [
     //   "campo" => "created_at",
     //   "rango" => "2024, 2025"
