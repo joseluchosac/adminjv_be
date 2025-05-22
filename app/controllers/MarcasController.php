@@ -25,8 +25,11 @@ class MarcasController
       ]
     ];
 
-    $paramOrders = $pJson['orders'];
+    $paramOrders = count($pJson['orders']) ? $pJson['orders'] : [["campo_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
+    // $paramOrders = $pJson['orders'];
 
+    // var_dump($paramOrders);
+    // exit();
     $pagination = [
       "page" => $_GET["page"] ?? "1",
       "offset" => $pJson['offset']
@@ -46,7 +49,17 @@ class MarcasController
     unset($res["previous"]);
     return $res;
   }
-
+  public function get_marca()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $pJson = json_decode(file_get_contents('php://input'), true);
+    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    
+    $registro = Marcas::getMarca($pJson['id']);
+    if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 405);
+    $response["content"] = $registro;
+    return $response;
+  }
   public function create_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
@@ -100,9 +113,9 @@ class MarcasController
     $registro = Marcas::getMarca($pJson['id']);
     Users::setActivityLog("Modificación de registro en la tabla marcas: " . $registro["nombre"]);
 
+    $response['content'] = $registro;
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $registro;
     return $response;
   }
 
@@ -123,14 +136,6 @@ class MarcasController
     return $response;
   }
 
-  public function get_marca()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $registro = Marcas::getMarca($pJson['id']);
-    return $registro;
-  }
 
 }

@@ -63,6 +63,7 @@ try {
     Middleware::check($authorization, $nombreModulo, $route);
     $currentController = new $route['controllerName'](); // ej: new ModulosController()
     $response = $currentController->{$route['accion']}(); // ej: $currentController->get_modulos()
+    if(!$response) throwMiExcepcion("No hay datos de respuesta", "error", 404);
   } else {
     throwMiExcepcion("Accion no encontrada en controlador", "error", 404);
   }
@@ -72,13 +73,13 @@ try {
   $response['error'] = true;
   $response['msg'] = $e->getMessage();
   $response['msgType'] = $params['msgType'];
-  $response['data'] = $params['data'];
+  $response['content'] = $params['content'];
   if($e->getMessage() === "Expired token"){
     $response['msgType'] = "errorToken";
   }
 }catch (\Throwable $e) {
   http_response_code(400);
-  $response['loco'] = "jose";
+  $response['content'] = null;
   $response['error'] = true;
   $response['msgType'] = "error";
   $response['msg'] = $e->getMessage();

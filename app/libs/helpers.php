@@ -472,14 +472,14 @@ function getDateToDatetime($strDate)
 }
 
 
-function throwMiExcepcion( $msg, $msgType = "error", $responseCode = 400, $data=null)
+function throwMiExcepcion( $msg, $msgType = "error", $responseCode = 400, $content=null)
 {
   throw new MiExcepcion(
     $msg, 
     [
       "msgType" => $msgType,
       "responseCode" => $responseCode,
-      "data" => $data,
+      "content" => $content,
     ]
   );
 }
