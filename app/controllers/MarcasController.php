@@ -18,14 +18,14 @@ class MarcasController
 
     $paramWhere = [
       "paramLike" => ['nombre' => $search],
-      "paramEquals" => $pJson['equals'], // [["campo_name" => "id", "value"=>1]] 
+      "paramEquals" => $pJson['equals'], // [["fieldname" => "id", "value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['campo_name'],
+        "campo" => $pJson['between']['fieldname'],
         "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];
 
-    $paramOrders = count($pJson['orders']) ? $pJson['orders'] : [["campo_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
+    $paramOrders = count($pJson['orders']) ? $pJson['orders'] : [["fieldname"=>"id","order_dir"=>"DESC", "text" => "Id"]];
     // $paramOrders = $pJson['orders'];
 
     // var_dump($paramOrders);

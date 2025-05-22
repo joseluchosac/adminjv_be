@@ -15,7 +15,7 @@ class CategoriasController
       "estado"
     ];
     $orders = [
-      ["campo_name" => "orden", "order_dir" => "asc"],
+      ["fieldname" => "orden", "order_dir" => "asc"],
     ];
     $registro = Categorias::getCategorias($campos, $orders);
     return $registro;

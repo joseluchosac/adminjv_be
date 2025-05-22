@@ -24,7 +24,7 @@ class ConfigController
       "clave_sol" => $_POST["clave_sol"],
     ];
     // obtiene logo y certificado anterior
-    $prev = Config::getEmpresaBy(["logo","certificado_digital"], [["campo_name" => "id", "value"=>1]]);
+    $prev = Config::getEmpresaBy(["logo","certificado_digital"], [["fieldname" => "id", "value"=>1]]);
     $folderLogo = "../store/img/empresa/";
     $folderCertificado = "../../app/files/certificado/";
     

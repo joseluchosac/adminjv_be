@@ -35,9 +35,9 @@ class UsersController
         'username' => $search, 
         "email" => $search
       ],
-      "paramEquals" => $pJson['equals'], // [["campo_name" => "id", "value"=>1]] 
+      "paramEquals" => $pJson['equals'], // [["fieldname" => "id", "value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['campo_name'],
+        "campo" => $pJson['between']['fieldname'],
         "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];
@@ -373,9 +373,9 @@ class UsersController
 
     // Obteniendo al user
     $equals = [
-      ["campo_name" => "username", "value" => $username],
-      ["campo_name" => "password", "value" => $password],
-      ["campo_name" => "estado", "value" => 1],
+      ["fieldname" => "username", "value" => $username],
+      ["fieldname" => "password", "value" => $password],
+      ["fieldname" => "estado", "value" => 1],
     ];
 
     $registros = Users::getUsers("users", $campos, $equals);
@@ -441,8 +441,8 @@ class UsersController
     $password = crypt($parJson['password'], $_ENV['SALT_PSW']);
     $user_id = Users::getCurUser()["id"];
     $equals = [
-      ["campo_name" => "id", "value" => $user_id],
-      ["campo_name" => "password", "value" => $password],
+      ["fieldname" => "id", "value" => $user_id],
+      ["fieldname" => "password", "value" => $password],
     ];
 
     $registros = Users::getUsers("users", $campos, $equals);

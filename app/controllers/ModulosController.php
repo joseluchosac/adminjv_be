@@ -26,7 +26,7 @@ class ModulosController
       "orden"
     ];
     $orders = [
-      ["campo_name" => "orden", "order_dir" => "asc"],
+      ["fieldname" => "orden", "order_dir" => "asc"],
     ];
     $registros = Modulos::getModulos($campos, null, $orders);
     return $registros;
