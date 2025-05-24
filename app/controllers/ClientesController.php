@@ -33,9 +33,9 @@ class ClientesController
         'nro_documento' => $search, 
         'nombre_razon_social' => $search, 
       ],
-      "paramEquals" => $pJson['equals'], // [["fieldname" => "id", "value"=>1]] 
+      "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['fieldname'],
+        "campo" => $pJson['between']['field_name'],
         "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];

@@ -29,7 +29,7 @@
     "paramLike" => ['nombres' => $search, 'apellidos' => $search, 'username' => $search, "email" => $search,],
     "paramEquals" => $params['equals'], // [[]] 
     "paramBetween" => [
-      "campo" => $params['between']['fieldname'],
+      "campo" => $params['between']['field_name'],
       "rango" => $params['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
     ]
   ];

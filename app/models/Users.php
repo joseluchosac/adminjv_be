@@ -42,7 +42,7 @@ class Users
     $stmt->execute($bindWhere);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $response['filas'] = $filas;
+    $response['content'] = $filas;
     $response['num_regs'] = $num_regs;
     $response['pages'] = $pages;
     $response['page'] = ($pages != 0) ? $page : 0;
@@ -124,7 +124,7 @@ class Users
     return $record;
   }
  
-  static function getUserSession(){
+  static function getProfile(){
     $sql = "SELECT
         id,
         nombres,

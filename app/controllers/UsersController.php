@@ -35,9 +35,9 @@ class UsersController
         'username' => $search, 
         "email" => $search
       ],
-      "paramEquals" => $pJson['equals'], // [["fieldname" => "id", "value"=>1]] 
+      "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['fieldname'],
+        "campo" => $pJson['between']['field_name'],
         "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];
@@ -71,17 +71,20 @@ class UsersController
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $registro = Users::getUser($pJson['id']);
-    return $registro;
+    if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
+    $response["content"] = $registro;
+    return $response;
   }
 
-  public function get_user_session()
+  public function get_profile()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $registro = Users::getUserSession();
-    return $registro;
+    $registro = Users::getProfile();
+    $response["content"] = $registro;
+    return $response;
   }
 
   public function create_user()
@@ -122,7 +125,7 @@ class UsersController
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Usuario registrado";
-    $response['registro'] = $registro;
+    $response['content'] = $registro;
     return $response;
   }
 
@@ -210,11 +213,11 @@ class UsersController
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $registro;
+    $response['content'] = $registro;
     return $response;
   }
 
-  public function update_user_session()
+  public function update_profile()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
@@ -227,15 +230,12 @@ class UsersController
 
     // Buscando duplicados
     $exclude = ["id" => $pJson['id']];
-    $count = Users::countRecordsBy(["username" => $pJson['username']], $exclude);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
     $count = Users::countRecordsBy(["email" => $pJson['email']], $exclude);
     if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
 
     $paramCampos = [
       "nombres" => trimSpaces($pJson['nombres']),
       "apellidos" => trimSpaces($pJson['apellidos']),
-      "username" => trimSpaces($pJson['username']),
       "email" => $pJson['email'],
     ];
 
@@ -249,11 +249,11 @@ class UsersController
     $resp = Users::updateUser("users", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $registro = Users::getUser($pJson['id']);
+    $registro = Users::getProfile($pJson['id']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Datos actualizados";
-    $response['registro'] = $registro;
+    $response['content'] = $registro;
     return $response;
   }
 
@@ -269,6 +269,8 @@ class UsersController
     $resp = Users::deleteUser($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
+    $response['content'] = null;
+    $response['error'] = "false";
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";
     return $response;
@@ -373,9 +375,9 @@ class UsersController
 
     // Obteniendo al user
     $equals = [
-      ["fieldname" => "username", "value" => $username],
-      ["fieldname" => "password", "value" => $password],
-      ["fieldname" => "estado", "value" => 1],
+      ["field_name" => "username", "field_value" => $username],
+      ["field_name" => "password", "field_value" => $password],
+      ["field_name" => "estado", "field_value" => 1],
     ];
 
     $registros = Users::getUsers("users", $campos, $equals);
@@ -391,7 +393,7 @@ class UsersController
     $curUser = ["id" => $id, "rol_id"=>$rol_id];
     Users::setCurUser($curUser);
     // Obteniendo el usuario y los modulos asociados al rol
-    $registro = Users::getUserSession();
+    $registro = Users::getProfile();
     $modulosSesion = Modulos::getModulosSesion();
 
     $empresaSession = Config::getEmpresaSession();
@@ -411,7 +413,7 @@ class UsersController
   //--> los modulos aciciados a su rol
   public function check_auth()
   {
-    $userSession = Users::getUserSession();
+    $userSession = Users::getProfile();
 
     $empresaSession = Config::getEmpresaSession();
 
@@ -441,8 +443,8 @@ class UsersController
     $password = crypt($parJson['password'], $_ENV['SALT_PSW']);
     $user_id = Users::getCurUser()["id"];
     $equals = [
-      ["fieldname" => "id", "value" => $user_id],
-      ["fieldname" => "password", "value" => $password],
+      ["field_name" => "id", "field_value" => $user_id],
+      ["field_name" => "password", "field_value" => $password],
     ];
 
     $registros = Users::getUsers("users", $campos, $equals);

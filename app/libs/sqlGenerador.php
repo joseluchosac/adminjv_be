@@ -58,8 +58,8 @@ class SqlWhere{
   static function arrEqual($datos){
       $equals = [];
       foreach($datos as $item){
-          if (strlen(trim($item["value"])) === 0) continue;
-          $equals[$item["fieldname"]] = $item["value"];
+          if (strlen(trim($item["field_value"])) === 0) continue;
+          $equals[$item["field_name"]] = $item["field_value"];
       }
       return self::arrFilter($equals);
   }
@@ -84,8 +84,8 @@ class SqlWhere{
     // ];
 
     // $parEquals = [
-    //   ["fieldname" => "estado", "value"=>1],
-    //   ["fieldname" => "sexo", "value"=>"f"],
+    //   ["field_name" => "estado", "field_value"=>1],
+    //   ["field_name" => "sexo", "field_value"=>"f"],
     // ];
     
     // $between = [
@@ -129,14 +129,14 @@ function getSqlOrderBy($orders)
   }
   $sql = "";
   foreach ($orders as $valor) {
-    $sql = $sql . $valor['fieldname'] . " " . $valor['order_dir'] . ", ";
+    $sql = $sql . $valor['field_name'] . " " . $valor['order_dir'] . ", ";
   }
   $sql = " ORDER BY " . substr(trim($sql), 0, -1);
   return $sql;
 }
 ///////////// USO getSqlOrderBy ////////
     // $orders = [
-    //   ["fieldname" => "apellidos", "order_dir" => "asc"],
-    //   ["fieldname" => "nombres", "order_dir" => "desc"],
+    //   ["field_name" => "apellidos", "order_dir" => "asc"],
+    //   ["field_name" => "nombres", "order_dir" => "desc"],
     // ];
 /////////////////////////

@@ -18,14 +18,14 @@ class MarcasController
 
     $paramWhere = [
       "paramLike" => ['nombre' => $search],
-      "paramEquals" => $pJson['equals'], // [["fieldname" => "id", "value"=>1]] 
+      "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['fieldname'],
+        "campo" => $pJson['between']['field_name'],
         "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];
 
-    $paramOrders = count($pJson['orders']) ? $pJson['orders'] : [["fieldname"=>"id","order_dir"=>"DESC", "text" => "Id"]];
+    $paramOrders = count($pJson['orders']) ? $pJson['orders'] : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
     // $paramOrders = $pJson['orders'];
 
     // var_dump($paramOrders);
@@ -56,7 +56,7 @@ class MarcasController
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     
     $registro = Marcas::getMarca($pJson['id']);
-    if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 405);
+    if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
     $response["content"] = $registro;
     return $response;
   }
