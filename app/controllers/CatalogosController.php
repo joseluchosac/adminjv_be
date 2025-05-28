@@ -20,6 +20,7 @@ class CatalogosController
           tipo_tributo,
           CAST(porcentaje AS FLOAT) AS porcentaje,
           CAST(importe AS FLOAT) AS importe,
+          pred,
           estado
         FROM impuestos"
       ],
@@ -56,6 +57,7 @@ class CatalogosController
           codigo,
           descripcion,
           simbolo,
+          pred,
           estado
         FROM tipos_moneda"
       ],

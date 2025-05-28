@@ -533,3 +533,57 @@ function normalize_url_path($path) {
   }
   return "/".implode("/", $absolutes);
 }
+
+
+// ✅ FUNCION RECURSIVA QUE DEVUELVE UN NUEVO ARREGLO DE LOS ANCESTROS DE UN
+// ELEMENTO A PARTIR DE UN ARREGLO DE ELEMENTOS
+// [..., elementoAbuelo, elementoPadre, ElementoHijo]
+// $arreglo = [
+//     ['id'=>1, 'desc'=>'medicinas', "padre_id"=>0],
+//     ['id'=>2, 'desc'=>'de marca', "padre_id"=>1],
+//     ['id'=>3, 'desc'=>'generico', "padre_id"=>1],
+//     ['id'=>4, 'desc'=>'antibioticos', "padre_id"=>2],
+//     ['id'=>5, 'desc'=>'antibioticos', "padre_id"=>3],
+//     ['id'=>6, 'desc'=>'ciprofloxacino', "padre_id"=>4],
+// ];
+function getBranch($id, $arreglo, $branch=[]){
+    $elemento = [];
+    foreach($arreglo as $value){
+        if($value["id"] === $id){
+            $elemento = $value;
+            array_unshift($branch, $value);
+            break;
+        }
+    }
+    if($elemento){
+        return getBranch($elemento["padre_id"], $arreglo, $branch);
+    }else{
+        return $branch;
+    };
+};
+// ✅ UTILIDADES PARA CAMBIAR EL TEXTO A ARREGLO Y VICEVERSA DEL CAMPO categoria_ids DE LA TABLA productos
+// $texto = ",7,2,13,4,";
+// var_dump(array_map(function($el){
+//     return intval($el);
+// },array_filter(explode(",",$texto))));
+
+// $arreglo = [7,2,13,4];
+// var_dump(",".implode(",", $arreglo).",");
+
+
+
+// ✅ FUNCION QUE DEVUELVE UN SLUG A PARTIR DE UN STRING
+// $titulo = "Título de mi publicación con caracteres especiales, espacios y  ¡mucho más!";
+// $slug = generarSlug($titulo);
+// echo $slug; // Output: titulo-de-mi-publicacion-con-caracteres-especiales-espacios-y-mucho-mas
+function generarSlug(string $texto): string
+{
+  $slug = strtolower($texto);  // 1. Convertir a minúsculas
+  $slug = preg_replace('/[^a-z0-9\-_\s]/', '', $slug);  // 2. Eliminar caracteres especiales
+  $slug = str_replace(' ', '-', $slug);  // 3. Reemplazar espacios con guiones
+  $slug = trim($slug, '-');  // 4. Recortar guiones
+  $slug = iconv('utf-8', 'ascii//TRANSLIT', $slug);  // 5. (Opcional) Eliminar caracteres no deseados
+  return $slug;
+}
+
+// Ejemplo de uso

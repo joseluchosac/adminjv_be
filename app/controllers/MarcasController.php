@@ -25,7 +25,9 @@ class MarcasController
       ]
     ];
 
-    $paramOrders = count($pJson['orders']) ? $pJson['orders'] : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
+    $paramOrders = count($pJson['orders']) 
+      ? $pJson['orders'] 
+      : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
     // $paramOrders = $pJson['orders'];
 
     // var_dump($paramOrders);
