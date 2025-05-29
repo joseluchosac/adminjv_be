@@ -586,4 +586,41 @@ function generarSlug(string $texto): string
   return $slug;
 }
 
-// Ejemplo de uso
+// ✅ FUNCION QUE DEVUELVE UN ARREGLO JERARQUIZADO
+function generateTree($arreglo, $padre_id = 0) {
+  $arbol = array();
+  foreach ($arreglo as $categoria) {
+      if ($categoria['padre_id'] == $padre_id) {
+          $children = generateTree($arreglo, $categoria['id']);
+          if ($children) {
+              $categoria['children'] = $children;
+          }else{
+            $categoria['children'] = [];
+          }
+          $arbol[] = $categoria;
+      }
+  }
+  return $arbol;
+}
+
+// ✅ FUNCION QUE APLANA UN ARREGLO JERARQUIZADO
+function flattenTree($tree, $padre_id = 0, &$resultado = []) {
+  foreach ($tree as $nodo) {
+      // Extraemos los hijos si existen y los eliminamos del nodo actual
+      $children = isset($nodo['children']) ? $nodo['children'] : [];
+      unset($nodo['children']);
+
+      // Establecemos el padre_id correcto
+      $nodo['padre_id'] = $padre_id;
+      
+      // Añadimos el nodo actual al resultado
+      $resultado[] = $nodo;
+      
+      // Si tiene children, los procesamos recursivamente
+      if (!empty($children)) {
+          flattenTree($children, $nodo['id'], $resultado);
+      }
+  }
+  
+  return $resultado;
+}

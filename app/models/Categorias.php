@@ -19,10 +19,8 @@ class Categorias
   static function getCategoria($id){
     $sql = "SELECT
         id,
-        nombre,
         descripcion,
         padre_id,
-        icon,
         orden
       FROM categorias
       WHERE id = :id;
@@ -56,9 +54,9 @@ class Categorias
   static function createCategoria($params)
   {
     $sql = "INSERT INTO categorias
-      (nombre, descripcion, padre_id, icon, orden)
+      (descripcion, padre_id, orden)
       values
-      (:nombre, :descripcion, :padre_id, :icon, :orden)
+      (:descripcion, :padre_id, :orden)
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
@@ -70,10 +68,8 @@ class Categorias
   static function updateCategoria($params)
   {
     $sql = "UPDATE categorias SET
-        nombre = :nombre,
         descripcion = :descripcion,
-        padre_id = :padre_id,
-        icon = :icon
+        padre_id = :padre_id
       WHERE id = :id
     ";
     $dbh = Conexion::conectar();

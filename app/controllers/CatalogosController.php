@@ -94,6 +94,14 @@ class CatalogosController
           estado
         FROM unidades_medida"
       ],
+      ["table" => "categorias", 
+        "sql" => "SELECT 
+          id, 
+          descripcion, 
+          padre_id,
+          orden
+        FROM categorias ORDER BY orden"
+      ],
       ["table" => "departamentos", 
         "sql" => "SELECT DISTINCT
           departamento
@@ -101,6 +109,7 @@ class CatalogosController
       ],
     ];
     $catalogos = Catalogos::getCatalogos($tablas);
+    // $catalogos['categorias'] = generateTree($catalogos['categorias']);
     return $catalogos;
   }
 

@@ -7,18 +7,20 @@ class CategoriasController
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $campos = [
       "id", 
-      "nombre", 
       "descripcion", 
       "padre_id",
-      "icon",
-      "orden",
-      "estado"
+      "orden"
     ];
     $orders = [
       ["field_name" => "orden", "order_dir" => "asc"],
     ];
-    $registro = Categorias::getCategorias($campos, $orders);
-    return $registro;
+    $registros = Categorias::getCategorias($campos, $orders);
+    return $registros;
+  }
+
+  public function get_categorias_tree(){
+    $response['data']=generateTree($this->get_categorias());
+    return $response;
   }
 
   public function sort_categorias()
@@ -28,9 +30,14 @@ class CategoriasController
     $params = json_decode(file_get_contents('php://input'), true);
 
     Categorias::sortCategorias($params);
+
+    $_SERVER["REQUEST_METHOD"] = "POST";
+    $categorias_tree = generateTree($this->get_categorias());
+
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Categorías reordenadas";
+    $response['content'] = $categorias_tree;
     return $response;
   }
 
@@ -44,32 +51,23 @@ class CategoriasController
     // Validacion de modulo
     if(trim($pJson['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
 
-    if(trim($pJson['nombre']) == "") throwMiExcepcion("Ingrese el nombre de la categoría", "warning", 200);
-
     // Comprobacion de duplicados
     $count = Categorias::countRecordsBy(["descripcion" => $pJson['descripcion']]);
     if($count) throwMiExcepcion("La descripción: " . $pJson['descripcion'] . ", ya existe!", "warning");
 
-    if($pJson['nombre']){
-      $count = Categorias::countRecordsBy(["nombre" => $pJson['nombre']]);
-      if($count) throwMiExcepcion("La categoría de nombre: " . $pJson['nombre'] . ", ya existe!", "warning");
-    }
-
     $params = [
-      "nombre" => $pJson['nombre'] ? trimSpaces($pJson['nombre']) : null,
       "descripcion" => trimSpaces($pJson['descripcion']),
       "padre_id" => $pJson['padre_id'] ? $pJson['padre_id'] : 0,
-      "icon" => $pJson['icon'] ? $pJson['icon'] : "FaRegCircle",
       "orden" => 0,
     ];
 
     $lastId = Categorias::createCategoria( $params );
     if(!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
 
-    $registro = Categorias::getCategoria($lastId);
+    $categorias_tree = generateTree($this->get_categorias());
     $response['msgType'] = "success";
     $response['msg'] = "Módulo registrado";
-    $response['registro'] = $registro;
+    $response['content'] = $categorias_tree;
     return $response;
   }
 
@@ -88,21 +86,19 @@ class CategoriasController
     if($count) throwMiExcepcion("La descripción: " . $pJson['descripcion'] . ", ya existe!", "warning");
 
     $params = [
-      "nombre" => $pJson['nombre'] ? trimSpaces($pJson['nombre']) : null,
       "descripcion" => trimSpaces($pJson['descripcion']),
       "padre_id" => $pJson['padre_id'] ? $pJson['padre_id'] : 0,
-      "icon" => $pJson['icon'] ? $pJson['icon'] : "FaRegCircle",
-      "id" => intval($pJson['id']),
+      "id" => $pJson['id'],
     ];
 
     $resp = Categorias::updateCategoria( $params );
     if(!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
-
-    $registro = Categorias::getCategoria($params['id']);
+    $_SERVER["REQUEST_METHOD"] = "POST";
+    $categorias_tree = generateTree($this->get_categorias());
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $registro;
+    $response['content'] = $categorias_tree;
     return $response;
   }
 
@@ -123,8 +119,12 @@ class CategoriasController
     $resp = Categorias::deleteCategoria( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
+    $_SERVER["REQUEST_METHOD"] = "POST";
+    $categorias_tree = generateTree($this->get_categorias());
+
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";
+    $response['content'] = $categorias_tree;
     return $response;
   }
 }

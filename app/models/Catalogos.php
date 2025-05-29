@@ -10,7 +10,11 @@ class Catalogos
     foreach ($tablas as $value) {
       $stmt = $dbh->prepare($value["sql"]);
       $stmt->execute();
-      $res[$value['table']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      if($value['table'] === 'categorias'){
+        $res["categorias_tree"] = generateTree($stmt->fetchAll(PDO::FETCH_ASSOC));
+      }else{
+        $res[$value['table']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+      }
     }
     
     return $res;
