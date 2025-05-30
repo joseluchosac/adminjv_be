@@ -80,6 +80,9 @@ class ProductosController
 
     $registro = Productos::getProducto($pJson['id']);
     if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
+    $temp = substr($registro["categoria_ids"], 1, -1);
+    $temp = array_map(function($el){return intval($el);},explode(",", $temp));
+    $registro["categoria_ids"] = array_filter($temp);
     $response["content"] = $registro;
     return $response;
   }
@@ -229,4 +232,5 @@ class ProductosController
       }
     }
   }
+
 }
