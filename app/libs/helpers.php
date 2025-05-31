@@ -568,7 +568,8 @@ function getBranch($id, $arreglo, $branch=[]){
 // },array_filter(explode(",",$texto))));
 
 // $arreglo = [7,2,13,4];
-// var_dump(",".implode(",", $arreglo).",");
+// $dato = $arreglo ? ",".implode(",", $arreglo)."," : "";
+// var_dump($dato);
 
 
 

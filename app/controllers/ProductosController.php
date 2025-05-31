@@ -94,29 +94,35 @@ class ProductosController
 
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    // var_dump($pJson);
+    // exit();
+    $codigo = trimSpaces($pJson['codigo']);
+    $barcode = trimSpaces($pJson['barcode']);
+    $categoria_ids = $pJson['categoria_ids'] ? ",".implode(",", $pJson['categoria_ids'])."," : "";
+    $descripcion = trimSpaces($pJson['descripcion']);
     $params = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "productoname" => $pJson['productoname'],
-      "password" => $pJson['password'],
-      "password_repeat" => $pJson['password_repeat'], // eliminar despues de validar
-      "email" => $pJson['email'] ? $pJson['email'] : null,
-      "rol_id" => $pJson['rol_id'] ?? 19,
-      "caja_id" => $pJson['caja_id'] ?? 1,
+      "codigo" => $codigo ? $codigo : null,
+      "barcode" => $barcode ? $barcode : null,
+      "categoria_ids" => $categoria_ids,
+      "descripcion" => $descripcion,
+      "unidad_medida_cod" => $pJson['unidad_medida_cod'],
+      "tipo_moneda_cod" => $pJson['tipo_moneda_cod'],
+      "precio_venta" => $pJson['precio_venta'],
+      "precio_costo" => $pJson['precio_costo'],
+      "impuesto_id_igv" => $pJson['impuesto_id_igv'],
+      "impuesto_id_icbper" => $pJson['impuesto_id_icbper'],
+      "inventariable" => $pJson['inventariable'],
+      "lotizable" => $pJson['lotizable'],
+      "stock" => $pJson['stock'],
+      "stock_min" => $pJson['stock_min'],
+      "imagen" => $pJson['imagen'],
     ];
     // Validacion
-    $this->validateCreateProducto($params);
-
-    $params["password"] = crypt($params['password'], $_ENV['SALT_PSW']);
-    unset($params["password_repeat"]);
+    // $this->validateCreateProducto($params);
 
     // Buscando duplicados
-    $count = Productos::countRecordsBy(["productoname" => $pJson['productoname']]);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['productoname'] . ", ya existe!", "warning");
-    if ($pJson['email']) {
-      $count = Productos::countRecordsBy(["email" => $pJson['email']]);
-      if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
-    }
+    $count = Productos::countRecordsBy(["descripcion" => $descripcion]);
+    if ($count) throwMiExcepcion("El producto: " . $descripcion . ", ya existe!", "warning");
 
     $lastId = Productos::createProducto($params);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
@@ -134,24 +140,36 @@ class ProductosController
 
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-
+    $codigo = trimSpaces($pJson['codigo']);
+    $barcode = trimSpaces($pJson['barcode']);
+    $categoria_ids = $pJson['categoria_ids'] ? ",".implode(",", $pJson['categoria_ids'])."," : "";
+    $descripcion = trimSpaces($pJson['descripcion']);
     $paramCampos = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "rol_id" => $pJson['rol_id'],
-      "caja_id" => $pJson['caja_id'],
+      "codigo" => $codigo ? $codigo : null,
+      "barcode" => $barcode ? $barcode : null,
+      "categoria_ids" => $categoria_ids,
+      "descripcion" => $descripcion,
+      "unidad_medida_cod" => $pJson['unidad_medida_cod'],
+      "tipo_moneda_cod" => $pJson['tipo_moneda_cod'],
+      "precio_venta" => $pJson['precio_venta'],
+      "precio_costo" => $pJson['precio_costo'],
+      "impuesto_id_igv" => $pJson['impuesto_id_igv'],
+      "impuesto_id_icbper" => $pJson['impuesto_id_icbper'],
+      "inventariable" => $pJson['inventariable'],
+      "lotizable" => $pJson['lotizable'],
+      "stock" => $pJson['stock'],
+      "stock_min" => $pJson['stock_min'],
+      "imagen" => $pJson['imagen'],
       "estado" => $pJson['estado'],
     ];
 
     // Validacion
-    $this->validateUpdateProducto($paramCampos);
+    // $this->validateUpdateProducto($paramCampos);
 
     // Buscando duplicados
     $exclude = ["id" => $pJson['id']];
-    $count = Productos::countRecordsBy(["productoname" => $pJson['productoname']], $exclude);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['productoname'] . ", ya existe!", "warning");
-    $count = Productos::countRecordsBy(["email" => $pJson['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
+    $count = Productos::countRecordsBy(["descripcion" => $descripcion], $exclude);
+    if ($count) throwMiExcepcion("El usuario: " . $descripcion . ", ya existe!", "warning");
 
     $paramWhere = ["id" => $pJson['id']];
 
@@ -164,6 +182,26 @@ class ProductosController
     $response['msg'] = "Registro actualizado";
     $response['content'] = $registro;
     return $response;
+  }
+
+  public function update_estado(){
+    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
+
+    $pJson = json_decode(file_get_contents('php://input'), true);
+    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+
+    $paramCampos = ["estado" => $pJson['estado']];
+    $paramWhere = ["id" => $pJson['id']];
+
+    $resp = Productos::updateProducto("productos", $paramCampos, $paramWhere);
+    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+    
+    $registro = Productos::getProducto($pJson['id']);
+
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['content'] = $registro;
+    return $response; 
   }
 
   public function delete_producto()

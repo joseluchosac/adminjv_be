@@ -95,7 +95,7 @@ class Productos
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
     return $record;
   }
-
+  
   static function getProductoBy($param){
     $sqlWhere = implode(" AND ", array_map(function($el){
       return "u.$el = :$el";
@@ -125,6 +125,16 @@ class Productos
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
     return $record;
   }
+
+  static function createProducto($params)
+  {
+    $sql = sqlInsert("productos", $params);
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($params);
+    $lastId = $dbh->lastInsertId();
+    return $lastId;
+  }
  
   static function updateProducto($table, $paramCampos, $paramWhere)
   {
@@ -137,15 +147,13 @@ class Productos
     return $resp;
   }
 
-  static function createProducto($params)
-  {
-    $sql = sqlInsert("productos", $params);
+  static function deleteProducto($params){
+    $sql = "DELETE FROM productos WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
-    $lastId = $dbh->lastInsertId();
-    // $resp = $stmt->rowCount();
-    return $lastId;
+    $resp = $stmt->rowCount();
+    return $resp;
   }
 
   static function countRecordsBy($equal, $exclude = []){
@@ -164,14 +172,6 @@ class Productos
     return $response;
   }
 
-  static function deleteProducto($params){
-    $sql = "DELETE FROM productos WHERE id = :id";
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($params);
-    $resp = $stmt->rowCount();
-    return $resp;
-  }
 
   // Metodos privados
   static private function num_regs($table, $sqlWhere, $bindWhere)
