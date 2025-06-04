@@ -170,6 +170,15 @@ class ConfigController
     return $resp;
   }
 
+  public function get_establecimiento(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $pJson = json_decode(file_get_contents('php://input'), true);
+    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $establecimiento = Config::getEstablecimiento($pJson['id']);
+    $resp["content"] = $establecimiento;
+    return $resp;
+  }
+
   public function get_series_establecimiento(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);

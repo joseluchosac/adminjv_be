@@ -6,7 +6,7 @@ class Productos
 
   static public function filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
-    $table = "productos";
+    $table = "productos_v";
 
     $sqlWhere = SqlWhere::and([
       SqlWhere::likeOr($paramWhere['paramLike']),
@@ -67,27 +67,33 @@ class Productos
 
   static function getProducto($id){
     $sql = "SELECT
-      id,
-      ifnull(codigo, '') as codigo,
-      ifnull(barcode,'') as barcode,
-      categoria_ids,
-      descripcion,
-      unidad_medida_cod,
-      tipo_moneda_cod,
-      precio_venta,
-      precio_costo,
-      impuesto_id_igv,
-      impuesto_id_icbper,
-      inventariable,
-      lotizable,
-      stock,
-      stock_min,
-      imagen,
-      estado,
-      created_at,
-      ifnull(updated_at, '') as updated_at
-      FROM productos
-      WHERE id = :id;
+      p.id,
+      ifnull(p.codigo, '') as codigo,
+      ifnull(p.barcode,'') as barcode,
+      p.categoria_ids,
+      p.descripcion,
+      ifnull(p.marca_id, 0) as marca_id,
+      ifnull(m.nombre, '') as marca,
+      ifnull(p.laboratorio_id, 0) as laboratorio_id,
+      ifnull(l.nombre, '') as laboratorio,
+      p.unidad_medida_cod,
+      p.tipo_moneda_cod,
+      p.precio_venta,
+      p.precio_costo,
+      p.impuesto_id_igv,
+      p.impuesto_id_icbper,
+      p.inventariable,
+      p.lotizable,
+      p.stock,
+      p.stock_min,
+      p.imagen,
+      p.estado,
+      p.created_at,
+      ifnull(p.updated_at, '') as updated_at
+      FROM productos p
+      LEFT JOIN marcas m ON p.marca_id = m.id 
+      LEFT JOIN laboratorios l ON p.laboratorio_id = l.id 
+      WHERE p.id = :id;
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

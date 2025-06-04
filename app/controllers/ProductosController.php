@@ -14,20 +14,16 @@ class ProductosController
     $campos = [
       'id',
       'codigo',
-      'barcode',
-      'categoria_ids',
       'descripcion',
-      'unidad_medida_cod',
-      'tipo_moneda_cod',
+      'marca_id',
+      'marca',
+      'laboratorio_id',
+      'laboratorio',
+      'categoria_ids',
+      'barcode',
       'precio_venta',
-      'precio_costo',
-      'impuesto_id_igv',
-      'impuesto_id_icbper',
-      'inventariable',
-      'lotizable',
       'stock',
-      'stock_min',
-      'imagen',
+      'unidad_medida_cod',
       'estado',
       'created_at',
       'updated_at',
@@ -83,6 +79,7 @@ class ProductosController
     $temp = substr($registro["categoria_ids"], 1, -1);
     $temp = array_map(function($el){return intval($el);},explode(",", $temp));
     $registro["categoria_ids"] = array_filter($temp);
+    // $registro['inventariable'] = $registro['inventariable'] ? true : false;
     $response["content"] = $registro;
     return $response;
   }
@@ -105,6 +102,8 @@ class ProductosController
       "barcode" => $barcode ? $barcode : null,
       "categoria_ids" => $categoria_ids,
       "descripcion" => $descripcion,
+      "marca_id" => $pJson['marca_id'],
+      "laboratorio_id" => $pJson['laboratorio_id'],
       "unidad_medida_cod" => $pJson['unidad_medida_cod'],
       "tipo_moneda_cod" => $pJson['tipo_moneda_cod'],
       "precio_venta" => $pJson['precio_venta'],
@@ -149,6 +148,8 @@ class ProductosController
       "barcode" => $barcode ? $barcode : null,
       "categoria_ids" => $categoria_ids,
       "descripcion" => $descripcion,
+      "marca_id" => $pJson['marca_id'],
+      "laboratorio_id" => $pJson['laboratorio_id'],
       "unidad_medida_cod" => $pJson['unidad_medida_cod'],
       "tipo_moneda_cod" => $pJson['tipo_moneda_cod'],
       "precio_venta" => $pJson['precio_venta'],

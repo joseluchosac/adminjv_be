@@ -118,22 +118,51 @@ class Config
 
   static function getEstablecimientos(){
     $sql = "SELECT
-        id,
-        tipo,
-        nombre,
-        direccion_sucursal,
-        direccion_almacen,
-        ubigeo_inei,
-        telefono,
-        email,
-        estado
-      FROM establecimientos
+        e.id,
+        e.codigo_establecimiento,
+        e.nombre,
+        e.direccion,
+        e.ubigeo_inei,
+        CONCAT(u.departamento, ', ', u.provincia, ', ', u.distrito) as distrito,
+        e.telefono,
+        e.email,
+        e.sucursal,
+        e.almacen,
+        e.estado
+      FROM establecimientos e
+      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
     ";
       $dbh = Conexion::conectar();
       $stmt = $dbh->prepare($sql);
       $stmt->execute();
       $establecimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
       return $establecimientos;
+  }
+
+  static function getEstablecimiento($id){
+    $sql = "SELECT
+        e.id,
+        e.codigo_establecimiento,
+        e.nombre,
+        e.direccion,
+        e.ubigeo_inei,
+        u.departamento,
+		    u.provincia,
+		    u.distrito,
+        e.telefono,
+        e.email,
+        e.sucursal,
+        e.almacen,
+        e.estado
+      FROM establecimientos e
+      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
+      WHERE e.id = :id
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["id" => $id]);
+    $establecimiento = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $establecimiento;
   }
 
   static function getSeriesEstablecimiento($establecimiento_id){
