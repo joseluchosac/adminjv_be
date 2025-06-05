@@ -5,7 +5,7 @@ class Ubigeos
 {
   static public function filterUbigeos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
-    $table = "ubigeos";
+    $table = "ubigeos_v";
 
     $sqlWhere = SqlWhere::and([
       SqlWhere::likeOr($paramWhere['paramLike']),

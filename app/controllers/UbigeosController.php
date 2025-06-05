@@ -11,9 +11,7 @@ class UbigeosController
     $campos = [
       'ubigeo_inei',
       'ubigeo_reniec',
-      'departamento',
-      'provincia',
-      'distrito',
+      'dis_prov_dep',
     ];
 
     $search = $pJson['search'] ? "%" . $pJson['search'] . "%" : "";
@@ -22,9 +20,7 @@ class UbigeosController
       "paramLike" => [
         'ubigeo_inei' => $search,
         // 'ubigeo_reniec' => $search,
-        'departamento' => $search,
-        'provincia' => $search,
-        'distrito' => $search,
+        'dis_prov_dep' => $search,
       ],
       "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [

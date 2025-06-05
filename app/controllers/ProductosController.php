@@ -86,7 +86,6 @@ class ProductosController
 
   public function create_producto()
   {
-    
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
     $pJson = json_decode(file_get_contents('php://input'), true);

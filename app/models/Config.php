@@ -116,55 +116,6 @@ class Config
     return $count;
   }
 
-  static function getEstablecimientos(){
-    $sql = "SELECT
-        e.id,
-        e.codigo_establecimiento,
-        e.nombre,
-        e.direccion,
-        e.ubigeo_inei,
-        CONCAT(u.departamento, ', ', u.provincia, ', ', u.distrito) as distrito,
-        e.telefono,
-        e.email,
-        e.sucursal,
-        e.almacen,
-        e.estado
-      FROM establecimientos e
-      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
-    ";
-      $dbh = Conexion::conectar();
-      $stmt = $dbh->prepare($sql);
-      $stmt->execute();
-      $establecimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      return $establecimientos;
-  }
-
-  static function getEstablecimiento($id){
-    $sql = "SELECT
-        e.id,
-        e.codigo_establecimiento,
-        e.nombre,
-        e.direccion,
-        e.ubigeo_inei,
-        u.departamento,
-		    u.provincia,
-		    u.distrito,
-        e.telefono,
-        e.email,
-        e.sucursal,
-        e.almacen,
-        e.estado
-      FROM establecimientos e
-      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
-      WHERE e.id = :id
-    ";
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute(["id" => $id]);
-    $establecimiento = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $establecimiento;
-  }
-
   static function getSeriesEstablecimiento($establecimiento_id){
     $sql = "SELECT 
         id,
@@ -183,5 +134,21 @@ class Config
     $stmt->execute(["establecimiento_id" => $establecimiento_id]);
     $seriesEstablecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $seriesEstablecimiento;
+  }
+
+  static function countRecords($table, $equal, $exclude = []){
+    $where = " WHERE " . array_keys($equal)[0] . " = :". array_keys($equal)[0];
+    if($exclude){
+      $where .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
+    }
+    $sql = "SELECT COUNT(*) AS count FROM $table" . $where;
+    $param = array_merge($equal, $exclude);
+
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($param);
+    $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+    $response = $registro['count'];
+    return $response;
   }
 }

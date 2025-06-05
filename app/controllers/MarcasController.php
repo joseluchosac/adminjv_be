@@ -51,6 +51,7 @@ class MarcasController
     unset($res["previous"]);
     return $res;
   }
+  
   public function get_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
