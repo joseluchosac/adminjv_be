@@ -2,9 +2,6 @@
 require_once('../../app/models/Clientes.php');
 require_once('../../app/services/Services.php');
 
-use Firebase\JWT\JWT;
-use Valitron\Validator;
-
 class ClientesController
 {
   public function filter_clientes($isPaginated = true)
@@ -96,7 +93,7 @@ class ClientesController
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Cliente registrado";
-    $response['registro'] = $registro;
+    $response['content'] = $registro;
     return $response;
   }
 
@@ -139,7 +136,7 @@ class ClientesController
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $registro;
+    $response['content'] = $registro;
     return $response;
   }
 
@@ -167,7 +164,8 @@ class ClientesController
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $registro = Clientes::getCliente($pJson['id']);
-    return $registro;
+    $res['content'] = $registro;
+    return $res;
   }
 
   public function consultar_nro_documento()
@@ -180,54 +178,7 @@ class ClientesController
     $tipo_documento_cod = $pJson["tipo_documento_cod"];
     $nro_documento = trim($pJson["nro_documento"]);
     $data = Services::consultarNroDoc($nro_documento, $tipo_documento_cod);
-    return $data;
+    $res['content'] = $data;
+    return $res;
   }
-
-  // private function validateCreateUser($params){
-  //   $v = new Validator($params);
-  //   $v->addRule('iguales', function ($field, $value, array $params, array $fields) {
-  //     return $fields['password'] === $fields["password_repeat"];
-  //   });
-  //   $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
-  //     return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
-  //   });
-  //   $v->rule('required', 'nombres')->message('El nombre es requerido');
-  //   $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
-  //   $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
-  //   $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
-  //   $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
-  //   $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
-  //   $v->rule('required', 'username')->message('El usuario es requerido');
-  //   $v->rule('lengthMin', 'username', 3)->message('El usuario debe tener al menos 3 caracteres.');
-  //   $v->rule('lengthMax', 'username', 50)->message('El usuario no puede exceder los 50 caracteres.');
-  //   $v->rule('sinEspacios', 'username')->message('El usuario no puede tener espacios');
-  //   $v->rule('email', 'email')->message('Ingrese un formato de email válido');
-  //   $v->rule('required', 'password')->message('La contraseña es obligatoria');
-  //   $v->rule('regex', 'password', '/^[A-Za-z\d@$!%*?&]{6,}$/')->message('La contraseña debe tener al menos 6 caracteres, sin espacios');
-  //   $v->rule('iguales', 'password')->message('Los passwords no son iguales');;
-  //   if (!$v->validate()) {
-  //     foreach ($v->errors() as $campo => $errores) {
-  //       foreach ($errores as $error) {
-  //         throwMiExcepcion($error, "warning", 200);
-  //       }
-  //     }
-  //   }
-  // }
-
-  // private function validateUpdateUser($params){
-  //   $v = new Validator($params);
-  //   $v->rule('required', 'nombres')->message('El nombre es requerido');
-  //   $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
-  //   $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
-  //   $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
-  //   $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
-  //   $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
-  //   if (!$v->validate()) {
-  //     foreach ($v->errors() as $campo => $errores) {
-  //       foreach ($errores as $error) {
-  //         throwMiExcepcion($error, "warning", 200);
-  //       }
-  //     }
-  //   }
-  // }
 }

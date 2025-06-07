@@ -172,9 +172,10 @@ class UsersController
     $response['error'] = false;
     $response['msg'] = "Registro satisfactorio";
     $response['msgType'] = "success";
-    $response['token'] = $jwt;
-    $response['registro'] = $params;
-    $response['modulosSesion'] = $modulosSesion;
+    $response['content']['token'] = $jwt;
+    $response['content']['registro'] = $params;
+    $response['content']['modulosSesion'] = $modulosSesion;
+    
     return $response;
   }
 
@@ -269,10 +270,10 @@ class UsersController
     $resp = Users::deleteUser($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
-    $response['content'] = null;
     $response['error'] = "false";
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";
+    $response['content'] = null;
     return $response;
   }
 
@@ -293,7 +294,7 @@ class UsersController
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "El usuario " . $pJson['username'] . " tiene una cuenta de correo asociada";
-    $response['email'] = $userByUsername["email"];
+    $response['content'] = $userByUsername["email"];
     return $response;
   }
 
@@ -401,10 +402,10 @@ class UsersController
     $response['error'] = false;
     $response['msg'] = "Usuario logueado";
     $response['msgType'] = "success";
-    $response['token'] = $jwt;
-    $response['registro'] = $registro;
-    $response['empresaSession'] = $empresaSession;
-    $response['modulosSesion'] = $modulosSesion;
+    $response['content']['token'] = $jwt;
+    $response['content']['registro'] = $registro;
+    $response['content']['empresaSession'] = $empresaSession;
+    $response['content']['modulosSesion'] = $modulosSesion;
 
     return $response;
   }
@@ -420,8 +421,8 @@ class UsersController
     $response['msgType'] = "success";
     $response['error'] = false;
     $response['msg'] = "Usuario autorizado";
-    $response['registro'] = $userSession;
-    $response['empresaSession'] = $empresaSession;
+    $response['content']['registro'] = $userSession;
+    $response['content']['empresaSession'] = $empresaSession;
     return $response;
   }
 

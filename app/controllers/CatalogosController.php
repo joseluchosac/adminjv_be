@@ -110,7 +110,9 @@ class CatalogosController
     ];
     $catalogos = Catalogos::getCatalogos($tablas);
     // $catalogos['categorias'] = generateTree($catalogos['categorias']);
-    return $catalogos;
+    $resp['error'] = false;
+    $resp['content'] = $catalogos;
+    return $resp;
   }
 
   public function create_tipo_comprobante(){
@@ -137,7 +139,7 @@ class CatalogosController
     $registros = Catalogos::getCatalogos($tablas);
     $response['msgType'] = "success";
     $response['msg'] = "Registro creado";
-    $response['registro'] = $registros["tipos_comprobante"];
+    $response['content'] = $registros["tipos_comprobante"];
     return $response;
   }
 
@@ -170,7 +172,7 @@ class CatalogosController
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $registros["tipos_comprobante"];
+    $response['content'] = $registros["tipos_comprobante"];
     return $response;
   }
 
@@ -184,22 +186,24 @@ class CatalogosController
     $count = Catalogos::deleteTipoComprobante($params);
     if (!$count) throwMiExcepcion("Ningún registro eliminado", "warning");
 
+    $response['content']['id'] = $pJson['id'];
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";
-    $response['id'] = $pJson['id'];
     return $response;
   }
 
   public function get_provincias(){
     $params = json_decode(file_get_contents('php://input'), true);
     $provincias = Catalogos::getProvincias($params['departamento']);
-    return $provincias;
+    $res['content'] = $provincias;
+    return $res;
   }
 
   public function get_distritos(){
     $params = json_decode(file_get_contents('php://input'), true);
     $distritos = Catalogos::getDistritos($params['departamento'], $params['provincia']);
-    return $distritos;
+    $res['content'] = $distritos;
+    return $res;
   }
 }
 

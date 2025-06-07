@@ -22,6 +22,7 @@ class Middleware{
         case 'users':{
           if($route['accion'] == 'sign_in') break;
           if($route['accion'] == 'sign_up') break;
+          if($route['accion'] == 'get_email_by_username') break; // Para recuperar cuenta
         }
         case 'clientes':{
           if($route['accion'] == 'prueba') break;

@@ -68,7 +68,7 @@ class LaboratoriosController
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Laboratorio registrado";
-    $response['registro'] = $registro;
+    $response['content'] = $registro;
     return $response;
   }
 

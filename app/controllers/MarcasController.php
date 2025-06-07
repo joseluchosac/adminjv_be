@@ -84,7 +84,7 @@ class MarcasController
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Marca registrado";
-    $response['registro'] = $registro;
+    $response['content'] = $registro;
     return $response;
   }
 

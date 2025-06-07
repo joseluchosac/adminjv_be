@@ -14,14 +14,14 @@ class CategoriasController
     $orders = [
       ["field_name" => "orden", "order_dir" => "asc"],
     ];
-    $registros = Categorias::getCategorias($campos, $orders);
-    return $registros;
+    $resp['content'] = Categorias::getCategorias($campos, $orders);
+    return $resp;
   }
 
-  public function get_categorias_tree(){
-    $response['data']=generateTree($this->get_categorias());
-    return $response;
-  }
+  // public function get_categorias_tree(){
+  //   $response['data']=generateTree($this->get_categorias());
+  //   return $response;
+  // }
 
   public function sort_categorias()
   {
@@ -32,7 +32,7 @@ class CategoriasController
     Categorias::sortCategorias($params);
 
     $_SERVER["REQUEST_METHOD"] = "POST";
-    $categorias_tree = generateTree($this->get_categorias());
+    $categorias_tree = generateTree($this->get_categorias()['content']);
 
     $response['error'] = false;
     $response['msgType'] = "success";
@@ -64,7 +64,7 @@ class CategoriasController
     $lastId = Categorias::createCategoria( $params );
     if(!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
 
-    $categorias_tree = generateTree($this->get_categorias());
+    $categorias_tree = generateTree($this->get_categorias()['content']);
     $response['msgType'] = "success";
     $response['msg'] = "Módulo registrado";
     $response['content'] = $categorias_tree;
@@ -94,7 +94,7 @@ class CategoriasController
     $resp = Categorias::updateCategoria( $params );
     if(!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     $_SERVER["REQUEST_METHOD"] = "POST";
-    $categorias_tree = generateTree($this->get_categorias());
+    $categorias_tree = generateTree($this->get_categorias()['content']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
@@ -120,7 +120,7 @@ class CategoriasController
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $_SERVER["REQUEST_METHOD"] = "POST";
-    $categorias_tree = generateTree($this->get_categorias());
+    $categorias_tree = generateTree($this->get_categorias()['content']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";

@@ -79,7 +79,8 @@ class ProductosController
     $temp = substr($registro["categoria_ids"], 1, -1);
     $temp = array_map(function($el){return intval($el);},explode(",", $temp));
     $registro["categoria_ids"] = array_filter($temp);
-    // $registro['inventariable'] = $registro['inventariable'] ? true : false;
+    $registro['inventariable'] = boolval($registro['inventariable']);
+    $registro['lotizable'] = boolval($registro['lotizable']);
     $response["content"] = $registro;
     return $response;
   }
