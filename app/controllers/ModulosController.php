@@ -122,12 +122,12 @@ class ModulosController
     $params = [
       "id" => $pJson['id'],
     ];
-    $resp = Modulos::deleteModulo( $params );
-    if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
+    $deleteModulo = Modulos::deleteModulo( $params );
+    if(!$deleteModulo) throwMiExcepcion("Ningún registro eliminado", "warning");
 
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro eliminado";
-    return $response;
+    $res['msgType'] = "success";
+    $res['msg'] = "Registro eliminado";
+    return $res;
   }
 
   public function sort_modulos()
@@ -136,19 +136,18 @@ class ModulosController
 
     $params = json_decode(file_get_contents('php://input'), true);
     Modulos::sortModulos($params);
-    $response['error'] = false;
-    $response['msgType'] = "success";
-    $response['msg'] = "Módulos reordenados";
-    return $response;
+    $res['error'] = false;
+    $res['msgType'] = "success";
+    $res['msg'] = "Módulos reordenados";
+    return $res;
   }
 
   public function get_modulo_rol()
   {
-    // $_SERVER['HTTP_ORIGIN'] ->http://localhost:5173
     setcookie("nombre", "Panchito",[
       'expires' => time() + 60*20,
       'path' => '/',
-      // 'domain' => 'http://localhost:5173', // Dominio del backend (puedes usar un subdominio comodín)
+      // 'domain' => 'http://localhost:5173', // Dominio del backend (se puede usar un subdominio comodín)
       'secure' => true, // Solo enviar la cookie sobre HTTPS
       // 'httponly' => true, // No accesible desde JavaScript
       'samesite' => 'None', // Permitir cookies en solicitudes entre dominios
@@ -157,17 +156,20 @@ class ModulosController
     $pJson = json_decode(file_get_contents('php://input'), true);
     $rol_id = $pJson["rol_id"];
     if($rol_id){
-      $response = Modulos::getModuloRol($rol_id);
+      $res['content'] = Modulos::getModuloRol($rol_id);
     }else{
-      $response = null;
+      $res['msg'] = "No se obtuvieron datos";
+      $res['msgType'] = "info";
+      $res['content'] = null;
     }
-    return $response;
+    return $res;
   }
 
   public function get_modulos_sesion()
   {
     $modulosSesion = Modulos::getModulosSesion();
-    return $modulosSesion;
+    $res['content'] = $modulosSesion;
+    return $res;
   }
 
   public function update_modulos_roles()
@@ -177,10 +179,10 @@ class ModulosController
     if(!$rol_id) throwMiExcepcion("No se guardaron los cambios", "warning", 200);
     $modulos = $pJson["modulos"];
     Modulos::updateModulosRoles($rol_id, $modulos);
-    $response['error'] = false;
-    $response['msgType'] = "success";
-    $response['msg'] = "Modulos del rol actualizados";
-    return $response;
+    $res['error'] = false;
+    $res['msgType'] = "success";
+    $res['msg'] = "Modulos del rol actualizados";
+    return $res;
   }
 
 }

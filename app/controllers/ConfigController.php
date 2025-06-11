@@ -164,140 +164,141 @@ class ConfigController
     return $response;
   }
 
-  public function get_establecimientos(){
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $resp = Establecimientos::getEstablecimientos();
-    return $resp;
-  }
+  // public function get_establecimientos(){
+  //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+  //   $establecimientos = Establecimientos::getEstablecimientos();
+  //   $resp['content'] = $establecimientos;
+  //   return $resp;
+  // }
 
-  public function get_establecimiento(){
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-    $establecimiento = Establecimientos::getEstablecimiento($pJson['id']);
-    $resp["content"] = $establecimiento;
-    return $resp;
-  }
+  // public function get_establecimiento(){
+  //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+  //   $pJson = json_decode(file_get_contents('php://input'), true);
+  //   if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+  //   $establecimiento = Establecimientos::getEstablecimiento($pJson['id']);
+  //   $resp["content"] = $establecimiento;
+  //   return $resp;
+  // }
 
-  public function create_establecimiento(){
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
+  // public function create_establecimiento(){
+  //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-    $codigo_establecimiento = trimSpaces($pJson['codigo_establecimiento']);
-    $nombre = trimSpaces($pJson['nombre']);
-    $params = [
-      "codigo_establecimiento" => $codigo_establecimiento ? $codigo_establecimiento : null,
-      "nombre" => $nombre,
-      "direccion" => trimSpaces($pJson['direccion']),
-      "telefono" => trimSpaces($pJson['telefono']),
-      "email" => trimSpaces($pJson['email']),
-      "ubigeo_inei" => $pJson['ubigeo_inei'],
-      "almacen" => $pJson['almacen'],
-      "sucursal" => $pJson['sucursal'],
-    ];
-    // Validacion
-    //$this->validateCreateUser($params);
+  //   $pJson = json_decode(file_get_contents('php://input'), true);
+  //   if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+  //   $codigo_establecimiento = trimSpaces($pJson['codigo_establecimiento']);
+  //   $nombre = trimSpaces($pJson['nombre']);
+  //   $params = [
+  //     "codigo_establecimiento" => $codigo_establecimiento ? $codigo_establecimiento : null,
+  //     "nombre" => $nombre,
+  //     "direccion" => trimSpaces($pJson['direccion']),
+  //     "telefono" => trimSpaces($pJson['telefono']),
+  //     "email" => trimSpaces($pJson['email']),
+  //     "ubigeo_inei" => $pJson['ubigeo_inei'],
+  //     "almacen" => $pJson['almacen'],
+  //     "sucursal" => $pJson['sucursal'],
+  //   ];
+  //   // Validacion
+  //   //$this->validateCreateUser($params);
 
-    // Buscando duplicados
-    $count = Config::countRecords("establecimientos", ["nombre" => $nombre]);
-    if ($count) throwMiExcepcion("El nombre del establecimiento: " . $nombre . ", ya existe!", "warning");
+  //   // Buscando duplicados
+  //   $count = Config::countRecords("establecimientos", ["nombre" => $nombre]);
+  //   if ($count) throwMiExcepcion("El nombre del establecimiento: " . $nombre . ", ya existe!", "warning");
 
-    $lastId = Establecimientos::createEstablecimiento($params);
-    if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
-    $registro = Establecimientos::getestablecimiento($lastId);
-    $response['error'] = false;
-    $response['msgType'] = "success";
-    $response['msg'] = "Marca registrado";
-    $response['content'] = $registro;
-    return $response;
-  }
+  //   $lastId = Establecimientos::createEstablecimiento($params);
+  //   if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
+  //   $registro = Establecimientos::getestablecimiento($lastId);
+  //   $response['error'] = false;
+  //   $response['msgType'] = "success";
+  //   $response['msg'] = "Marca registrado";
+  //   $response['content'] = $registro;
+  //   return $response;
+  // }
 
-  public function update_establecimiento()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
+  // public function update_establecimiento()
+  // {
+  //   if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-    $codigo_establecimiento = trimSpaces($pJson['codigo_establecimiento']);
-    $nombre = trimSpaces($pJson['nombre']);
-    $paramCampos = [
-      "codigo_establecimiento" => $codigo_establecimiento ? $codigo_establecimiento : null,
-      "nombre" => $nombre,
-      "direccion" => trimSpaces($pJson['direccion']),
-      "telefono" => trimSpaces($pJson['telefono']),
-      "email" => trimSpaces($pJson['email']),
-      "ubigeo_inei" => $pJson['ubigeo_inei'],
-      "almacen" => $pJson['almacen'],
-      "sucursal" => $pJson['sucursal'],
-    ];
+  //   $pJson = json_decode(file_get_contents('php://input'), true);
+  //   if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+  //   $codigo_establecimiento = trimSpaces($pJson['codigo_establecimiento']);
+  //   $nombre = trimSpaces($pJson['nombre']);
+  //   $paramCampos = [
+  //     "codigo_establecimiento" => $codigo_establecimiento ? $codigo_establecimiento : null,
+  //     "nombre" => $nombre,
+  //     "direccion" => trimSpaces($pJson['direccion']),
+  //     "telefono" => trimSpaces($pJson['telefono']),
+  //     "email" => trimSpaces($pJson['email']),
+  //     "ubigeo_inei" => $pJson['ubigeo_inei'],
+  //     "almacen" => $pJson['almacen'],
+  //     "sucursal" => $pJson['sucursal'],
+  //   ];
 
-    // Validacion
-    // $this->validateUpdateProducto($paramCampos);
+  //   // Validacion
+  //   // $this->validateUpdateProducto($paramCampos);
 
-    // Buscando duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Config::countRecords("establecimientos", ["nombre" => $nombre], $exclude);
-    if ($count) throwMiExcepcion("El nombre del establecimiento: " . $nombre . ", ya existe!", "warning");
+  //   // Buscando duplicados
+  //   $exclude = ["id" => $pJson['id']];
+  //   $count = Config::countRecords("establecimientos", ["nombre" => $nombre], $exclude);
+  //   if ($count) throwMiExcepcion("El nombre del establecimiento: " . $nombre . ", ya existe!", "warning");
 
-    $paramWhere = ["id" => $pJson['id']];
+  //   $paramWhere = ["id" => $pJson['id']];
 
-    $resp = Establecimientos::updateEstablecimiento($paramCampos, $paramWhere);
-    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+  //   $resp = Establecimientos::updateEstablecimiento($paramCampos, $paramWhere);
+  //   if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    $registro = Establecimientos::getEstablecimiento($pJson['id']);
+  //   $registro = Establecimientos::getEstablecimiento($pJson['id']);
 
-    $response['error'] = false;
-    $response['msg'] = "Registro actualizado";
-    $response['msgType'] = "success";
-    $response['content'] = $registro;
-    return $response;
-  }
+  //   $response['error'] = false;
+  //   $response['msg'] = "Registro actualizado";
+  //   $response['msgType'] = "success";
+  //   $response['content'] = $registro;
+  //   return $response;
+  // }
 
-  public function update_estado_establecimiento(){
-    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
+  // public function update_estado_establecimiento(){
+  //   if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+  //   $pJson = json_decode(file_get_contents('php://input'), true);
+  //   if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
-    $paramCampos = ["estado" => $pJson['estado']];
-    $paramWhere = ["id" => $pJson['id']];
+  //   $paramCampos = ["estado" => $pJson['estado']];
+  //   $paramWhere = ["id" => $pJson['id']];
 
-    $resp = Establecimientos::updateEstablecimiento($paramCampos, $paramWhere);
-    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+  //   $resp = Establecimientos::updateEstablecimiento($paramCampos, $paramWhere);
+  //   if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    $registro = Establecimientos::getEstablecimiento($pJson['id']);
+  //   $registro = Establecimientos::getEstablecimiento($pJson['id']);
 
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro actualizado";
-    $response['content'] = $registro;
-    return $response; 
-  }
+  //   $response['msgType'] = "success";
+  //   $response['msg'] = "Registro actualizado";
+  //   $response['content'] = $registro;
+  //   return $response; 
+  // }
 
-  public function delete_Establecimiento()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+  // public function delete_Establecimiento()
+  // {
+  //   if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
+  //   $pJson = json_decode(file_get_contents('php://input'), true);
+  //   if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $params = ["id" => $pJson['id']];
-    $resp = Establecimientos::deleteEstablecimiento($params);
-    if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
+  //   $params = ["id" => $pJson['id']];
+  //   $resp = Establecimientos::deleteEstablecimiento($params);
+  //   if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
-    $response['content'] = null;
-    $response['error'] = "false";
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro eliminado";
-    return $response;
-  }
+  //   $response['content'] = null;
+  //   $response['error'] = "false";
+  //   $response['msgType'] = "success";
+  //   $response['msg'] = "Registro eliminado";
+  //   return $response;
+  // }
 
-  public function get_series_establecimiento(){
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+  // public function get_series_establecimiento(){
+  //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+  //   $pJson = json_decode(file_get_contents('php://input'), true);
+  //   if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
-    $resp = Config::getSeriesEstablecimiento($pJson['establecimiento_id']);
-    return $resp;
-  }
+  //   $resp = Config::getSeriesEstablecimiento($pJson['establecimiento_id']);
+  //   return $resp;
+  // }
 }
 

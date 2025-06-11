@@ -4,6 +4,18 @@ require_once('../../app/models/Roles.php');
 
 class RolesController
 {
+  public function get_roles(){
+    $campos = [
+      "id",
+      "rol",
+      "estado",
+    ];
+
+    $roles = Roles::getRoles($campos, null);
+    $resp['content'] = $roles;
+    return $resp;
+  }
+
   public function create_rol()
   {
     if($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
@@ -25,13 +37,13 @@ class RolesController
     $lastId = Roles::createRol( $params );
     if(!$lastId) throwMiExcepcion("Ningún registro ingresado", "warning");
 
-    $registro = Roles::getRol($lastId);
-    $response['error'] = false;
-    $response['msgType'] = "success";
-    $response['msg'] = "Rol registrado";
-    $response['accion'] = "create";
-    $response['rol'] = $registro;
-    return $response;
+    $roles = $this->get_roles()['content'];
+
+    $res['error'] = false;
+    $res['msgType'] = "success";
+    $res['msg'] = "Rol registrado";
+    $res['content'] = $roles;
+    return $res;
   }
   
   public function update_rol()
@@ -56,14 +68,13 @@ class RolesController
     $resp = Roles::updateRol( $params );
     if(!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $registro = Roles::getRol($params['id']);
+    $roles = $this->get_roles()['content'];
 
-    $response['error'] = false;
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro actualizado";
-    $response['accion'] = "update";
-    $response['rol'] = $registro;
-    return $response;
+    $res['error'] = false;
+    $res['msgType'] = "success";
+    $res['msg'] = "Registro actualizado";
+    $res['content'] = $roles;
+    return $res;
   }
 
   public function delete_rol()
@@ -84,13 +95,13 @@ class RolesController
     ];
     $resp = Roles::deleteRol( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
+    $roles = $this->get_roles()['content'];
 
-    $response['error'] = false;
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro eliminado";
-    $response['accion'] = "delete";
-    $response['rol_id'] = intval($params["id"]);
-    return $response;
+    $res['error'] = false;
+    $res['msgType'] = "success";
+    $res['msg'] = "Registro eliminado";
+    $res['content'] = $roles;
+    return $res;
   }
 }
 
