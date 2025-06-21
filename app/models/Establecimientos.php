@@ -60,63 +60,28 @@ class Establecimientos
     return $rows['num_regs']; 
   }
 
-
-  
-  // Evaluar
-  static function getEstablecimientos(){
+  static function getSucursal($id){
     $sql = "SELECT
-        e.id,
-        e.codigo_establecimiento,
-        e.nombre,
-        e.direccion,
-        e.ubigeo_inei,
-        CONCAT(u.distrito, ', ', u.provincia, ', ', u.departamento) as dis_prov_dep,
-        e.telefono,
-        e.email,
-        e.sucursal,
-        e.almacen,
-        e.estado
-      FROM establecimientos e
-      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
-    ";
-      $dbh = Conexion::conectar();
-      $stmt = $dbh->prepare($sql);
-      $stmt->execute();
-      $establecimientos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-      foreach ($establecimientos as $key => $value) {
-        $establecimientos[$key]["sucursal"] = boolval($value['sucursal']);
-        $establecimientos[$key]["almacen"] = boolval($value['almacen']);
-      }
-      return $establecimientos;
-  }
-
-  static function getEstablecimiento($id){
-    $sql = "SELECT
-        e.id,
-        e.codigo_establecimiento,
-        e.nombre,
-        e.direccion,
-        e.ubigeo_inei,
-        u.departamento,
-		    u.provincia,
-		    u.distrito,
-        e.telefono,
-        e.email,
-        e.sucursal,
-        e.almacen,
-        e.estado
-      FROM establecimientos e
-      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
-      WHERE e.id = :id
+      id,
+      codigo,
+      descripcion,
+      direccion,
+      ubigeo_inei,
+      dis_prov_dep,
+      telefono,
+      email,
+      estado
+      FROM sucursales_v
+      WHERE id = :id
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute(["id" => $id]);
-    $establecimiento = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $establecimiento;
+    $sucursal = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $sucursal;
   }
-
-  static function createEstablecimiento($params)
+  
+  static function createSucursal($params)
   {
     $sql = sqlInsert("establecimientos", $params);
     $dbh = Conexion::conectar();
@@ -126,23 +91,61 @@ class Establecimientos
     return $lastId;
   }
 
-  static function updateEstablecimiento($paramCampos, $paramWhere)
+  static function updateSucursal($paramCampos, $paramWhere)
   {
     $sql = sqlUpdate("establecimientos", $paramCampos, $paramWhere);
     $params = array_merge($paramCampos, $paramWhere);
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
-    $resp = $stmt->rowCount();
-    return $resp;
+    $count = $stmt->rowCount();
+    return $count;
   }
 
-  static function deleteEstablecimiento($params){
+
+  static function countRecordsBy($equal, $exclude = []){
+    $where = " WHERE " . array_keys($equal)[0] . " = :". array_keys($equal)[0];
+    if($exclude){
+      $where .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
+    }
+    $sql = "SELECT COUNT(*) AS count FROM establecimientos" . $where;
+    $param = array_merge($equal, $exclude);
+
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($param);
+    $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+    $response = $registro['count'];
+    return $response;
+  }
+
+
+  static function deleteSucursal($params){
     $sql = "DELETE FROM establecimientos WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
-    $resp = $stmt->rowCount();
-    return $resp;
+    $count = $stmt->rowCount();
+    return $count;
+  }
+
+  static function countEstablecimientos($equal, $exclude = []){
+    $sqlWhere = SqlWhere::and([SqlWhere::equalAnd($equal)]);
+    $bindWhere = SqlWhere::arrMerge(["equal" => $equal]);
+
+    if($exclude){
+      $sqlWhere .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
+    }
+
+    $sql = "SELECT COUNT(*) AS count FROM establecimientos" . $sqlWhere;
+    $param = array_merge($bindWhere, $exclude);
+
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($param);
+    $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+    $response = $registro['count'];
+
+    return $response;
   }
 }

@@ -625,3 +625,15 @@ function flattenTree($tree, $padre_id = 0, &$resultado = []) {
   
   return $resultado;
 }
+
+// ✅ FUNCION QUE GENERA UNA CADENA ALFANUMERICA
+function generarCadenaAlfanumerica($longitud = 10) {
+  $caracteres = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  $cadenaAleatoria = '';
+  for ($i = 0; $i < $longitud; $i++) {
+    $indice = rand(0, strlen($caracteres) - 1);
+    $cadenaAleatoria .= $caracteres[$indice];
+  }
+  return $cadenaAleatoria;
+}
+

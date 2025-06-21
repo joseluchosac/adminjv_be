@@ -116,24 +116,30 @@ class Config
     return $count;
   }
 
-  static function getSeriesEstablecimiento($establecimiento_id){
-    $sql = "SELECT 
-        id,
-        establecimiento_id,
-        descripcion,
-        serie,
-        serie_prefix,
-        serie_suffix,
-        correlativo,
-        estado
-      FROM series
-      WHERE establecimiento_id = :establecimiento_id
+  static function registerTerminal($params)
+  {
+    $sql = sqlInsert("terminales", $params);
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($params);
+    $lastId = $dbh->lastInsertId();
+    return $lastId;
+  }
+
+  static function getTerminal($nombre){
+    $sql = "SELECT
+      id,
+      nombre,
+      descripcion,
+      establecimiento_id
+      FROM terminales
+      WHERE nombre = :nombre
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute(["establecimiento_id" => $establecimiento_id]);
-    $seriesEstablecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $seriesEstablecimiento;
+    $stmt->execute(["nombre"=>$nombre]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $data;
   }
 
   static function countRecords($table, $equal, $exclude = []){
@@ -149,6 +155,24 @@ class Config
     $stmt->execute($param);
     $registro = $stmt->fetch(PDO::FETCH_ASSOC);
     $response = $registro['count'];
+    return $response;
+  }
+
+  static function countTerminales($equal, $exclude = []){
+    $sqlWhere = SqlWhere::and([SqlWhere::equalAnd($equal)]);
+    $bindWhere = SqlWhere::arrMerge(["equal" => $equal]);
+    if($exclude){
+      $sqlWhere .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
+    }
+    $sql = "SELECT COUNT(*) AS count FROM terminales" . $sqlWhere;
+    $param = array_merge($bindWhere, $exclude);
+
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($param);
+    $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+    $response = $registro['count'];
+
     return $response;
   }
 }

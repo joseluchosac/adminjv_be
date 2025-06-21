@@ -1,12 +1,12 @@
 <?php
 require_once("Conexion.php");
 
-class Productos
+class Movimientos
 {
 
-  static public function filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
+  static public function filterMovimientos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
-    $table = "productos_v";
+    $table = "movimientos";
 
     $sqlWhere = SqlWhere::and([
       SqlWhere::likeOr($paramWhere['paramLike']),
@@ -49,7 +49,7 @@ class Productos
     return $response;
   }
 
-  static function getProductos($tabla, $campos, $whereEquals = null)
+  static function getMovimientos($tabla, $campos, $whereEquals = null)
   {
     $sql = "SELECT " . implode(", ", $campos) . " FROM $tabla";
 
@@ -65,7 +65,7 @@ class Productos
     return $records;
   }
 
-  static function getProducto($id){
+  static function getMovimiento($id){
     $sql = "SELECT
       p.id,
       ifnull(p.codigo, '') as codigo,
@@ -90,7 +90,7 @@ class Productos
       p.estado,
       p.created_at,
       ifnull(p.updated_at, '') as updated_at
-      FROM productos p
+      FROM movimientos p
       LEFT JOIN marcas m ON p.marca_id = m.id 
       LEFT JOIN laboratorios l ON p.laboratorio_id = l.id 
       WHERE p.id = :id;
@@ -102,47 +102,81 @@ class Productos
     return $record;
   }
   
-  static function getProductoBy($paramWhere){
+  static function getMovimientoBy($param){
     $sqlWhere = implode(" AND ", array_map(function($el){
-      return "p.$el = :$el";
-    },array_keys($paramWhere)));
+      return "u.$el = :$el";
+    },array_keys($param)));
     $sqlWhere = $sqlWhere ? " WHERE " . $sqlWhere : "";
     $sql = "SELECT
-      p.id,
-      ifnull(p.codigo, '') as codigo,
-      ifnull(p.barcode,'') as barcode,
-      p.descripcion,
-      ifnull(m.nombre, '') as marca,
-      ifnull(l.nombre, '') as laboratorio,
-      p.unidad_medida_cod,
-      p.precio_costo,
-      p.inventariable,
-      p.imagen,
-      p.created_at,
-      ifnull(p.updated_at, '') as updated_at
-      FROM productos p
-      LEFT JOIN marcas m ON p.marca_id = m.id 
-      LEFT JOIN laboratorios l ON p.laboratorio_id = l.id 
+        u.id,
+        u.nombres,
+        u.apellidos,
+        u.movimientoname,
+        ifnull(u.email,'') AS email,
+        u.rol_id,
+        r.rol,
+        u.caja_id,
+        c.descripcion AS caja,
+        u.estado,
+        u.created_at,
+        ifnull(u.updated_at, '') AS updated_at
+      FROM movimientos u
+      LEFT JOIN roles r ON u.rol_id = r.id
+      LEFT JOIN cajas c ON u.caja_id = c.id
       $sqlWhere;
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute($paramWhere);
+    $stmt->execute($param);
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
     return $record;
   }
 
-  static function createProducto($params)
+  static function createMovimiento($paramCampos, $paramCamposDetalle, $paramInventarios)
   {
-    $sql = sqlInsert("productos", $params);
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($params);
-    $lastId = $dbh->lastInsertId();
-    return $lastId;
+    try {
+      $sql = sqlInsert("movimientos", $paramCampos);
+      $sqlDetalle = sqlInsert("movimientos_detalle", $paramCamposDetalle[0]);
+      $sqlUpdateCorrelativo = "UPDATE series 
+        SET correlativo = :correlativo
+        WHERE establecimiento_id = :establecimiento_id
+          AND serie = :serie
+      ";
+      $sqlInventarios = sqlInsert("inventarios", $paramInventarios[0]);
+
+      $dbh = Conexion::conectar();
+      $dbh->beginTransaction();
+      // Insertando a movimientos
+      $stmt = $dbh->prepare($sql);
+      $stmt->execute($paramCampos);
+      $lastId = $dbh->lastInsertId();
+      // Insertando a movimientos_detalle
+      $stmt = $dbh->prepare($sqlDetalle);
+      foreach ($paramCamposDetalle as $fila) {
+        $fila['movimiento_id'] = $lastId;
+        $stmt->execute($fila);
+      }
+      // Actualizando el correlativo
+      $stmt = $dbh->prepare($sqlUpdateCorrelativo);
+      $stmt->execute([
+        'correlativo' => intval($paramCampos['correlativo']) + 1,
+        'establecimiento_id' => $paramCampos['establecimiento_id'],
+        'serie' => $paramCampos['serie']
+      ]);
+      // Insertando a Inventarios
+      $stmt = $dbh->prepare($sqlInventarios);
+      foreach ($paramInventarios as $fila) {
+        $stmt->execute($fila);
+      }
+      $dbh->commit();
+      return $lastId;
+    } catch (PDOException $e) {
+      $dbh->rollBack();
+      throwMiExcepcion($e->getMessage(), "error", 400);
+    }
   }
  
-  static function updateProducto($table, $paramCampos, $paramWhere)
+  static function updateMovimiento($table, $paramCampos, $paramWhere)
   {
     $sql = sqlUpdate($table, $paramCampos, $paramWhere);
     $params = array_merge($paramCampos, $paramWhere);
@@ -153,8 +187,8 @@ class Productos
     return $resp;
   }
 
-  static function deleteProducto($params){
-    $sql = "DELETE FROM productos WHERE id = :id";
+  static function deleteMovimiento($params){
+    $sql = "DELETE FROM movimientos WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
@@ -167,7 +201,7 @@ class Productos
     if($exclude){
       $where .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
     }
-    $sql = "SELECT COUNT(*) AS count FROM productos" . $where;
+    $sql = "SELECT COUNT(*) AS count FROM movimientos" . $where;
     $param = array_merge($equal, $exclude);
 
     $dbh = Conexion::conectar();

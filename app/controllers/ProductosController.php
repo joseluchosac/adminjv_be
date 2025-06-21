@@ -1,6 +1,6 @@
 <?php
-// require_once('../../app/models/Config.php');
 require_once('../../app/models/Productos.php');
+require_once('../../app/models/Inventarios.php');
 
 use Valitron\Validator;
 
@@ -22,7 +22,6 @@ class ProductosController
       'categoria_ids',
       'barcode',
       'precio_venta',
-      'stock',
       'unidad_medida_cod',
       'estado',
       'created_at',
@@ -81,6 +80,34 @@ class ProductosController
     $registro["categoria_ids"] = array_filter($temp);
     $registro['inventariable'] = boolval($registro['inventariable']);
     $registro['lotizable'] = boolval($registro['lotizable']);
+    $response["content"] = $registro;
+    return $response;
+  }
+
+  public function get_producto_by_code()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $pJson = json_decode(file_get_contents('php://input'), true);
+    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    if (!$pJson['codigo']) throwMiExcepcion("Ingrese el código", "error", 404);
+
+    $paramWhere = ["estado" => 1];
+    // Verificando si se busca por codigo o barcode
+    if (strpos($pJson['codigo'], 'P') === 0) {
+      $paramWhere['codigo'] = $pJson['codigo'];
+    }else{
+      $paramWhere['barcode'] = $pJson['codigo'];
+    }
+
+    $registro = Productos::getProductoBy($paramWhere);
+    if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 200);
+
+    // Obteniendo datos del producto del ultimo inventario del establecimiento
+    if($pJson['establecimiento_id'] && $registro['inventariable']){
+      $ultimoInventario = Inventarios::getUltimoInventario($pJson['establecimiento_id'], $registro['id']);
+      $registro['stock'] = $ultimoInventario ? floatval($ultimoInventario['ex_unidades']) : 0;
+      $registro['precio_costo'] = $ultimoInventario ? floatval($ultimoInventario['ex_costo_unitario']) : floatval($registro['precio_costo']);
+    }
     $response["content"] = $registro;
     return $response;
   }
@@ -224,52 +251,52 @@ class ProductosController
     return $response;
   }
 
-  private function validateCreateProducto($params){
-    $v = new Validator($params);
-    $v->addRule('iguales', function ($field, $value, array $params, array $fields) {
-      return $fields['password'] === $fields["password_repeat"];
-    });
-    $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
-      return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
-    });
-    $v->rule('required', 'nombres')->message('El nombre es requerido');
-    $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
-    $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
-    $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
-    $v->rule('required', 'productoname')->message('El usuario es requerido');
-    $v->rule('lengthMin', 'productoname', 3)->message('El usuario debe tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'productoname', 50)->message('El usuario no puede exceder los 50 caracteres.');
-    $v->rule('sinEspacios', 'productoname')->message('El usuario no puede tener espacios');
-    $v->rule('email', 'email')->message('Ingrese un formato de email válido');
-    $v->rule('required', 'password')->message('La contraseña es obligatoria');
-    $v->rule('regex', 'password', '/^[A-Za-z\d@$!%*?&]{6,}$/')->message('La contraseña debe tener al menos 6 caracteres, sin espacios');
-    $v->rule('iguales', 'password')->message('Los passwords no son iguales');;
-    if (!$v->validate()) {
-      foreach ($v->errors() as $campo => $errores) {
-        foreach ($errores as $error) {
-          throwMiExcepcion($error, "warning", 200);
-        }
-      }
-    }
-  }
+  // private function validateCreateProducto($params){
+  //   $v = new Validator($params);
+  //   $v->addRule('iguales', function ($field, $value, array $params, array $fields) {
+  //     return $fields['password'] === $fields["password_repeat"];
+  //   });
+  //   $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
+  //     return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
+  //   });
+  //   $v->rule('required', 'nombres')->message('El nombre es requerido');
+  //   $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
+  //   $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
+  //   $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
+  //   $v->rule('required', 'productoname')->message('El usuario es requerido');
+  //   $v->rule('lengthMin', 'productoname', 3)->message('El usuario debe tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'productoname', 50)->message('El usuario no puede exceder los 50 caracteres.');
+  //   $v->rule('sinEspacios', 'productoname')->message('El usuario no puede tener espacios');
+  //   $v->rule('email', 'email')->message('Ingrese un formato de email válido');
+  //   $v->rule('required', 'password')->message('La contraseña es obligatoria');
+  //   $v->rule('regex', 'password', '/^[A-Za-z\d@$!%*?&]{6,}$/')->message('La contraseña debe tener al menos 6 caracteres, sin espacios');
+  //   $v->rule('iguales', 'password')->message('Los passwords no son iguales');;
+  //   if (!$v->validate()) {
+  //     foreach ($v->errors() as $campo => $errores) {
+  //       foreach ($errores as $error) {
+  //         throwMiExcepcion($error, "warning", 200);
+  //       }
+  //     }
+  //   }
+  // }
 
-  private function validateUpdateProducto($params){
-    $v = new Validator($params);
-    $v->rule('required', 'nombres')->message('El nombre es requerido');
-    $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
-    $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
-    $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
-    $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
-    if (!$v->validate()) {
-      foreach ($v->errors() as $campo => $errores) {
-        foreach ($errores as $error) {
-          throwMiExcepcion($error, "warning", 200);
-        }
-      }
-    }
-  }
+  // private function validateUpdateProducto($params){
+  //   $v = new Validator($params);
+  //   $v->rule('required', 'nombres')->message('El nombre es requerido');
+  //   $v->rule('lengthMin', 'nombres', 3)->message('El nombre debe tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'nombres', 50)->message('El nombre no puede exceder los 50 caracteres.');
+  //   $v->rule('required', 'apellidos')->message('Los apellidos son requeridos');
+  //   $v->rule('lengthMin', 'apellidos', 3)->message('Los apellidos deben tener al menos 3 caracteres.');
+  //   $v->rule('lengthMax', 'apellidos', 50)->message('Los apellidos no puede exceder los 50 caracteres.');
+  //   if (!$v->validate()) {
+  //     foreach ($v->errors() as $campo => $errores) {
+  //       foreach ($errores as $error) {
+  //         throwMiExcepcion($error, "warning", 200);
+  //       }
+  //     }
+  //   }
+  // }
 
 }

@@ -68,16 +68,16 @@ class CatalogosController
           estado
         FROM tipos_movimiento_caja"
       ],
-      ["table" => "tipos_movimiento_producto", 
+      ["table" => "tipos_movimiento", 
         "sql" => "SELECT 
-          id,
-          codigo,
-          tipo,
-          tipo_operacion_cod,
-          descripcion,
-          documento,
-          estado
-        FROM tipos_movimiento_producto"
+            id,
+            tipo,
+            concepto,
+            origen,
+            estado
+          FROM tipos_movimiento
+          Order by tipo, concepto
+        "
       ],
       ["table" => "tipos_operacion", 
         "sql" => "SELECT 
@@ -106,6 +106,20 @@ class CatalogosController
         "sql" => "SELECT DISTINCT
           departamento
         FROM ubigeos"
+      ],
+      ["table" => "establecimientos", 
+        "sql" => "SELECT
+          id,
+          tipo,
+          codigo,
+          descripcion,
+          direccion,
+          ubigeo_inei,
+          dis_prov_dep,
+          telefono,
+          email,
+          estado
+        FROM establecimientos_v"
       ],
     ];
     $catalogos = Catalogos::getCatalogos($tablas);
