@@ -1,17 +1,18 @@
 <?php
 require_once('../../app/models/Establecimientos.php');
-require_once('../../app/models/Series.php');
+require_once('../../app/models/Numeraciones.php');
 use Valitron\Validator;
 
 class EstablecimientosController
 {
-  public function filter_sucursales($isPaginated = true)
+  public function filter_establecimientos($isPaginated = true)
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
 
     $campos = [
       'id',
+      'tipo',
       'codigo',
       'descripcion',
       'direccion',
@@ -40,13 +41,13 @@ class EstablecimientosController
       "offset" => $pJson['offset']
     ];
 
-    $res = Establecimientos::filterSucursales($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $res = Establecimientos::filterEstablecimientos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
     return $res;
   }
 
-  public function filter_sucursales_full() // sin paginacion
+  public function filter_establecimientos_full() // sin paginacion
   {
-    $res =  self::filter_sucursales(false);
+    $res =  self::filter_establecimientos(false);
     unset($res["next"]);
     unset($res["offset"]);
     unset($res["page"]);
@@ -54,20 +55,29 @@ class EstablecimientosController
     unset($res["previous"]);
     return $res;
   }
-  
-  public function get_sucursal()
+
+  public function get_establecimientos()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $establecimientos = Establecimientos::getEstablecimientos();
+    $res['content'] = $establecimientos;
+    unset($establecimientos);
+    return $res;
+  }
+
+  public function get_establecimiento()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
     if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $sucursal = Establecimientos::getSucursal($pJson['id']);
-    $res['content'] = $sucursal;
-    unset($sucursal);
+    $establecimiento = Establecimientos::getEstablecimiento($pJson['id']);
+    $res['content'] = $establecimiento;
+    unset($establecimiento);
     return $res;
   }
 
-  public function create_sucursal()
+  public function create_establecimiento()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
@@ -77,7 +87,7 @@ class EstablecimientosController
     $descripcion = trimSpaces($pJson['descripcion']);
     $paramCampos = [
       "codigo" => $codigo ? $codigo : null,
-      "tipo" => 'sucursal',
+      "tipo" => $pJson['tipo'],
       "descripcion" => $descripcion,
       "direccion" => trimSpaces($pJson['direccion']),
       "ubigeo_inei" => $pJson['ubigeo_inei'],
@@ -85,7 +95,7 @@ class EstablecimientosController
       "email" => trimSpaces($pJson['email']),
     ];
     // Validacion
-    $this->validateSucursal($paramCampos);
+    $this->validateEstablecimiento($paramCampos);
 
     // Buscando duplicados
     $count = Establecimientos::countRecordsBy(["descripcion" => $descripcion]);
@@ -96,10 +106,10 @@ class EstablecimientosController
       if ($count) throwMiExcepcion("El código: " . $codigo . ", ya existe!", "warning");
     }
 
-    $lastId = Establecimientos::createSucursal($paramCampos);
+    $lastId = Establecimientos::createEstablecimiento($paramCampos);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
     // Users::setActivityLog("Creación de nuevo laboratorio: " . $params["nombre"]);
-    $registro = Establecimientos::getSucursal($lastId);
+    $registro = Establecimientos::getEstablecimiento($lastId);
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Sucursal registrada";
@@ -107,7 +117,7 @@ class EstablecimientosController
     return $response;
   }
 
-  public function update_sucursal()
+  public function update_establecimiento()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
@@ -117,6 +127,7 @@ class EstablecimientosController
     $descripcion = trimSpaces($pJson['descripcion']);
     $paramCampos = [
       "codigo" => $codigo ? $codigo : null,
+      "tipo" => $pJson['tipo'],
       "descripcion" => $descripcion,
       "direccion" => trimSpaces($pJson['direccion']),
       "ubigeo_inei" => $pJson['ubigeo_inei'],
@@ -125,10 +136,10 @@ class EstablecimientosController
       "estado" => trimSpaces($pJson['estado']),
     ];
 
-    $this->validateSucursal($paramCampos);
+    $this->validateEstablecimiento($paramCampos);
     // Buscando duplicados
     $exclude = ["id" => $pJson['id']];
-    // Buscando si es sucursal principal
+    // Buscando si es establecimiento principal
     $countPrincipal = Establecimientos::countEstablecimientos([
       ["field_name" => "codigo", "field_value"=>'0000'],
       ["field_name" => "id", "field_value"=>$pJson['id']]
@@ -149,18 +160,18 @@ class EstablecimientosController
 
     $paramWhere = ["id" => $pJson['id']];
 
-    $update = Establecimientos::updateSucursal($paramCampos, $paramWhere);
+    $update = Establecimientos::updateEstablecimiento($paramCampos, $paramWhere);
     if (!$update) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $sucursal = Establecimientos::getSucursal($pJson['id']);
+    $establecimiento = Establecimientos::getEstablecimiento($pJson['id']);
 
     $res['msgType'] = "success";
     $res['msg'] = "Registro actualizado";
-    $res['content'] = $sucursal;
+    $res['content'] = $establecimiento;
     return $res;
   }
 
-  public function delete_sucursal()
+  public function delete_establecimiento()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
     $pJson = json_decode(file_get_contents('php://input'), true);
@@ -169,36 +180,34 @@ class EstablecimientosController
     $params = [
       "id" => $pJson['id'],
     ];
-    // Buscando duplicados si es sucursal principal
+    // Buscando duplicados si es establecimiento principal
     $countPrincipal = Establecimientos::countEstablecimientos([
       ["field_name" => "codigo", "field_value"=>'0000'],
       ["field_name" => "id", "field_value"=>$pJson['id']]
     ] );
-    if($countPrincipal)throwMiExcepcion("No se puede eliminar a la sucursal principal", "warning");
+    if($countPrincipal)throwMiExcepcion("No se puede eliminar al establecimiento principal", "warning");
     
-    // Buscando si tiene series asociadas
-    $countSeries = Series::countSeries([
+    // Buscando si tiene numeraciones asociadas
+    $countNumeraciones = Numeraciones::countNumeraciones([
       ["field_name" => "establecimiento_id", "field_value"=>$params['id']],
     ]);
-    if($countSeries)throwMiExcepcion("Debe eliminar las series asociadas a la sucursal", "warning");
+    if($countNumeraciones)throwMiExcepcion("Debe eliminar las numeraciones asociadas al establecimiento", "warning");
 
-    $resp = Establecimientos::deleteSucursal($params);
+    $resp = Establecimientos::deleteEstablecimiento($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
-
-    $response['content'] = null;
+    $response['content'] = intval($params['id']);
     $response['error'] = "false";
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";
     return $response;
   }
 
-
-
-  private function validateSucursal($params){
+  private function validateEstablecimiento($params){
     $v = new Validator($params);
     $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
       return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
     });
+    $v->rule('required', 'tipo')->message('Ingrese el tipo');
     $v->rule('required', 'codigo')->message('Ingrese el código');
     $v->rule('sinEspacios', 'codigo')->message('El código no debe tener espacios');
     $v->rule('required', 'descripcion')->message('Ingrese la descripción');
@@ -215,4 +224,5 @@ class EstablecimientosController
       }
     }
   }
+
 }

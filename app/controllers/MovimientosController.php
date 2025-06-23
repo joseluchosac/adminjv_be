@@ -1,6 +1,6 @@
 <?php
 require_once('../../app/models/Movimientos.php');
-require_once('../../app/models/Series.php');
+require_once('../../app/models/Numeraciones.php');
 require_once('../../app/models/Inventarios.php');
 
 use Valitron\Validator;
@@ -18,8 +18,9 @@ class MovimientosController
       'tipo',
       'concepto',
       'fecha',
-      'serie',
-      'correlativo',
+      // 'serie',
+      // 'correlativo',
+      'numeracion',
       'tipo',
       'observacion',
       'user_id',
@@ -33,8 +34,7 @@ class MovimientosController
     $paramWhere = [
       "paramLike" => [
         'fecha' => $search, 
-        'serie' => $search, 
-        'correlativo' => $search, 
+        'numeracion' => $search, 
       ],
       "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [
@@ -71,25 +71,31 @@ class MovimientosController
       'establecimiento_id' => $params['establecimiento_id'],
       'serie' => $serie,
     ];
-    $correlativo = Series::getCorrelativo($paramWhereCorrelativo);
+    $correlativo = Numeraciones::getCorrelativo($paramWhereCorrelativo);
+
     // Generandon parametros para insertar en movimientos
     $paramMovimiento = [
       "establecimiento_id" => $params['establecimiento_id'],
       "tipo" => $params['tipo'],
       "concepto" => $params['concepto'],
       "fecha" => $fechaActual,
-      "serie" => $serie,
-      "correlativo" => $correlativo,
+      "numeracion" => $serie . "-" . $correlativo,
       "observacion" => $params['observacion'],
     ];
+
     // Generando parametros para insertar en movimientos_detalle
-    $paramMovimientosDetalle = [];
+    $paramMovimientoDetalle = [];
     foreach ($params['detalle'] as $value) {
-      unset($value['tmp_id']);
-      unset($value['precio_costo']);
-      unset($value['stock']);
-      array_push($paramMovimientosDetalle, $value);
+      $item = [
+        'movimiento_id' => 0, // Se actualizara despues
+        'producto_id' => $value['producto_id'],
+        'producto_descripcion' => $value['producto_descripcion'],
+        'cantidad' => $value['cantidad'],
+        'observacion' => $value['observacion'],
+      ];
+      array_push($paramMovimientoDetalle, $item);
     }
+
     // Generando parametros para insertar en inventarios
     $paramInventarios = [];
     foreach ($params['detalle'] as $value) {
@@ -105,7 +111,7 @@ class MovimientosController
       $item = [
         'establecimiento_id' => $params['establecimiento_id'],
         'fecha' => $fechaActual,
-        "nro_comprobante" => $serie . "-" . $correlativo,
+        "numeracion" => $serie . "-" . $correlativo,
         "producto_id" => $value['producto_id'],
         "tipo_movimiento" => $tipo,
         "concepto_movimiento" => $params['concepto'],
@@ -121,13 +127,11 @@ class MovimientosController
       ];
       array_push($paramInventarios, $item);
     }
-    // print_r($paramCamposDetalle);
-    // exit();
 
     // Validacion
     // $this->validateCreateMovimiento($params);
 
-    $lastId = Movimientos::createMovimiento($paramMovimiento, $paramMovimientosDetalle, $paramInventarios);
+    $lastId = Movimientos::createMovimiento($paramMovimiento, $paramMovimientoDetalle, $paramInventarios);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
     // $registro = Movimientos::getMovimiento($lastId);
     $response['error'] = false;

@@ -132,12 +132,12 @@ class Movimientos
     return $record;
   }
 
-  static function createMovimiento($paramCampos, $paramCamposDetalle, $paramInventarios)
+  static function createMovimiento($paramMovimiento, $paramMovimientoDetalle, $paramInventarios)
   {
     try {
-      $sql = sqlInsert("movimientos", $paramCampos);
-      $sqlDetalle = sqlInsert("movimientos_detalle", $paramCamposDetalle[0]);
-      $sqlUpdateCorrelativo = "UPDATE series 
+      $sql = sqlInsert("movimientos", $paramMovimiento);
+      $sqlDetalle = sqlInsert("movimientos_detalle", $paramMovimientoDetalle[0]);
+      $sqlUpdateNumeracion = "UPDATE numeraciones 
         SET correlativo = :correlativo
         WHERE establecimiento_id = :establecimiento_id
           AND serie = :serie
@@ -146,28 +146,35 @@ class Movimientos
 
       $dbh = Conexion::conectar();
       $dbh->beginTransaction();
+
       // Insertando a movimientos
       $stmt = $dbh->prepare($sql);
-      $stmt->execute($paramCampos);
+      $stmt->execute($paramMovimiento);
       $lastId = $dbh->lastInsertId();
+
       // Insertando a movimientos_detalle
       $stmt = $dbh->prepare($sqlDetalle);
-      foreach ($paramCamposDetalle as $fila) {
+      foreach ($paramMovimientoDetalle as $fila) {
         $fila['movimiento_id'] = $lastId;
         $stmt->execute($fila);
       }
-      // Actualizando el correlativo
-      $stmt = $dbh->prepare($sqlUpdateCorrelativo);
+
+      // Actualizando el correlativo de la numeracion
+      $stmt = $dbh->prepare($sqlUpdateNumeracion);
+      $serie = explode("-", $paramMovimiento['numeracion'])[0];
+      $correlativo = intval(explode("-", $paramMovimiento['numeracion'])[1]);
       $stmt->execute([
-        'correlativo' => intval($paramCampos['correlativo']) + 1,
-        'establecimiento_id' => $paramCampos['establecimiento_id'],
-        'serie' => $paramCampos['serie']
+        'correlativo' => $correlativo + 1,
+        'establecimiento_id' => $paramMovimiento['establecimiento_id'],
+        'serie' => $serie
       ]);
+
       // Insertando a Inventarios
       $stmt = $dbh->prepare($sqlInventarios);
       foreach ($paramInventarios as $fila) {
         $stmt->execute($fila);
       }
+      
       $dbh->commit();
       return $lastId;
     } catch (PDOException $e) {

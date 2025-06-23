@@ -128,7 +128,6 @@ class Config
 
   static function getTerminal($nombre){
     $sql = "SELECT
-      id,
       nombre,
       descripcion,
       establecimiento_id

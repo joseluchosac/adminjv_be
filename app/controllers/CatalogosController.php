@@ -121,8 +121,22 @@ class CatalogosController
           estado
         FROM establecimientos_v"
       ],
+      ["table" => "numeraciones", 
+        "sql" => "SELECT
+          id,
+          establecimiento_id,
+          tipo_comprobante_cod,
+          descripcion,
+          serie,
+          correlativo,
+          modifica_a,
+          serie_prefix,
+          estado
+        FROM numeraciones ORDER BY tipo_comprobante_cod"
+      ],
     ];
     $catalogos = Catalogos::getCatalogos($tablas);
+    $catalogos['tipos_establecimiento'] = ['SUCURSAL', 'DEPOSITO'];
     // $catalogos['categorias'] = generateTree($catalogos['categorias']);
     $resp['error'] = false;
     $resp['content'] = $catalogos;

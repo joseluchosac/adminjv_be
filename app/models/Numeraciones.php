@@ -1,9 +1,9 @@
 <?php
 require_once("Conexion.php");
 
-class Series
+class Numeraciones
 {
-  static function getSeriesEstablecimiento($establecimiento_id){
+  static function getNumeracionesEstablecimiento($establecimiento_id){
     $sql = "SELECT 
         id,
         establecimiento_id,
@@ -13,17 +13,17 @@ class Series
         correlativo,
         modifica_a,
         estado
-      FROM series
+      FROM numeraciones
       WHERE establecimiento_id = :establecimiento_id
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute(["establecimiento_id" => $establecimiento_id]);
-    $seriesEstablecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $seriesEstablecimiento;
+    $numeracionesEstablecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $numeracionesEstablecimiento;
   }
 
-  static function getSerieEstablecimiento($id){
+  static function getNumeracion($id){
     $sql = "SELECT 
         id,
         establecimiento_id,
@@ -33,14 +33,14 @@ class Series
         correlativo,
         modifica_a,
         estado
-      FROM series
+      FROM numeraciones
       WHERE id = :id
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute(["id" => $id]);
-    $serieEstablecimiento = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $serieEstablecimiento;
+    $numeracionEstablecimiento = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $numeracionEstablecimiento;
   }
 
   static function getCorrelativo($paramWhere){
@@ -53,7 +53,7 @@ class Series
         correlativo,
         modifica_a,
         estado
-      FROM series
+      FROM numeraciones
       WHERE establecimiento_id = :establecimiento_id
         AND serie = :serie
     ";
@@ -64,9 +64,9 @@ class Series
     return $correlativo['correlativo'];
   }
 
-  static function createSerieEstablecimiento($params)
+  static function createNumeracion($params)
   {
-    $sql = sqlInsert("series", $params);
+    $sql = sqlInsert("numeraciones", $params);
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
@@ -74,9 +74,9 @@ class Series
     return $lastId;
   }
 
-  static function updateSerieEstablecimiento($paramCampos, $paramWhere)
+  static function updateNumeracion($paramCampos, $paramWhere)
   {
-    $sql = sqlUpdate("series", $paramCampos, $paramWhere);
+    $sql = sqlUpdate("numeraciones", $paramCampos, $paramWhere);
     $params = array_merge($paramCampos, $paramWhere);
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
@@ -85,8 +85,8 @@ class Series
     return $resp;
   }
 
-  static function deleteSerieEstablecimiento($params){
-    $sql = "DELETE FROM series WHERE id = :id";
+  static function deleteNumeracion($params){
+    $sql = "DELETE FROM numeraciones WHERE id = :id";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
@@ -94,13 +94,13 @@ class Series
     return $resp;
   }
 
-  static function countSeries($equal, $exclude = []){
+  static function countNumeraciones($equal, $exclude = []){
     $sqlWhere = SqlWhere::and([SqlWhere::equalAnd($equal)]);
     $bindWhere = SqlWhere::arrMerge(["equal" => $equal]);
     if($exclude){
       $sqlWhere .= " AND " . array_keys($exclude)[0] . " != :". array_keys($exclude)[0];
     }
-    $sql = "SELECT COUNT(*) AS count FROM series" . $sqlWhere;
+    $sql = "SELECT COUNT(*) AS count FROM numeraciones" . $sqlWhere;
     $param = array_merge($bindWhere, $exclude);
 
     $dbh = Conexion::conectar();
