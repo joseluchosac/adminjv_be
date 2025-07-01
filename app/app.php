@@ -19,7 +19,7 @@ header("Access-Control-Allow-Credentials: true"); // Permitir el envío de crede
 // header("Access-Control-Allow-Headers: *");
 
 ////// Permite encabezados específicos
-header("Access-Control-Allow-Headers: nombre-modulo, Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
+header("Access-Control-Allow-Headers: nombre-modulo, Authorization, attached-data, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
 
 // header("Content-Type:application/json");
 
@@ -47,6 +47,7 @@ $dotenv->load();
 
 $authorization = apache_request_headers()['Authorization'] ?? null;
 $nombreModulo = apache_request_headers()["nombre-modulo"] ?? null;
+$attachedDataJson = apache_request_headers()["attached-data"] ?? null;
 // echo "<pre>";
 // print_r($authorization);
 // echo "</pre>";
@@ -60,7 +61,7 @@ try {
   
   if (method_exists($route['controllerName'], $route['accion'])) {
     ////// MIDDLEWARE
-    Middleware::check($authorization, $nombreModulo, $route);
+    Middleware::check($authorization, $nombreModulo, $attachedDataJson, $route);
     $currentController = new $route['controllerName'](); // ej: new ModulosController()
     $response = $currentController->{$route['accion']}(); // ej: $currentController->get_modulos()
     if(!$response) throwMiExcepcion("No hay datos de respuesta", "error", 404);

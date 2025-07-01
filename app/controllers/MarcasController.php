@@ -6,7 +6,7 @@ class MarcasController
   public function filter_marcas($isPaginated = true)
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
+    $p = json_decode(file_get_contents('php://input'), true);
 
     $campos = [
       'id',
@@ -14,27 +14,27 @@ class MarcasController
       'estado',
     ];
 
-    $search = $pJson['search'] ? "%" . $pJson['search'] . "%" : "";
+    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
 
     $paramWhere = [
       "paramLike" => ['nombre' => $search],
-      "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
+      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['field_name'],
-        "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
+        "campo" => $p['between']['field_name'],
+        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];
 
-    $paramOrders = count($pJson['orders']) 
-      ? $pJson['orders'] 
+    $paramOrders = count($p['orders']) 
+      ? $p['orders'] 
       : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
-    // $paramOrders = $pJson['orders'];
+    // $paramOrders = $p['orders'];
 
     // var_dump($paramOrders);
     // exit();
     $pagination = [
       "page" => $_GET["page"] ?? "1",
-      "offset" => $pJson['offset']
+      "offset" => $p['offset']
     ];
 
     $res = Marcas::filterMarcas($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
@@ -55,10 +55,10 @@ class MarcasController
   public function get_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     
-    $registro = Marcas::getMarca($pJson['id']);
+    $registro = Marcas::getMarca($p['id']);
     if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
     $response["content"] = $registro;
     return $response;
@@ -67,15 +67,15 @@ class MarcasController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-    $params = ["nombre" => $pJson['nombre'],];
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $params = ["nombre" => $p['nombre'],];
     // Validacion
     //$this->validateCreateUser($params);
 
     // Buscando duplicados
-    $count = Marcas::countRecordsBy(["nombre" => $pJson['nombre']]);
-    if ($count) throwMiExcepcion("El marca: " . $pJson['nombre'] . ", ya existe!", "warning");
+    $count = Marcas::countRecordsBy(["nombre" => $p['nombre']]);
+    if ($count) throwMiExcepcion("El marca: " . $p['nombre'] . ", ya existe!", "warning");
 
     $lastId = Marcas::createMarca($params);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
@@ -92,28 +92,28 @@ class MarcasController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     $paramCampos = [
-      "nombre" => trim($pJson['nombre']) ? trim($pJson['nombre']) : null,
-      "estado" => $pJson['estado'],
+      "nombre" => trim($p['nombre']) ? trim($p['nombre']) : null,
+      "estado" => $p['estado'],
     ];
 
     // Validacion
     // $this->validateUpdateUser($paramCampos);
 
     // Buscando duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Marcas::countRecordsBy(["nombre" => $pJson['nombre']], $exclude);
-    if ($count) throwMiExcepcion("El marca: " . $pJson['nombre'] . ", ya existe!", "warning");
+    $exclude = ["id" => $p['id']];
+    $count = Marcas::countRecordsBy(["nombre" => $p['nombre']], $exclude);
+    if ($count) throwMiExcepcion("El marca: " . $p['nombre'] . ", ya existe!", "warning");
 
-    $paramWhere = ["id" => $pJson['id']];
+    $paramWhere = ["id" => $p['id']];
 
     $resp = Marcas::updateMarca("marcas", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    $registro = Marcas::getMarca($pJson['id']);
+    $registro = Marcas::getMarca($p['id']);
     Users::setActivityLog("Modificación de registro en la tabla marcas: " . $registro["nombre"]);
 
     $response['content'] = $registro;
@@ -125,11 +125,11 @@ class MarcasController
   public function delete_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     // OJO, antes de eliminar verificar si el marca tiene una venta asociada
-    $params = [ "id" => $pJson['id'] ];
+    $params = [ "id" => $p['id'] ];
     $resp = Marcas::deleteMarca($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 

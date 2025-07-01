@@ -39,6 +39,8 @@ class CatalogosController
           id,
           codigo,
           descripcion,
+          serie_pre,
+          descripcion_doc,
           estado
         FROM tipos_comprobante"
       ],
@@ -121,19 +123,17 @@ class CatalogosController
           estado
         FROM establecimientos_v"
       ],
-      ["table" => "numeraciones", 
-        "sql" => "SELECT
-          id,
-          establecimiento_id,
-          tipo_comprobante_cod,
-          descripcion,
-          serie,
-          correlativo,
-          modifica_a,
-          serie_prefix,
-          estado
-        FROM numeraciones ORDER BY tipo_comprobante_cod"
-      ],
+      // ["table" => "numeraciones", 
+      //   "sql" => "SELECT
+      //     id,
+      //     establecimiento_id,
+      //     descripcion_doc,
+      //     serie_pre,
+      //     serie,
+      //     correlativo,
+      //     estado
+      //   FROM numeraciones ORDER BY id"
+      // ],
     ];
     $catalogos = Catalogos::getCatalogos($tablas);
     $catalogos['tipos_establecimiento'] = ['SUCURSAL', 'DEPOSITO'];
@@ -145,11 +145,11 @@ class CatalogosController
 
   public function create_tipo_comprobante(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
     $paramCampos = [
-      "codigo" => trimSpaces($pJson['codigo']),
-      "descripcion" => trimSpaces($pJson['descripcion']),
+      "codigo" => trimSpaces($p['codigo']),
+      "descripcion" => trimSpaces($p['descripcion']),
       "estado" => "1",
     ];
     // Validacion
@@ -173,18 +173,18 @@ class CatalogosController
 
   public function update_tipo_comprobante(){
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     $paramCampos = [
-      "codigo" => trimSpaces($pJson['codigo']),
-      "descripcion" => trimSpaces($pJson['descripcion']),
-      "estado" => $pJson['estado'],
+      "codigo" => trimSpaces($p['codigo']),
+      "descripcion" => trimSpaces($p['descripcion']),
+      "estado" => $p['estado'],
     ];
     // Validacion
     // $this->validateUpdateUser($paramCampos);
 
-    $paramWhere = ["id" => $pJson['id']];
+    $paramWhere = ["id" => $p['id']];
 
     $resp = Catalogos::updateTipoComprobante($paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
@@ -206,15 +206,15 @@ class CatalogosController
 
   public function delete_tipo_comprobante(){
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     $params = [
-      "id" => $pJson['id'],
+      "id" => $p['id'],
     ];
     $count = Catalogos::deleteTipoComprobante($params);
     if (!$count) throwMiExcepcion("Ningún registro eliminado", "warning");
 
-    $response['content']['id'] = $pJson['id'];
+    $response['content']['id'] = $p['id'];
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";
     return $response;

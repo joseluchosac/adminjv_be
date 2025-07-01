@@ -103,6 +103,8 @@ function sqlInsert($table, $columns)
 }
 
 // Genera una sentencia SQL UPDATE
+// $parSet = ["apellidos" => "velasquez","nombres" => "jose",];
+// $parWhere = ["id" => 3,"estado" => 1];
 function sqlUpdate($table, $parSet, $parWhere)
 {
   $sqlSet = '';
@@ -637,3 +639,7 @@ function generarCadenaAlfanumerica($longitud = 10) {
   return $cadenaAleatoria;
 }
 
+// ✅ FUNCION QUE RECORTA UNA CADENA LARGA EN UNA CORTA CON ELLPISIS
+function cropText($texto, $limite = 20) {
+  return strlen($texto) > $limite ? substr($texto, 0, $limite) . '...' : $texto;
+}

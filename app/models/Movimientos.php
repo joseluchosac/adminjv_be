@@ -6,7 +6,7 @@ class Movimientos
 
   static public function filterMovimientos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
-    $table = "movimientos";
+    $table = "movimientos_v";
 
     $sqlWhere = SqlWhere::and([
       SqlWhere::likeOr($paramWhere['paramLike']),
@@ -49,6 +49,78 @@ class Movimientos
     return $response;
   }
 
+
+  static function createMovimiento($mov1, $mov2 = null){
+    try {
+      $dbh = Conexion::conectar();
+      $dbh->beginTransaction();
+      self::createMov($mov1['movimiento'], $mov1['movimientoDetalle'], $mov1['inventarios'], $mov1['stocks'],  $dbh);
+      if($mov2){ // movimiento de entrada para traspaso
+        self::createMov($mov2['movimiento'], $mov2['movimientoDetalle'], $mov2['inventarios'], $mov2['stocks'], $dbh);
+      }
+      $dbh->commit();
+    } catch (PDOException $e) {
+      $dbh->rollBack();
+      throwMiExcepcion($e->getMessage(), "error", 400);
+    }
+  }
+
+  static private function createMov($movimiento, $movimientoDetalle, $inventarios, $stocks, $dbh)
+  {
+    $sql = sqlInsert("movimientos", $movimiento);
+    $sqlDetalle = sqlInsert("movimientos_detalle", $movimientoDetalle[0]);
+    $sqlUpdateNumeracion = "UPDATE numeraciones 
+      SET correlativo = :correlativo
+      WHERE establecimiento_id = :establecimiento_id
+        AND serie = :serie
+    ";
+    $sqlInventarios = sqlInsert("inventarios", $inventarios[0]);
+    $sqlCreateStock = sqlInsert("stocks", $stocks[0]);
+    $sqlUpdateStock = sqlUpdate("stocks", $stocks[0], ['id'=>0]);
+    // Insertando a movimientos
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($movimiento);
+    $lastId = $dbh->lastInsertId();
+
+    // Insertando a movimientos_detalle
+    $stmt = $dbh->prepare($sqlDetalle);
+    foreach ($movimientoDetalle as $fila) {
+      $fila['movimiento_id'] = $lastId;
+      $stmt->execute($fila);
+    }
+
+    // Actualizando el correlativo de la numeracion
+    $stmt = $dbh->prepare($sqlUpdateNumeracion);
+    $serie = explode("-", $movimiento['numeracion'])[0];
+    $correlativo = intval(explode("-", $movimiento['numeracion'])[1]);
+    $stmt->execute([
+      'correlativo' => $correlativo + 1,
+      'establecimiento_id' => $movimiento['establecimiento_id'],
+      'serie' => $serie
+    ]);
+
+    // Insertando a Inventarios
+    $stmt = $dbh->prepare($sqlInventarios);
+    foreach ($inventarios as $inventario) {
+      $stmt->execute($inventario);
+    }
+    
+    // Insertando a Stocks
+    foreach ($stocks as $stock) {
+      $fila = self::getStock($stock['establecimiento_id'], $stock['producto_id'], $dbh);
+      if($fila){
+        $stock['id'] = $fila['id'];
+        $stmt = $dbh->prepare($sqlUpdateStock);
+        $stmt->execute($stock);
+      }else{
+        $stmt = $dbh->prepare($sqlCreateStock);
+        $stmt->execute($stock);
+      }
+    }
+    return $lastId;
+  }
+
+
   static function getMovimientos($tabla, $campos, $whereEquals = null)
   {
     $sql = "SELECT " . implode(", ", $campos) . " FROM $tabla";
@@ -86,7 +158,7 @@ class Movimientos
       p.lotizable,
       p.stock,
       p.stock_min,
-      p.imagen,
+      p.thumb,
       p.estado,
       p.created_at,
       ifnull(p.updated_at, '') as updated_at
@@ -132,57 +204,10 @@ class Movimientos
     return $record;
   }
 
-  static function createMovimiento($paramMovimiento, $paramMovimientoDetalle, $paramInventarios)
-  {
-    try {
-      $sql = sqlInsert("movimientos", $paramMovimiento);
-      $sqlDetalle = sqlInsert("movimientos_detalle", $paramMovimientoDetalle[0]);
-      $sqlUpdateNumeracion = "UPDATE numeraciones 
-        SET correlativo = :correlativo
-        WHERE establecimiento_id = :establecimiento_id
-          AND serie = :serie
-      ";
-      $sqlInventarios = sqlInsert("inventarios", $paramInventarios[0]);
 
-      $dbh = Conexion::conectar();
-      $dbh->beginTransaction();
-
-      // Insertando a movimientos
-      $stmt = $dbh->prepare($sql);
-      $stmt->execute($paramMovimiento);
-      $lastId = $dbh->lastInsertId();
-
-      // Insertando a movimientos_detalle
-      $stmt = $dbh->prepare($sqlDetalle);
-      foreach ($paramMovimientoDetalle as $fila) {
-        $fila['movimiento_id'] = $lastId;
-        $stmt->execute($fila);
-      }
-
-      // Actualizando el correlativo de la numeracion
-      $stmt = $dbh->prepare($sqlUpdateNumeracion);
-      $serie = explode("-", $paramMovimiento['numeracion'])[0];
-      $correlativo = intval(explode("-", $paramMovimiento['numeracion'])[1]);
-      $stmt->execute([
-        'correlativo' => $correlativo + 1,
-        'establecimiento_id' => $paramMovimiento['establecimiento_id'],
-        'serie' => $serie
-      ]);
-
-      // Insertando a Inventarios
-      $stmt = $dbh->prepare($sqlInventarios);
-      foreach ($paramInventarios as $fila) {
-        $stmt->execute($fila);
-      }
-      
-      $dbh->commit();
-      return $lastId;
-    } catch (PDOException $e) {
-      $dbh->rollBack();
-      throwMiExcepcion($e->getMessage(), "error", 400);
-    }
-  }
  
+
+
   static function updateMovimiento($table, $paramCampos, $paramWhere)
   {
     $sql = sqlUpdate($table, $paramCampos, $paramWhere);
@@ -233,4 +258,19 @@ class Movimientos
     return $rows['num_regs']; 
   }
 
+  static private function getStock($establecimiento_id, $producto_id, $dbh){
+    $sql = "SELECT 
+      id,
+      establecimiento_id,
+      producto_id,
+      stock
+      FROM stocks
+      WHERE establecimiento_id = :establecimiento_id
+      AND producto_id = :producto_id
+    ";
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["establecimiento_id" => $establecimiento_id, "producto_id" => $producto_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC); 
+    return $row; 
+  }
 }

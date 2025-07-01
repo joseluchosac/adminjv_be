@@ -5,24 +5,22 @@ use Valitron\Validator;
 class NumeracionesController
 {
 
-  public function get_numeraciones_establecimiento(){
+  public function get_numeraciones(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
-    $numeracionesEstablecimiento = Numeraciones::getNumeracionesEstablecimiento($pJson['establecimiento_id']);
-    $res['content'] = $numeracionesEstablecimiento;
+    $numeraciones = Numeraciones::getNumeraciones();
+    $res['content'] = $numeraciones;
     
     return $res;
   }
 
   public function get_numeracion(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $numeracionEstablecimiento = Numeraciones::getNumeracion($pJson['id']);
-    $res['content'] = $numeracionEstablecimiento;
+    $numeracion = Numeraciones::getNumeracion($p['id']);
+    $numeracion['serie_suf'] = substr($numeracion['serie'], strlen($numeracion['serie_pre']));
+    $res['content'] = $numeracion;
 
     return $res;
   }
@@ -31,16 +29,14 @@ class NumeracionesController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-    $descripcion = trimSpaces($pJson['descripcion']);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     $paramCampos = [
-      "tipo_comprobante_cod" => $pJson['tipo_comprobante_cod'],
-      "descripcion" => $descripcion,
-      "establecimiento_id" => $pJson['establecimiento_id'],
-      "serie" => trimSpaces($pJson['serie']),
-      "correlativo" => $pJson['correlativo'],
-      "modifica_a" => $pJson['modifica_a'],
+      "establecimiento_id" => $p['establecimiento_id'],
+      "descripcion_doc" => $p['descripcion_doc'],
+      "serie_pre" => trimSpaces($p['serie_pre']),
+      "serie" => trimSpaces($p['serie']),
+      "correlativo" => $p['correlativo'],
     ];
     // Validacion
     // $this->validateSucursal($paramCampos);
@@ -50,15 +46,15 @@ class NumeracionesController
       ["field_name" => "serie", "field_value"=>$paramCampos['serie']],
     ]);
     if($countNumeraciones){
-      throwMiExcepcion("La numeracion " . $paramCampos['serie'] . " ya fue registrada, ingrese otra", "warning");
+      throwMiExcepcion("La serie " . $paramCampos['serie'] . " ya fue registrada, ingrese otra", "warning");
     }
     // Buscando duplicados de establecimiento y descripcion
     $countDescripcion = Numeraciones::countNumeraciones([
       ["field_name" => "establecimiento_id", "field_value"=>$paramCampos['establecimiento_id']],
-      ["field_name" => "descripcion", "field_value"=>$descripcion],
+      ["field_name" => "serie_pre", "field_value"=>$paramCampos['serie_pre']],
     ]);
     if($countDescripcion){
-      throwMiExcepcion("Ingrese otra descripcion", "warning");
+      throwMiExcepcion("Ingrese otro tipo de comprobante", "warning");
     }
 
     $lastId = Numeraciones::createNumeracion($paramCampos);
@@ -76,21 +72,19 @@ class NumeracionesController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-    $descripcion = trimSpaces($pJson['descripcion']);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
     $paramCampos = [
-      "tipo_comprobante_cod" => $pJson['tipo_comprobante_cod'],
-      "descripcion" => $descripcion,
-      "establecimiento_id" => $pJson['establecimiento_id'],
-      "serie" => trimSpaces($pJson['serie']),
-      "correlativo" => $pJson['correlativo'],
-      "modifica_a" => $pJson['modifica_a'],
+      "establecimiento_id" => $p['establecimiento_id'],
+      "descripcion_doc" => $p['descripcion_doc'],
+      "serie_pre" => trimSpaces($p['serie_pre']),
+      "serie" => trimSpaces($p['serie']),
+      "correlativo" => $p['correlativo'],
     ];
 
     // $this->validateSucursal($paramCampos);
     // Buscando duplicados de numeracion
-    $exclude = ["id" => $pJson['id']];
+    $exclude = ["id" => $p['id']];
     $countNumeraciones = Numeraciones::countNumeraciones([
       ["field_name" => "serie", "field_value"=>$paramCampos['serie']],
     ],$exclude);
@@ -100,26 +94,18 @@ class NumeracionesController
     // Buscando duplicados de establecimiento y descripcion
     $countDescripcion = Numeraciones::countNumeraciones([
       ["field_name" => "establecimiento_id", "field_value"=>$paramCampos['establecimiento_id']],
-      ["field_name" => "descripcion", "field_value"=>$descripcion],
+      ["field_name" => "serie_pre", "field_value"=>$paramCampos['serie_pre']],
     ], $exclude);
     if($countDescripcion){
-      throwMiExcepcion("Ingrese otra descripcion", "warning");
+      throwMiExcepcion("Ingrese otro tipo de comprobante", "warning");
     }
-    // $count = Establecimientos::countRecordsBy(["descripcion" => $descripcion], $exclude);
-    // if ($count) throwMiExcepcion("El Establecimiento: " . $descripcion . ", ya existe!", "warning");
 
-    // if($codigo){
-    //   $count = Establecimientos::countRecordsBy(["codigo" => $codigo], $exclude);
-    //   if ($count) throwMiExcepcion("El código: " . $codigo . ", ya existe!", "warning");
-    // }
-    
-
-    $paramWhere = ["id" => $pJson['id']];
+    $paramWhere = ["id" => $p['id']];
 
     $update = Numeraciones::updateNumeracion($paramCampos, $paramWhere);
     if (!$update) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $registro = Numeraciones::getNumeracion($pJson['id']);
+    $registro = Numeraciones::getNumeracion($p['id']);
 
     $res['msgType'] = "success";
     $res['msg'] = "Registro actualizado";
@@ -130,16 +116,16 @@ class NumeracionesController
   public function delete_numeracion()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $params = [
-      "id" => $pJson['id'],
+      "id" => $p['id'],
     ];
 
     // $countPrincipal = Establecimientos::countEstablecimientos([
     //   ["field_name" => "codigo", "field_value"=>'0000'],
-    //   ["field_name" => "id", "field_value"=>$pJson['id']]
+    //   ["field_name" => "id", "field_value"=>$p['id']]
     // ] );
     // if($countPrincipal)throwMiExcepcion("No se puede eliminar al establecimiento principal", "warning");
 
@@ -156,10 +142,10 @@ class NumeracionesController
   // public function get_establecimiento()
   // {
   //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-  //   $pJson = json_decode(file_get_contents('php://input'), true);
-  //   if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+  //   $p = json_decode(file_get_contents('php://input'), true);
+  //   if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-  //   $establecimiento = Establecimientos::getEstablecimiento($pJson['id']);
+  //   $establecimiento = Establecimientos::getEstablecimiento($p['id']);
   //   $res['content'] = $establecimiento;
   //   unset($establecimiento);
   //   return $res;

@@ -87,12 +87,12 @@ class ConfigController
 
   public function update_cpe_fact(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $parJson = file_get_contents('php://input');
-    $count = Config::setConfigDb($parJson, "cpe_fact");
+    $pJson = file_get_contents('php://input');
+    $count = Config::setConfigDb($pJson, "cpe_fact");
     if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $parJson;
+    $response['registro'] = $pJson;
     return $response;
   }
 
@@ -104,12 +104,12 @@ class ConfigController
 
   public function update_cpe_guia(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $parJson = file_get_contents('php://input');
-    $count = Config::setConfigDb($parJson, "cpe_guia");
+    $pJson = file_get_contents('php://input');
+    $count = Config::setConfigDb($pJson, "cpe_guia");
     if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $parJson;
+    $response['registro'] = $pJson;
     return $response;
   }
 
@@ -121,12 +121,12 @@ class ConfigController
 
   public function update_apis_nro_doc(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $parJson = file_get_contents('php://input');
-    $count = Config::setConfigDb($parJson, "apis_nro_doc");
+    $pJson = file_get_contents('php://input');
+    $count = Config::setConfigDb($pJson, "apis_nro_doc");
     if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $parJson;
+    $response['registro'] = $pJson;
     return $response;
   }
 
@@ -138,12 +138,12 @@ class ConfigController
 
   public function update_usuario_sol_sec(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $parJson = file_get_contents('php://input');
-    $count = Config::setConfigDb($parJson, "usuario_sol_sec");
+    $pJson = file_get_contents('php://input');
+    $count = Config::setConfigDb($pJson, "usuario_sol_sec");
     if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $parJson;
+    $response['registro'] = $pJson;
     return $response;
   }
 
@@ -155,53 +155,71 @@ class ConfigController
 
   public function update_email_config(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $parJson = file_get_contents('php://input');
-    $count = Config::setConfigDb($parJson, "email_config");
+    $pJson = file_get_contents('php://input');
+    $count = Config::setConfigDb($pJson, "email_config");
     if (!$count) throwMiExcepcion("No hubo actualizaciones", "warning", 200);
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $parJson;
-    return $response;
-  }
-
-  public function register_terminal(){
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    $nombre = "";
-    if($pJson['descripcion']){
-      // buscar si existe para actualizarlo de lo contrario ignorar y lanzar la excepcion
-      // mejor en el front
-    }
-    for ($i=0; $i < 10; $i++) { 
-      $nombre = generarCadenaAlfanumerica(10);
-      $cantidad = Config::countTerminales([["field_name" => "nombre", "field_value"=>$nombre]]);
-      if(!$cantidad) break;
-    }
-    if (!$nombre) throwMiExcepcion("No se pudo completar la operación, vuelva a intentarlo", "warning");
-
-    $paramCampos = [
-      "nombre" => $nombre,
-      "descripcion" => $pJson['descripcion'],
-      "establecimiento_id" => $pJson['establecimiento_id'],
-    ];
-    $lastId = Config::registerTerminal($paramCampos);
-    if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
-    // $paramCampos['id'] = intval($lastId);
-    $response['error'] = false;
-    $response['msgType'] = "success";
-    $response['msg'] = "Terminal registrado";
-    $response['content'] = $paramCampos;
+    $response['registro'] = $pJson;
     return $response;
   }
 
   public function get_terminal(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson['nombre']) throwMiExcepcion("no se enviaron suficientes parámetros", "error", 405);
-    $terminal = Config::getTerminal($pJson['nombre']);
+    $p = json_decode(file_get_contents('php://input'), true);
+
+    if(!$p['nombre']) throwMiExcepcion("no se enviaron suficientes parámetros", "error", 405);
+    $terminal = Config::getTerminal($p['nombre']);
     if(!$terminal) throwMiExcepcion("no se obtuvieron datos", "error", 405);
+    Users::setCurTerm($terminal);
     $res['content'] = $terminal;
     return $res;
+  }
+
+  public function link_this_terminal(){ // Registra o actualiza un terminal o equipo
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+    // var_dump($p);
+    $nombre = "";
+
+    if(!$p['descripcion']) throwMiExcepcion("Ingrese una descripción", "warning", 200);
+    if(!$p['establecimiento_id']) throwMiExcepcion("Elija un establecimiento", "warning", 200);
+    $p['descripcion'] = trimSpaces($p['descripcion']);
+
+    if(!$p['nombre']){ // create
+      for ($i=0; $i < 10; $i++) { 
+        $nombre = generarCadenaAlfanumerica(10);
+        $cantidad = Config::countTerminales([["field_name" => "nombre", "field_value"=>$nombre]]);
+        if(!$cantidad) break;
+      }
+      if (!$nombre) throwMiExcepcion("No se pudo completar la operación, vuelva a intentarlo", "warning");
+      $p['nombre'] = $nombre;
+      $lastId = Config::createTerminal($p);
+      if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
+      $response['msg'] = "Terminal registrado";
+      $response['content'] = $p;
+    }else{ // update
+      $paramWhere = ["nombre" => $p["nombre"]];
+      $response['content'] = $p;
+      unset($p['nombre']);
+      $count = Config::updateTerminal($p, $paramWhere);
+      if (!$count) throwMiExcepcion("Ningún registro actualizado", "warning");
+      $response['msg'] = "Terminal actualizado";
+    }
+    $response['error'] = false;
+    $response['msgType'] = "success";
+    return $response;
+  }
+
+  public function unlink_this_terminal(){
+    if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+    $count = Config::deleteTerminalByName($p['nombre']);
+    if(!$count) throwMiExcepcion("No se encontró el registro para eliminar", "warning", 200);
+    $response['error'] = false;
+    $response['msg'] = "Terminal desvinculado";
+    $response['msgType'] = "success";
+    $response['content'] = null;
   }
 }
 

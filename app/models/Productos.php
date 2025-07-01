@@ -6,19 +6,26 @@ class Productos
 
   static public function filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
-    $table = "productos_v";
+    $table = "productos2_v";
 
     $sqlWhere = SqlWhere::and([
       SqlWhere::likeOr($paramWhere['paramLike']),
       SqlWhere::equalAnd($paramWhere['paramEquals']),
       SqlWhere::between($paramWhere['paramBetween']),
     ]);
-
     $bindWhere = SqlWhere::arrMerge([
       "like" => $paramWhere['paramLike'], 
       "equal" => $paramWhere['paramEquals'], 
       "between" => $paramWhere['paramBetween']
-    ]);
+    ]);    
+    // se podra inyectar aca el where establecimiento id?
+    $curTerm = Users::getCurTerm();
+    $sqlWhere .= $sqlWhere
+      ? " AND (establecimiento_id = :establecimiento_id1 OR establecimiento_id = :establecimiento_id2)" 
+      : " WHERE (establecimiento_id = :establecimiento_id1 OR establecimiento_id = :establecimiento_id2)";
+
+    $bindWhere["establecimiento_id1"] = $curTerm ? $curTerm["establecimiento_id"] : 0;
+    $bindWhere["establecimiento_id2"] = 0;
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
     $sqlOrderBy = getSqlOrderBy($paramOrders);
@@ -84,9 +91,8 @@ class Productos
       p.impuesto_id_icbper,
       p.inventariable,
       p.lotizable,
-      p.stock,
       p.stock_min,
-      p.imagen,
+      p.thumb,
       p.estado,
       p.created_at,
       ifnull(p.updated_at, '') as updated_at
@@ -117,7 +123,7 @@ class Productos
       p.unidad_medida_cod,
       p.precio_costo,
       p.inventariable,
-      p.imagen,
+      p.thumb,
       p.created_at,
       ifnull(p.updated_at, '') as updated_at
       FROM productos p

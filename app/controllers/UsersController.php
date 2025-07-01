@@ -9,7 +9,7 @@ class UsersController
   public function filter_users($isPaginated = true)
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
+    $p = json_decode(file_get_contents('php://input'), true);
 
     $campos = [
       'id',
@@ -26,7 +26,7 @@ class UsersController
       'updated_at'
     ];
 
-    $search = $pJson['search'] ? "%" . $pJson['search'] . "%" : "";
+    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
 
     $paramWhere = [
       "paramLike" => [
@@ -35,18 +35,18 @@ class UsersController
         'username' => $search, 
         "email" => $search
       ],
-      "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
+      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['field_name'],
-        "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
+        "campo" => $p['between']['field_name'],
+        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];
 
-    $paramOrders = $pJson['orders'];
+    $paramOrders = $p['orders'];
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
-      "offset" => $pJson['offset']
+      "offset" => $p['offset']
     ];
 
     $res = Users::filterUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
@@ -67,10 +67,10 @@ class UsersController
   public function get_user()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $registro = Users::getUser($pJson['id']);
+    $registro = Users::getUser($p['id']);
     if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
     $response["content"] = $registro;
     return $response;
@@ -79,8 +79,8 @@ class UsersController
   public function get_profile()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $registro = Users::getProfile();
     $response["content"] = $registro;
@@ -92,17 +92,17 @@ class UsersController
     
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     $params = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "username" => $pJson['username'],
-      "password" => $pJson['password'],
-      "password_repeat" => $pJson['password_repeat'], // eliminar despues de validar
-      "email" => $pJson['email'] ? $pJson['email'] : null,
-      "rol_id" => $pJson['rol_id'] ?? 19,
-      "caja_id" => $pJson['caja_id'] ?? 1,
+      "nombres" => trimSpaces($p['nombres']),
+      "apellidos" => trimSpaces($p['apellidos']),
+      "username" => $p['username'],
+      "password" => $p['password'],
+      "password_repeat" => $p['password_repeat'], // eliminar despues de validar
+      "email" => $p['email'] ? $p['email'] : null,
+      "rol_id" => $p['rol_id'] ?? 19,
+      "caja_id" => $p['caja_id'] ?? 1,
     ];
     // Validacion
     $this->validateCreateUser($params);
@@ -111,11 +111,11 @@ class UsersController
     unset($params["password_repeat"]);
 
     // Buscando duplicados
-    $count = Users::countRecordsBy(["username" => $pJson['username']]);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
-    if ($pJson['email']) {
-      $count = Users::countRecordsBy(["email" => $pJson['email']]);
-      if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
+    $count = Users::countRecordsBy(["username" => $p['username']]);
+    if ($count) throwMiExcepcion("El usuario: " . $p['username'] . ", ya existe!", "warning");
+    if ($p['email']) {
+      $count = Users::countRecordsBy(["email" => $p['email']]);
+      if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning");
     }
 
     $lastId = Users::createUser($params);
@@ -134,27 +134,27 @@ class UsersController
     // throwMiExcepcion("error de prueba", "error");
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     // Validacion de user
-    if (trim($pJson['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
-    if (trim($pJson['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
+    if (trim($p['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
+    if (trim($p['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
 
     // Buscando duplicados
-    $count = Users::countRecordsBy(["username" => $pJson['username']]);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
-    if ($pJson['email']) {
-      $count = Users::countRecordsBy(["email" => $pJson['email']]);
-      if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
+    $count = Users::countRecordsBy(["username" => $p['username']]);
+    if ($count) throwMiExcepcion("El usuario: " . $p['username'] . ", ya existe!", "warning");
+    if ($p['email']) {
+      $count = Users::countRecordsBy(["email" => $p['email']]);
+      if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning");
     }
 
     $params = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "username" => $pJson['username'],
-      "password" => crypt($pJson['password'], $_ENV['SALT_PSW']),
-      "email" => $pJson['email'] ? $pJson['email'] : null,
+      "nombres" => trimSpaces($p['nombres']),
+      "apellidos" => trimSpaces($p['apellidos']),
+      "username" => $p['username'],
+      "password" => crypt($p['password'], $_ENV['SALT_PSW']),
+      "email" => $p['email'] ? $p['email'] : null,
       "rol_id" => 19,
       "caja_id" => 1,
     ];
@@ -183,33 +183,33 @@ class UsersController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     $paramCampos = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "rol_id" => $pJson['rol_id'],
-      "caja_id" => $pJson['caja_id'],
-      "estado" => $pJson['estado'],
+      "nombres" => trimSpaces($p['nombres']),
+      "apellidos" => trimSpaces($p['apellidos']),
+      "rol_id" => $p['rol_id'],
+      "caja_id" => $p['caja_id'],
+      "estado" => $p['estado'],
     ];
 
     // Validacion
     $this->validateUpdateUser($paramCampos);
 
     // Buscando duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Users::countRecordsBy(["username" => $pJson['username']], $exclude);
-    if ($count) throwMiExcepcion("El usuario: " . $pJson['username'] . ", ya existe!", "warning");
-    $count = Users::countRecordsBy(["email" => $pJson['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
+    $exclude = ["id" => $p['id']];
+    $count = Users::countRecordsBy(["username" => $p['username']], $exclude);
+    if ($count) throwMiExcepcion("El usuario: " . $p['username'] . ", ya existe!", "warning");
+    $count = Users::countRecordsBy(["email" => $p['email']], $exclude);
+    if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning");
 
-    $paramWhere = ["id" => $pJson['id']];
+    $paramWhere = ["id" => $p['id']];
 
     $resp = Users::updateUser("users", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    $registro = Users::getUser($pJson['id']);
+    $registro = Users::getUser($p['id']);
     Users::setActivityLog("Modificación de registro en la tabla usuarios: " . $registro["username"]);
 
     $response['msgType'] = "success";
@@ -222,35 +222,35 @@ class UsersController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
-    if (trim($pJson['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
-    if (trim($pJson['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
-    if (trim($pJson['username']) == "") throwMiExcepcion("El usuario es requerido", "warning", 200);
+    if (trim($p['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
+    if (trim($p['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
+    if (trim($p['username']) == "") throwMiExcepcion("El usuario es requerido", "warning", 200);
 
     // Buscando duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Users::countRecordsBy(["email" => $pJson['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $pJson['email'] . ", ya existe!", "warning");
+    $exclude = ["id" => $p['id']];
+    $count = Users::countRecordsBy(["email" => $p['email']], $exclude);
+    if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning");
 
     $paramCampos = [
-      "nombres" => trimSpaces($pJson['nombres']),
-      "apellidos" => trimSpaces($pJson['apellidos']),
-      "email" => $pJson['email'],
+      "nombres" => trimSpaces($p['nombres']),
+      "apellidos" => trimSpaces($p['apellidos']),
+      "email" => $p['email'],
     ];
 
-    if ($pJson['password']) {
-      $paramCampos["password"] = crypt($pJson['password'], $_ENV['SALT_PSW']);
+    if ($p['password']) {
+      $paramCampos["password"] = crypt($p['password'], $_ENV['SALT_PSW']);
     }
 
-    $paramWhere = ["id" => $pJson['id']];
+    $paramWhere = ["id" => $p['id']];
 
 
     $resp = Users::updateUser("users", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $registro = Users::getProfile($pJson['id']);
+    $registro = Users::getProfile($p['id']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Datos actualizados";
@@ -261,11 +261,11 @@ class UsersController
   public function delete_user()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $params = [
-      "id" => $pJson['id'],
+      "id" => $p['id'],
     ];
     $resp = Users::deleteUser($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
@@ -281,19 +281,19 @@ class UsersController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $params = ["username" => $pJson['username'],];
+    $params = ["username" => $p['username'],];
 
     $userByUsername = Users::getUserBy($params);
-    if (!$userByUsername) throwMiExcepcion("No se encontró al usuario " . $pJson['username'], "error");
+    if (!$userByUsername) throwMiExcepcion("No se encontró al usuario " . $p['username'], "error");
 
-    if (!$userByUsername["email"]) throwMiExcepcion("El usuario " . $pJson['username'] . " no tiene una cuenta de correo asociada", "error");
+    if (!$userByUsername["email"]) throwMiExcepcion("El usuario " . $p['username'] . " no tiene una cuenta de correo asociada", "error");
 
     $response['error'] = false;
     $response['msgType'] = "success";
-    $response['msg'] = "El usuario " . $pJson['username'] . " tiene una cuenta de correo asociada";
+    $response['msg'] = "El usuario " . $p['username'] . " tiene una cuenta de correo asociada";
     $response['content'] = $userByUsername["email"];
     return $response;
   }
@@ -303,10 +303,10 @@ class UsersController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-    $email = $pJson['email'];
-    $username = $pJson['username'];
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $email = $p['email'];
+    $username = $p['username'];
     // Generando código de 6 dígitos.
     $code = rand(100000, 999999);
     // Enviando código al email.
@@ -327,11 +327,11 @@ class UsersController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-    $code = $pJson['code'];
-    $new_password = $pJson['new_password'];
-    $new_password_repeat = $pJson['new_password_repeat'];
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $code = $p['code'];
+    $new_password = $p['new_password'];
+    $new_password_repeat = $p['new_password_repeat'];
     if ($new_password !== $new_password_repeat) throwMiExcepcion("Las contraseñas no son iguales", "error");
     $userByCode = Users::getUserBy(["code_restore" => $code]);
     if (!$userByCode) throwMiExcepcion("Código expirado o inválido", "error");
@@ -353,10 +353,10 @@ class UsersController
   //--> Inicia sesion, devuelve al user y los modulos asociados a su rol
   public function sign_in() // Logeaese
   {
-    $parJson = json_decode(file_get_contents('php://input'), true) ?? [];
+    $p = json_decode(file_get_contents('php://input'), true);
 
-    $username = $parJson['username'] ?? '';
-    $password = $parJson['password'] ?? '';
+    $username = $p['username'] ?? '';
+    $password = $p['password'] ?? '';
     if (!$username || !$password) throwMiExcepcion("Usuario y password requeridos", "warning", 200);
 
     $campos = [
@@ -372,7 +372,7 @@ class UsersController
       "estado"
     ];
     // Encriptando el password
-    $password = crypt($parJson['password'], $_ENV['SALT_PSW']);
+    $password = crypt($p['password'], $_ENV['SALT_PSW']);
 
     // Obteniendo al user
     $equals = [
@@ -436,12 +436,12 @@ class UsersController
 
   public function check_password()
   {
-    $parJson = json_decode(file_get_contents('php://input'), true) ?? [];
-    $password = $parJson['password'] ?? '';
+    $p = json_decode(file_get_contents('php://input'), true);
+    $password = $p['password'] ?? '';
 
     $campos = ["id"];
     // Encriptando el password
-    $password = crypt($parJson['password'], $_ENV['SALT_PSW']);
+    $password = crypt($p['password'], $_ENV['SALT_PSW']);
     $user_id = Users::getCurUser()["id"];
     $equals = [
       ["field_name" => "id", "field_value" => $user_id],

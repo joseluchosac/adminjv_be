@@ -5,6 +5,7 @@ use Firebase\JWT\Key;
 class Users
 {
   static private $curUser = null;
+  static private $curTerm = null; // terminal actual
   static private $activity = [];
 
   static public function filterUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
@@ -205,10 +206,9 @@ class Users
     return $registro;
   }
 
-  static function checkToken($authorization)
+  static function checkToken($token)
   {
     try {
-      $token = explode(" ", $authorization)[1];
       // --> JWT::decode: Decodifica el token y si hay error lanza una excepcion
       $token_decoded = JWT::decode($token, new Key($_ENV['JWT_KEY'], 'HS256'));
       // --> Etrae id del user del token decodificado y lo compara en la BD
@@ -244,12 +244,15 @@ class Users
   static function setCurUser($curUser){
     self::$curUser = $curUser;
   }
+
   static function getCurUser(){
     return self::$curUser;
   }
+
   static function setActivity($activity){
     self::$activity = $activity;
   }
+
   static function getActivity(){
     return self::$activity;
   }
@@ -269,6 +272,13 @@ class Users
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
+  }
+
+  static function setCurTerm($thisTerm){
+    self::$curTerm = $thisTerm;
+  }
+  static function getCurTerm(){
+    return self::$curTerm;
   }
   // Metodos privados
   static private function num_regs($table, $sqlWhere, $bindWhere)

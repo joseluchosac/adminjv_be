@@ -8,7 +8,7 @@ class EstablecimientosController
   public function filter_establecimientos($isPaginated = true)
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
+    $p = json_decode(file_get_contents('php://input'), true);
 
     $campos = [
       'id',
@@ -23,22 +23,22 @@ class EstablecimientosController
       'estado',
     ];
 
-    $search = $pJson['search'] ? "%" . $pJson['search'] . "%" : "";
+    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
 
     $paramWhere = [
       "paramLike" => ['descripcion' => $search],
-      "paramEquals" => $pJson['equals'], // [["field_name" => "id", "field_value"=>1]] 
+      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
       "paramBetween" => [
-        "campo" => $pJson['between']['field_name'],
-        "rango" => $pJson['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
+        "campo" => $p['between']['field_name'],
+        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
       ]
     ];
 
-    $paramOrders = $pJson['orders'];
+    $paramOrders = $p['orders'];
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
-      "offset" => $pJson['offset']
+      "offset" => $p['offset']
     ];
 
     $res = Establecimientos::filterEstablecimientos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
@@ -68,10 +68,10 @@ class EstablecimientosController
   public function get_establecimiento()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $establecimiento = Establecimientos::getEstablecimiento($pJson['id']);
+    $establecimiento = Establecimientos::getEstablecimiento($p['id']);
     $res['content'] = $establecimiento;
     unset($establecimiento);
     return $res;
@@ -81,18 +81,18 @@ class EstablecimientosController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-    $codigo = trimSpaces($pJson['codigo']);
-    $descripcion = trimSpaces($pJson['descripcion']);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $codigo = trimSpaces($p['codigo']);
+    $descripcion = trimSpaces($p['descripcion']);
     $paramCampos = [
       "codigo" => $codigo ? $codigo : null,
-      "tipo" => $pJson['tipo'],
+      "tipo" => $p['tipo'],
       "descripcion" => $descripcion,
-      "direccion" => trimSpaces($pJson['direccion']),
-      "ubigeo_inei" => $pJson['ubigeo_inei'],
-      "telefono" => trimSpaces($pJson['telefono']),
-      "email" => trimSpaces($pJson['email']),
+      "direccion" => trimSpaces($p['direccion']),
+      "ubigeo_inei" => $p['ubigeo_inei'],
+      "telefono" => trimSpaces($p['telefono']),
+      "email" => trimSpaces($p['email']),
     ];
     // Validacion
     $this->validateEstablecimiento($paramCampos);
@@ -121,28 +121,28 @@ class EstablecimientosController
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-    $codigo = trimSpaces($pJson['codigo']);
-    $descripcion = trimSpaces($pJson['descripcion']);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $codigo = trimSpaces($p['codigo']);
+    $descripcion = trimSpaces($p['descripcion']);
     $paramCampos = [
       "codigo" => $codigo ? $codigo : null,
-      "tipo" => $pJson['tipo'],
+      "tipo" => $p['tipo'],
       "descripcion" => $descripcion,
-      "direccion" => trimSpaces($pJson['direccion']),
-      "ubigeo_inei" => $pJson['ubigeo_inei'],
-      "telefono" => trimSpaces($pJson['telefono']),
-      "email" => trimSpaces($pJson['email']),
-      "estado" => trimSpaces($pJson['estado']),
+      "direccion" => trimSpaces($p['direccion']),
+      "ubigeo_inei" => $p['ubigeo_inei'],
+      "telefono" => trimSpaces($p['telefono']),
+      "email" => trimSpaces($p['email']),
+      "estado" => trimSpaces($p['estado']),
     ];
 
     $this->validateEstablecimiento($paramCampos);
     // Buscando duplicados
-    $exclude = ["id" => $pJson['id']];
+    $exclude = ["id" => $p['id']];
     // Buscando si es establecimiento principal
     $countPrincipal = Establecimientos::countEstablecimientos([
       ["field_name" => "codigo", "field_value"=>'0000'],
-      ["field_name" => "id", "field_value"=>$pJson['id']]
+      ["field_name" => "id", "field_value"=>$p['id']]
     ]);
 
     if($countPrincipal && $codigo != "0000"){
@@ -158,12 +158,12 @@ class EstablecimientosController
     }
     
 
-    $paramWhere = ["id" => $pJson['id']];
+    $paramWhere = ["id" => $p['id']];
 
     $update = Establecimientos::updateEstablecimiento($paramCampos, $paramWhere);
     if (!$update) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $establecimiento = Establecimientos::getEstablecimiento($pJson['id']);
+    $establecimiento = Establecimientos::getEstablecimiento($p['id']);
 
     $res['msgType'] = "success";
     $res['msg'] = "Registro actualizado";
@@ -174,16 +174,16 @@ class EstablecimientosController
   public function delete_establecimiento()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if (!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $params = [
-      "id" => $pJson['id'],
+      "id" => $p['id'],
     ];
     // Buscando duplicados si es establecimiento principal
     $countPrincipal = Establecimientos::countEstablecimientos([
       ["field_name" => "codigo", "field_value"=>'0000'],
-      ["field_name" => "id", "field_value"=>$pJson['id']]
+      ["field_name" => "id", "field_value"=>$p['id']]
     ] );
     if($countPrincipal)throwMiExcepcion("No se puede eliminar al establecimiento principal", "warning");
     

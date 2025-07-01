@@ -116,7 +116,7 @@ class Config
     return $count;
   }
 
-  static function registerTerminal($params)
+  static function createTerminal($params)
   {
     $sql = sqlInsert("terminales", $params);
     $dbh = Conexion::conectar();
@@ -124,6 +124,25 @@ class Config
     $stmt->execute($params);
     $lastId = $dbh->lastInsertId();
     return $lastId;
+  }
+
+  static function deleteTerminalByName($nombre){
+    $sql = "DELETE FROM terminales WHERE nombre = :nombre";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["nombre" => $nombre]);
+    $count = $stmt->rowCount();
+    return $count;
+  }
+  static function updateTerminal($paramCampos, $paramWhere)
+  {
+    $sql = sqlUpdate("terminales", $paramCampos, $paramWhere);
+    $params = array_merge($paramCampos, $paramWhere);
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($params);
+    $count = $stmt->rowCount();
+    return $count;
   }
 
   static function getTerminal($nombre){

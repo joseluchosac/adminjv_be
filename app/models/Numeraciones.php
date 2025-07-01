@@ -3,22 +3,20 @@ require_once("Conexion.php");
 
 class Numeraciones
 {
-  static function getNumeracionesEstablecimiento($establecimiento_id){
+  static function getNumeraciones(){
     $sql = "SELECT 
         id,
         establecimiento_id,
-        tipo_comprobante_cod,
-        descripcion,
+        descripcion_doc,
+        serie_pre,
         serie,
         correlativo,
-        modifica_a,
         estado
       FROM numeraciones
-      WHERE establecimiento_id = :establecimiento_id
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute(["establecimiento_id" => $establecimiento_id]);
+    $stmt->execute();
     $numeracionesEstablecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $numeracionesEstablecimiento;
   }
@@ -27,11 +25,10 @@ class Numeraciones
     $sql = "SELECT 
         id,
         establecimiento_id,
-        tipo_comprobante_cod,
-        descripcion,
+        descripcion_doc,
+        serie_pre,
         serie,
         correlativo,
-        modifica_a,
         estado
       FROM numeraciones
       WHERE id = :id
@@ -39,20 +36,17 @@ class Numeraciones
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute(["id" => $id]);
-    $numeracionEstablecimiento = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $numeracionEstablecimiento;
+    $numeracion = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $numeracion;
   }
 
   static function getCorrelativo($paramWhere){
     $sql = "SELECT 
         id,
         establecimiento_id,
-        tipo_comprobante_cod,
-        descripcion,
+        serie_pre,
         serie,
-        correlativo,
-        modifica_a,
-        estado
+        correlativo
       FROM numeraciones
       WHERE establecimiento_id = :establecimiento_id
         AND serie = :serie
@@ -92,6 +86,19 @@ class Numeraciones
     $stmt->execute($params);
     $resp = $stmt->rowCount();
     return $resp;
+  }
+
+  static function getSerie($serie_pre, $establecimiento_id){
+    $sql = "SELECT 
+        serie
+      FROM numeraciones
+      WHERE establecimiento_id = :establecimiento_id AND serie_pre = :serie_pre
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["serie_pre" => $serie_pre, "establecimiento_id" => $establecimiento_id]);
+    $serie = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $serie;
   }
 
   static function countNumeraciones($equal, $exclude = []){

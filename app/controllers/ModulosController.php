@@ -6,12 +6,12 @@ class ModulosController
 {
   public function test(){
 
-    $parJson = json_decode(file_get_contents('php://input'), true);
+    $p = json_decode(file_get_contents('php://input'), true);
     $response['msg'] = 'ok';
     $response['server_REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'];
     $response['GET'] = $_GET;
     $response['POST'] = $_POST;
-    $response['parJson'] = $parJson;
+    $response['parJson'] = $p;
     return $response;
   }
 
@@ -36,31 +36,31 @@ class ModulosController
   {
     if($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     // Validacion de modulo
-    if(trim($pJson['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
+    if(trim($p['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
 
-    if($pJson['padre_id'] && !$pJson['nombre']){
+    if($p['padre_id'] && !$p['nombre']){
       throwMiExcepcion("Ingrese el nombre del módulo", "warning", 200);
     }
 
     // Comprobacion de duplicados
-    $count = Modulos::countRecordsBy(["descripcion" => $pJson['descripcion']]);
-    if($count) throwMiExcepcion("La descripción: " . $pJson['descripcion'] . ", ya existe!", "warning");
+    $count = Modulos::countRecordsBy(["descripcion" => $p['descripcion']]);
+    if($count) throwMiExcepcion("La descripción: " . $p['descripcion'] . ", ya existe!", "warning");
 
-    if($pJson['nombre']){
-      $count = Modulos::countRecordsBy(["nombre" => $pJson['nombre']]);
-      if($count) throwMiExcepcion("El módulo de nombre: " . $pJson['nombre'] . ", ya existe!", "warning");
+    if($p['nombre']){
+      $count = Modulos::countRecordsBy(["nombre" => $p['nombre']]);
+      if($count) throwMiExcepcion("El módulo de nombre: " . $p['nombre'] . ", ya existe!", "warning");
     }
 
     $params = [
-      "nombre" => $pJson['nombre'] ? trimSpaces($pJson['nombre']) : null,
-      "descripcion" => trimSpaces($pJson['descripcion']),
-      "padre_id" => $pJson['padre_id'] ? $pJson['padre_id'] : 0,
-      "icon_menu" => $pJson['icon_menu'] ? $pJson['icon_menu'] : "FaRegCircle",
-      "orden" => $pJson['orden'] ? $pJson['orden'] : 0,
+      "nombre" => $p['nombre'] ? trimSpaces($p['nombre']) : null,
+      "descripcion" => trimSpaces($p['descripcion']),
+      "padre_id" => $p['padre_id'] ? $p['padre_id'] : 0,
+      "icon_menu" => $p['icon_menu'] ? $p['icon_menu'] : "FaRegCircle",
+      "orden" => $p['orden'] ? $p['orden'] : 0,
     ];
 
     $lastId = Modulos::createModulo( $params );
@@ -77,23 +77,23 @@ class ModulosController
   {
     if($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
-    if(trim($pJson['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
+    if(trim($p['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
     
     // Comprobacion de duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Modulos::countRecordsBy(["descripcion" => $pJson['descripcion']], $exclude);
-    if($count) throwMiExcepcion("La descripción: " . $pJson['descripcion'] . ", ya existe!", "warning");
+    $exclude = ["id" => $p['id']];
+    $count = Modulos::countRecordsBy(["descripcion" => $p['descripcion']], $exclude);
+    if($count) throwMiExcepcion("La descripción: " . $p['descripcion'] . ", ya existe!", "warning");
 
     $params = [
-      "nombre" => $pJson['nombre'] ? trimSpaces($pJson['nombre']) : null,
-      "descripcion" => trimSpaces($pJson['descripcion']),
-      "padre_id" => $pJson['padre_id'] ? $pJson['padre_id'] : 0,
-      "icon_menu" => $pJson['icon_menu'] ? $pJson['icon_menu'] : "FaRegCircle",
-      "orden" => $pJson['orden'] ? $pJson['orden'] : 0,
-      "id" => intval($pJson['id']),
+      "nombre" => $p['nombre'] ? trimSpaces($p['nombre']) : null,
+      "descripcion" => trimSpaces($p['descripcion']),
+      "padre_id" => $p['padre_id'] ? $p['padre_id'] : 0,
+      "icon_menu" => $p['icon_menu'] ? $p['icon_menu'] : "FaRegCircle",
+      "orden" => $p['orden'] ? $p['orden'] : 0,
+      "id" => intval($p['id']),
     ];
 
 
@@ -112,15 +112,15 @@ class ModulosController
   {
     if($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     // Contar hijos
-    $count = Modulos::countRecordsBy(["padre_id" => $pJson['id']]);
+    $count = Modulos::countRecordsBy(["padre_id" => $p['id']]);
     if($count) throwMiExcepcion("El módulo a eliminar no debe tener hijos", "warning");
 
     $params = [
-      "id" => $pJson['id'],
+      "id" => $p['id'],
     ];
     $deleteModulo = Modulos::deleteModulo( $params );
     if(!$deleteModulo) throwMiExcepcion("Ningún registro eliminado", "warning");
@@ -153,8 +153,8 @@ class ModulosController
       'samesite' => 'None', // Permitir cookies en solicitudes entre dominios
     ]);
     // setcookie("nombre", "steve", time() + 60*2, "/");
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    $rol_id = $pJson["rol_id"];
+    $p = json_decode(file_get_contents('php://input'), true);
+    $rol_id = $p["rol_id"];
     if($rol_id){
       $res['content'] = Modulos::getModuloRol($rol_id);
     }else{
@@ -174,10 +174,10 @@ class ModulosController
 
   public function update_modulos_roles()
   {
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    $rol_id = $pJson["rol_id"];
+    $p = json_decode(file_get_contents('php://input'), true);
+    $rol_id = $p["rol_id"];
     if(!$rol_id) throwMiExcepcion("No se guardaron los cambios", "warning", 200);
-    $modulos = $pJson["modulos"];
+    $modulos = $p["modulos"];
     Modulos::updateModulosRoles($rol_id, $modulos);
     $res['error'] = false;
     $res['msgType'] = "success";

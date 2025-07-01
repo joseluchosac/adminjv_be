@@ -20,18 +20,18 @@ class RolesController
   {
     if($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     // Validacion
-    if(trim($pJson['rol']) == "") throwMiExcepcion("Descripción del rol requerida", "warning", 200);
+    if(trim($p['rol']) == "") throwMiExcepcion("Descripción del rol requerida", "warning", 200);
    
     // Buscando duplicados
-    $count = Roles::countRecordsBy(["rol" => $pJson['rol']]);
-    if($count) throwMiExcepcion("El rol: " . $pJson['rol'] . ", ya existe!", "warning");
+    $count = Roles::countRecordsBy(["rol" => $p['rol']]);
+    if($count) throwMiExcepcion("El rol: " . $p['rol'] . ", ya existe!", "warning");
 
     $params = [
-      "rol" => trimSpaces($pJson['rol']),
+      "rol" => trimSpaces($p['rol']),
     ];
 
     $lastId = Roles::createRol( $params );
@@ -50,19 +50,19 @@ class RolesController
   {
     if($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
-    if(trim($pJson['rol']) == "") throwMiExcepcion("Rol requerido", "warning", 200);
+    if(trim($p['rol']) == "") throwMiExcepcion("Rol requerido", "warning", 200);
 
     // Buscando duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Roles::countRecordsBy(["rol" => $pJson['rol']], $exclude);
-    if($count) throwMiExcepcion("El rol: " . $pJson['rol'] . ", ya existe!", "warning");
+    $exclude = ["id" => $p['id']];
+    $count = Roles::countRecordsBy(["rol" => $p['rol']], $exclude);
+    if($count) throwMiExcepcion("El rol: " . $p['rol'] . ", ya existe!", "warning");
 
     $params = [
-      "rol" => trimSpaces($pJson['rol']),
-      "id" => intval($pJson['id']),
+      "rol" => trimSpaces($p['rol']),
+      "id" => intval($p['id']),
     ];
 
     $resp = Roles::updateRol( $params );
@@ -81,17 +81,17 @@ class RolesController
   {
     if($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     // Comprobando dependencias
-    $count = Users::countRecordsBy(["rol_id" => $pJson['id']]);
+    $count = Users::countRecordsBy(["rol_id" => $p['id']]);
     if($count) throwMiExcepcion("Este rol depende de algunos usuarios !", "warning");
-    $count = ModulosRoles::countRecordsBy(["rol_id" => $pJson['id']]);
+    $count = ModulosRoles::countRecordsBy(["rol_id" => $p['id']]);
     if($count) throwMiExcepcion("Este rol depende de algunos usuarios !", "warning");
     
     $params = [
-      "id" => $pJson['id'],
+      "id" => $p['id'],
     ];
     $resp = Roles::deleteRol( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");

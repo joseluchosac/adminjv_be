@@ -45,19 +45,19 @@ class CategoriasController
   {
     if($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     // Validacion de modulo
-    if(trim($pJson['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
+    if(trim($p['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
 
     // Comprobacion de duplicados
-    $count = Categorias::countRecordsBy(["descripcion" => $pJson['descripcion']]);
-    if($count) throwMiExcepcion("La descripción: " . $pJson['descripcion'] . ", ya existe!", "warning");
+    $count = Categorias::countRecordsBy(["descripcion" => $p['descripcion']]);
+    if($count) throwMiExcepcion("La descripción: " . $p['descripcion'] . ", ya existe!", "warning");
 
     $params = [
-      "descripcion" => trimSpaces($pJson['descripcion']),
-      "padre_id" => $pJson['padre_id'] ? $pJson['padre_id'] : 0,
+      "descripcion" => trimSpaces($p['descripcion']),
+      "padre_id" => $p['padre_id'] ? $p['padre_id'] : 0,
       "orden" => 0,
     ];
 
@@ -75,20 +75,20 @@ class CategoriasController
   {
     if($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
-    if(trim($pJson['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
+    if(trim($p['descripcion']) == "") throwMiExcepcion("Descripción requerida", "warning", 200);
     
     // Comprobacion de duplicados
-    $exclude = ["id" => $pJson['id']];
-    $count = Categorias::countRecordsBy(["descripcion" => $pJson['descripcion']], $exclude);
-    if($count) throwMiExcepcion("La descripción: " . $pJson['descripcion'] . ", ya existe!", "warning");
+    $exclude = ["id" => $p['id']];
+    $count = Categorias::countRecordsBy(["descripcion" => $p['descripcion']], $exclude);
+    if($count) throwMiExcepcion("La descripción: " . $p['descripcion'] . ", ya existe!", "warning");
 
     $params = [
-      "descripcion" => trimSpaces($pJson['descripcion']),
-      "padre_id" => $pJson['padre_id'] ? $pJson['padre_id'] : 0,
-      "id" => $pJson['id'],
+      "descripcion" => trimSpaces($p['descripcion']),
+      "padre_id" => $p['padre_id'] ? $p['padre_id'] : 0,
+      "id" => $p['id'],
     ];
 
     $resp = Categorias::updateCategoria( $params );
@@ -106,15 +106,15 @@ class CategoriasController
   {
     if($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 200);
 
-    $pJson = json_decode(file_get_contents('php://input'), true);
-    if(!$pJson) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
     // Contar hijos
-    $count = Categorias::countRecordsBy(["padre_id" => $pJson['id']]);
+    $count = Categorias::countRecordsBy(["padre_id" => $p['id']]);
     if($count) throwMiExcepcion("La categoria a eliminar no debe tener hijos", "warning");
 
     $params = [
-      "id" => $pJson['id'],
+      "id" => $p['id'],
     ];
     $resp = Categorias::deleteCategoria( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
