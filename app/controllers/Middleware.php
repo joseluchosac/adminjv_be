@@ -1,18 +1,12 @@
 <?php
 
 class Middleware{
-  static function check($authorization, $nombreModulo, $attachedDataJson, $route){
-    // echo "<pre>";
-    // print_r($authorization);
-    // echo "<br>";
-    // print_r($moduloActual);
-    // echo "<br>";
-    // var_dump($attachedDataJson);
-    // echo "</pre>";
+  static function check($authorization, $attachedDataJson, $route){
     if($attachedDataJson){
       $attachedData = json_decode($attachedDataJson, true);
-      $thisTerm = $attachedData["thisTerm"] ?? null;
-      Users::setCurTerm($thisTerm);
+      $curEstab = $attachedData["curEstab"] ?? 0;
+      // $curModulo = $attachedData["curModulo"] ?? 0;
+      Users::setCurEstab($curEstab);
     }
 
     if($authorization){
@@ -33,6 +27,9 @@ class Middleware{
         }
         case 'productos':{
           if($route['accion'] == 'prueba') break;
+        }
+        case 'establecimientos':{
+          if($route['accion'] == 'get_establecimientos_options') break;
         }
         default:{
           throwMiExcepcion("authErr: token empty", "error", 200);  

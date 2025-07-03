@@ -5,7 +5,7 @@ use Firebase\JWT\Key;
 class Users
 {
   static private $curUser = null;
-  static private $curTerm = null; // terminal actual
+  static private $curEstab = 0; // establecimiento de sesion actual
   static private $activity = [];
 
   static public function filterUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
@@ -274,11 +274,11 @@ class Users
     $stmt->execute($params);
   }
 
-  static function setCurTerm($thisTerm){
-    self::$curTerm = $thisTerm;
+  static function setCurEstab($curEstab){
+    self::$curEstab = $curEstab;
   }
-  static function getCurTerm(){
-    return self::$curTerm;
+  static function getCurEstab(){
+    return self::$curEstab;
   }
   // Metodos privados
   static private function num_regs($table, $sqlWhere, $bindWhere)

@@ -48,27 +48,39 @@ class Establecimientos
     return $response;
   }
   
-  static function getEstablecimientos(){
-    $sql = "SELECT
-      id,
-      tipo,
-      codigo,
-      descripcion,
-      direccion,
-      ubigeo_inei,
-      dis_prov_dep,
-      telefono,
-      email,
-      estado
-      FROM establecimientos_v
-    ";
+  // static function getEstablecimientos(){
+  //   $sql = "SELECT
+  //     id,
+  //     tipo,
+  //     codigo,
+  //     descripcion,
+  //     direccion,
+  //     ubigeo_inei,
+  //     dis_prov_dep,
+  //     telefono,
+  //     email,
+  //     estado
+  //     FROM establecimientos_v
+  //   ";
+  //   $dbh = Conexion::conectar();
+  //   $stmt = $dbh->prepare($sql);
+  //   $stmt->execute();
+  //   $establecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  //   return $establecimiento;
+  // }
+
+  static function getEstablecimientos($campos, $orders = null)
+  {
+    $sql = "SELECT " . implode(", ", $campos) . " FROM establecimientos_v";
+    $sqlOrder = $orders ? getSqlOrderBy($orders) : "";
+    $sql .= $sqlOrder;
+
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute();
-    $establecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $establecimiento;
+    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $records;
   }
-
   static function getEstablecimiento($id){
     $sql = "SELECT
       id,

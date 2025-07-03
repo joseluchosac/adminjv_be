@@ -19,7 +19,7 @@ header("Access-Control-Allow-Credentials: true"); // Permitir el envío de crede
 // header("Access-Control-Allow-Headers: *");
 
 ////// Permite encabezados específicos
-header("Access-Control-Allow-Headers: nombre-modulo, Authorization, attached-data, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
+header("Access-Control-Allow-Headers: Authorization, attached-data, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
 
 // header("Content-Type:application/json");
 

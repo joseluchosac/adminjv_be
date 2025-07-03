@@ -177,7 +177,6 @@ class ProductosController
       "impuesto_id_icbper" => $p['impuesto_id_icbper'],
       "inventariable" => $p['inventariable'],
       "lotizable" => $p['lotizable'],
-      "stock" => $p['stock'],
       "stock_min" => $p['stock_min'],
       "thumb" => $p['thumb'],
     ];
@@ -223,7 +222,6 @@ class ProductosController
       "impuesto_id_icbper" => $p['impuesto_id_icbper'],
       "inventariable" => $p['inventariable'],
       "lotizable" => $p['lotizable'],
-      "stock" => $p['stock'],
       "stock_min" => $p['stock_min'],
       "thumb" => $p['thumb'],
       "estado" => $p['estado'],

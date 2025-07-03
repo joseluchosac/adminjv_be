@@ -126,14 +126,6 @@ class Config
     return $lastId;
   }
 
-  static function deleteTerminalByName($nombre){
-    $sql = "DELETE FROM terminales WHERE nombre = :nombre";
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute(["nombre" => $nombre]);
-    $count = $stmt->rowCount();
-    return $count;
-  }
   static function updateTerminal($paramCampos, $paramWhere)
   {
     $sql = sqlUpdate("terminales", $paramCampos, $paramWhere);

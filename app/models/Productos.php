@@ -19,12 +19,12 @@ class Productos
       "between" => $paramWhere['paramBetween']
     ]);    
     // se podra inyectar aca el where establecimiento id?
-    $curTerm = Users::getCurTerm();
+    $curEstab = Users::getCurEstab();
     $sqlWhere .= $sqlWhere
       ? " AND (establecimiento_id = :establecimiento_id1 OR establecimiento_id = :establecimiento_id2)" 
       : " WHERE (establecimiento_id = :establecimiento_id1 OR establecimiento_id = :establecimiento_id2)";
 
-    $bindWhere["establecimiento_id1"] = $curTerm ? $curTerm["establecimiento_id"] : 0;
+    $bindWhere["establecimiento_id1"] = $curEstab;
     $bindWhere["establecimiento_id2"] = 0;
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
@@ -91,20 +91,25 @@ class Productos
       p.impuesto_id_icbper,
       p.inventariable,
       p.lotizable,
-      p.stock_min,
+      CAST(s.stock as DOUBLE) as stock,
+      CAST(p.stock_min as DOUBLE) as stock_min,
       p.thumb,
       p.estado,
       p.created_at,
       ifnull(p.updated_at, '') as updated_at
       FROM productos p
       LEFT JOIN marcas m ON p.marca_id = m.id 
-      LEFT JOIN laboratorios l ON p.laboratorio_id = l.id 
+      LEFT JOIN laboratorios l ON p.laboratorio_id = l.id
+      LEFT JOIN stocks s ON p.id = s.producto_id AND s.establecimiento_id = :establecimiento_id
       WHERE p.id = :id;
     ";
+    $curEstab = Users::getCurEstab();
+    $establecimiento_id = $curEstab;
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute(['id' => $id]);
+    $stmt->execute(['id' => $id, 'establecimiento_id' => $establecimiento_id]);
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
+    $record['stock'] = $record['stock'] ? $record['stock'] : 0;
     return $record;
   }
   
