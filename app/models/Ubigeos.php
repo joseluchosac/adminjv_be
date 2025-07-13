@@ -57,6 +57,27 @@ class Ubigeos
     return $record;
   }
   
+    // $paramsEqual de la forma ["campo1"=>"valor1", "campo2"=>"valor2"]
+  static function getUbigeosBy($paramsEqual){
+    $sqlWhere = implode(" AND ", array_map(function($el){
+      return "$el = :$el";
+    },array_keys($paramsEqual)));
+    $sqlWhere = $sqlWhere ? " WHERE " . $sqlWhere : "";
+    $sql = "SELECT 
+        ubigeo_inei,
+        ubigeo_reniec,
+        dis_prov_dep,
+        dep_prov_dis
+      FROM ubigeos_v
+      $sqlWhere;
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($paramsEqual);
+    $record = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $record;
+  }
+
   static function countRecordsBy($equal, $exclude = []){
     $where = " WHERE " . array_keys($equal)[0] . " = :". array_keys($equal)[0];
     if($exclude){

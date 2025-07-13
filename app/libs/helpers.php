@@ -70,7 +70,7 @@ function trimSpaces($variable)
     return $newArray;
   } else {
     if (gettype($variable) === "string") {
-      return trimear($variable);
+      return trim($variable) ? trimear($variable) : "";
     } else {
       return $variable;
     }

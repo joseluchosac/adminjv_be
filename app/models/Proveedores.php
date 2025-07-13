@@ -74,7 +74,7 @@ class Proveedores
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
     $lastId = $dbh->lastInsertId();
-    $resp = $stmt->rowCount();
+    $stmt->rowCount();
     return $lastId;
   }
 
@@ -107,9 +107,7 @@ class Proveedores
         p.nombre_razon_social,
         p.direccion,
         p.ubigeo_inei,
-        ifnull(u.departamento,'') AS departamento,
-        ifnull(u.provincia, '') AS provincia,
-        ifnull(u.distrito, '') AS distrito,
+        CONCAT(u.distrito, ', ', u.provincia, ', ', u.departamento) AS dis_prov_dep,
         p.email,
         p.telefono,
         p.api,
@@ -123,6 +121,36 @@ class Proveedores
     $stmt = $dbh->prepare($sql);
     $stmt->execute(['id' => $id]);
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $record;
+  }
+
+  // $paramsEqual de la forma ["campo1"=>"valor1", "campo2"=>"valor2"]
+  static function getProveedoresBy($paramsEqual){
+    $sqlWhere = implode(" AND ", array_map(function($el){
+      return "p.$el = :$el";
+    },array_keys($paramsEqual)));
+    $sqlWhere = $sqlWhere ? " WHERE " . $sqlWhere : "";
+    $sql = "SELECT 
+        p.id,
+        p.tipo_documento_cod,
+        td.descripcion AS tipo_documento,
+        ifnull(p.nro_documento,'') AS nro_documento,
+        p.nombre_razon_social,
+        p.direccion,
+        p.ubigeo_inei,
+        p.dis_prov_dep,
+        p.email,
+        p.telefono,
+        p.api,
+        p.estado
+      FROM proveedores p
+      LEFT JOIN tipos_documento td ON p.tipo_documento_cod = td.codigo
+      $sqlWhere;
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($paramsEqual);
+    $record = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $record;
   }
 

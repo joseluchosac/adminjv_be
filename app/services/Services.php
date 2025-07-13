@@ -12,6 +12,7 @@ class Services {
     $data = $stmt->fetch(PDO::FETCH_ASSOC);
     $apis = json_decode($data['doc_value'], true);
     $defaultApi = $apis['default'];
+
     switch ($defaultApi) {
       case 'apisnetpe':{
         $response = self::consultaNroDoc_apis_net_pe($nro_documento, $tipo_documento_cod, $apis[$defaultApi]);
@@ -50,24 +51,39 @@ class Services {
     // Obtén el código de estado HTTP
     // $http_status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 
-    $response = json_decode($response, true);
+    $resp = json_decode($response, true);
     if(!$response) throwMiExcepcion("Error en la petición");
     if(curl_errno($curl)) throwMiExcepcion("Error en cURL: " . curl_error($curl));
     curl_close($curl);
-    if(isset($response["message"])){
-      $response['error'] = true;
-      $response['msg'] = $response['message'];
-      $response['msgType'] = "warning";
+    $nroDoc = [];
+    $content = null;
+    if(isset($resp["message"])){
+      $nroDoc['error'] = true;
+      $nroDoc['msg'] = $resp['message'];
+      $nroDoc['msgType'] = "warning";
     }else{
-      if($tipo_documento_cod == "1"){
-        $response["nombre_razon_social"] = $response["nombreCompleto"];
-      }else if($tipo_documento_cod == "6"){
-        $response["nombre_razon_social"] = $response["razonSocial"];
+      if($tipo_documento_cod == "1"){ // DNI
+        $content["nombre_razon_social"] = $resp["nombreCompleto"];
+        $content["condicion_sunat"] = "";
+        $content["estado_sunat"] = "";
+        $content["direccion"] = "";
+        $content["ubigeo"] = "";
+      }else if($tipo_documento_cod == "6"){ // RUC
+        $content["nombre_razon_social"] = $resp["razonSocial"];
+        $content["condicion_sunat"] = $resp["condicion"];
+        $content["estado_sunat"] = $resp["estado"];
+        $content["direccion"] = $resp["direccion"];
+        $content["ubigeo"] = $resp["ubigeo"];
       }
+      $content['tipo_documento_cod'] = $tipo_documento_cod;
+      $content['nro_documento'] = $nro_documento;
+      $content["dis_prov_dep"] = "";
+      $nroDoc['error'] = false;
+      $nroDoc['msg'] = "datos obtenidos";
+      $nroDoc['msgType'] = "success";
     }
-    // var_dump($response);
-    // exit();
-    return $response ;
+    $nroDoc["content"] = $content;
+    return $nroDoc ;
   }
 
 }

@@ -61,7 +61,7 @@ try {
   
   if (method_exists($route['controllerName'], $route['accion'])) {
     ////// MIDDLEWARE
-    Middleware::check($authorization, $nombreModulo, $attachedDataJson, $route);
+    Middleware::check( $route, $authorization, $attachedDataJson);
     $currentController = new $route['controllerName'](); // ej: new ModulosController()
     $response = $currentController->{$route['accion']}(); // ej: $currentController->get_modulos()
     if(!$response) throwMiExcepcion("No hay datos de respuesta", "error", 404);
@@ -76,7 +76,7 @@ try {
   $response['msgType'] = $params['msgType'];
   $response['content'] = $params['content'];
   if($e->getMessage() === "Expired token"){
-    $response['msgType'] = "errorToken";
+    $response['errorType'] = "errorToken";
   }
 }catch (\Throwable $e) {
   http_response_code(400);

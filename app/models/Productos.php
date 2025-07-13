@@ -46,7 +46,7 @@ class Productos
     $stmt->execute($bindWhere);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $response['content'] = $filas;
+    $response['filas'] = $filas;
     $response['num_regs'] = $num_regs;
     $response['pages'] = $pages;
     $response['page'] = ($pages != 0) ? $page : 0;

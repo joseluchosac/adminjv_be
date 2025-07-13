@@ -43,7 +43,7 @@ class Users
     $stmt->execute($bindWhere);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $response['content'] = $filas;
+    $response['filas'] = $filas;
     $response['num_regs'] = $num_regs;
     $response['pages'] = $pages;
     $response['page'] = ($pages != 0) ? $page : 0;
@@ -95,10 +95,11 @@ class Users
     return $record;
   }
 
-  static function getUserBy($param){
+  // $campos de la forma ["campo1"=>"valor1", "campo2"=>"valor2"]
+  static function getUserBy($campos){
     $sqlWhere = implode(" AND ", array_map(function($el){
       return "u.$el = :$el";
-    },array_keys($param)));
+    },array_keys($campos)));
     $sqlWhere = $sqlWhere ? " WHERE " . $sqlWhere : "";
     $sql = "SELECT
         u.id,
@@ -120,7 +121,7 @@ class Users
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute($param);
+    $stmt->execute($campos);
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
     return $record;
   }

@@ -218,6 +218,31 @@ class UsersController
     return $response;
   }
 
+  public function set_state_user()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
+
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+
+    $paramCampos = [
+      "estado" => $p['estado'],
+    ];
+
+    $paramWhere = ["id" => $p['id']];
+
+    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
+    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+    
+    $user = Users::getUser($p['id']);
+    Users::setActivityLog("Modificación de registro en la tabla usuarios: " . $user["username"]);
+
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['content'] = $user;
+    return $response;
+  }
+
   public function update_profile()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);

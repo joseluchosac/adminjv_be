@@ -20,7 +20,6 @@ class MovimientosController
       'concepto',
       'fecha',
       'numeracion',
-      'tipo',
       'estado',
       'created_at',
     ];

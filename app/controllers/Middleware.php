@@ -1,7 +1,7 @@
 <?php
 
 class Middleware{
-  static function check($authorization, $attachedDataJson, $route){
+  static function check($route, $authorization, $attachedDataJson){
     if($attachedDataJson){
       $attachedData = json_decode($attachedDataJson, true);
       $curEstab = $attachedData["curEstab"] ?? 0;
@@ -25,8 +25,10 @@ class Middleware{
           if($route['accion'] == 'sign_up') break;
           if($route['accion'] == 'get_email_by_username') break; // Para recuperar cuenta
         }
-        case 'productos':{
-          if($route['accion'] == 'prueba') break;
+        case 'test':{
+          if($route['accion'] == 'filter_laboratorios') break;
+          if($route['accion'] == 'filter_productos') break;
+          if($route['accion'] == 'test') break;
         }
         case 'establecimientos':{
           if($route['accion'] == 'get_establecimientos_options') break;
