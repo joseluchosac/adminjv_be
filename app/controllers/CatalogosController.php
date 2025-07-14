@@ -233,5 +233,6 @@ class CatalogosController
     $res['content'] = $distritos;
     return $res;
   }
+
 }
 

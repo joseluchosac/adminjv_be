@@ -5,7 +5,8 @@ class ConfigController
 {
   public function get_empresa(){
     $empresa = Config::getEmpresa();
-    return $empresa;
+    $response["content"] = $empresa;
+    return $response;
   }
 
   public function update_empresa(){
