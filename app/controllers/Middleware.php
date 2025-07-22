@@ -30,6 +30,9 @@ class Middleware{
           if($route['accion'] == 'filter_productos') break;
           if($route['accion'] == 'test') break;
         }
+        case 'config':{
+          if($route['accion'] == 'get_empresa_session') break;
+        }
         case 'establecimientos':{
           if($route['accion'] == 'get_establecimientos_options') break;
         }

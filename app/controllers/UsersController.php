@@ -76,14 +76,22 @@ class UsersController
     return $response;
   }
 
+  public function get_user_session()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+
+    $userSession = Users::getUserSession();
+    $response["content"] = $userSession;
+    return $response;
+  }
   public function get_profile()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $p = json_decode(file_get_contents('php://input'), true);
-    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    // $p = json_decode(file_get_contents('php://input'), true);
+    // if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $registro = Users::getProfile();
-    $response["content"] = $registro;
+    $profile = Users::getProfile();
+    $response["content"] = $profile;
     return $response;
   }
 
@@ -173,8 +181,8 @@ class UsersController
     $response['msg'] = "Registro satisfactorio";
     $response['msgType'] = "success";
     $response['content']['token'] = $jwt;
-    $response['content']['registro'] = $params;
-    $response['content']['modulosSesion'] = $modulosSesion;
+    // $response['content']['registro'] = $params;
+    // $response['content']['modulosSesion'] = $modulosSesion;
     
     return $response;
   }
@@ -428,15 +436,15 @@ class UsersController
     $response['msg'] = "Usuario logueado";
     $response['msgType'] = "success";
     $response['content']['token'] = $jwt;
-    $response['content']['registro'] = $registro;
-    $response['content']['empresaSession'] = $empresaSession;
-    $response['content']['modulosSesion'] = $modulosSesion;
+    // $response['content']['registro'] = $registro;
+    // $response['content']['empresaSession'] = $empresaSession;
+    // $response['content']['modulosSesion'] = $modulosSesion;
 
     return $response;
   }
 
   //--> Chekea token, devuelve al user del token y
-  //--> los modulos aciciados a su rol
+  //--> los modulos asociados a su rol
   public function check_auth()
   {
     $userSession = Users::getProfile();

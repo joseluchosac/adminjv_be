@@ -54,9 +54,23 @@ class Movimientos
     try {
       $dbh = Conexion::conectar();
       $dbh->beginTransaction();
-      self::createMov($mov1['movimiento'], $mov1['movimientoDetalle'], $mov1['inventarios'], $mov1['stocks'],  $dbh);
-      if($mov2){ // movimiento de entrada para traspaso
-        self::createMov($mov2['movimiento'], $mov2['movimientoDetalle'], $mov2['inventarios'], $mov2['stocks'], $dbh);
+      self::createMov(
+        $mov1['movimiento'],
+        $mov1['movimientoDetalle'],
+        $mov1['inventarios'],
+        $mov1['productos'],
+        $mov1['stocks'],
+        $dbh
+      );
+      if($mov2){ // movimiento de entrada cuando es traspaso
+        self::createMov(
+          $mov2['movimiento'],
+          $mov2['movimientoDetalle'],
+          $mov2['inventarios'],
+          $mov2['productos'],
+          $mov2['stocks'],
+          $dbh
+        );
       }
       $dbh->commit();
     } catch (PDOException $e) {
@@ -65,7 +79,14 @@ class Movimientos
     }
   }
 
-  static private function createMov($movimiento, $movimientoDetalle, $inventarios, $stocks, $dbh)
+  static private function createMov(
+    $movimiento,
+    $movimientoDetalle,
+    $inventarios,
+    $productos,
+    $stocks,
+    $dbh
+    )
   {
     $sql = sqlInsert("movimientos", $movimiento);
     $sqlDetalle = sqlInsert("movimientos_detalle", $movimientoDetalle[0]);
@@ -75,8 +96,9 @@ class Movimientos
         AND serie = :serie
     ";
     $sqlInventarios = sqlInsert("inventarios", $inventarios[0]);
+    $sqlUpdateProducto = sqlUpdate("productos", ["stocks"=>""], ['id'=>0]); // el 0 del id no lo concidera
     $sqlCreateStock = sqlInsert("stocks", $stocks[0]);
-    $sqlUpdateStock = sqlUpdate("stocks", $stocks[0], ['id'=>0]);
+    $sqlUpdateStock = sqlUpdate("stocks", $stocks[0], ['id'=>0]); // el 0 del id no lo concidera
     // Insertando a movimientos
     $stmt = $dbh->prepare($sql);
     $stmt->execute($movimiento);
@@ -104,15 +126,24 @@ class Movimientos
     foreach ($inventarios as $inventario) {
       $stmt->execute($inventario);
     }
-    
+
+    // Actualizando el campo stocks de la tabla productos
+    if(count($productos)){
+      foreach ($productos as $producto) {
+        $stmt = $dbh->prepare($sqlUpdateProducto);
+        $stmt->execute($producto);
+      }
+    }
+
+    // Evaluar eliminar lo de abajo
     // Insertando a Stocks
     foreach ($stocks as $stock) {
       $fila = self::getStock($stock['establecimiento_id'], $stock['producto_id'], $dbh);
-      if($fila){
+      if($fila){ // Actualiza stock
         $stock['id'] = $fila['id'];
         $stmt = $dbh->prepare($sqlUpdateStock);
         $stmt->execute($stock);
-      }else{
+      }else{ // Agrega stock
         $stmt = $dbh->prepare($sqlCreateStock);
         $stmt->execute($stock);
       }
@@ -273,4 +304,5 @@ class Movimientos
     $row = $stmt->fetch(PDO::FETCH_ASSOC); 
     return $row; 
   }
+
 }

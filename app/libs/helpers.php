@@ -103,8 +103,10 @@ function sqlInsert($table, $columns)
 }
 
 // Genera una sentencia SQL UPDATE
+// $table = 'usuarios'
 // $parSet = ["apellidos" => "velasquez","nombres" => "jose",];
 // $parWhere = ["id" => 3,"estado" => 1];
+// UPDATE usuarios SET apellidos=:apellidos, nombres=:nombres WHERE id=:id and estado=:estado 
 function sqlUpdate($table, $parSet, $parWhere)
 {
   $sqlSet = '';

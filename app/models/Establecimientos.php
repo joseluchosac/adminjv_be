@@ -71,7 +71,7 @@ class Establecimientos
 
   static function getEstablecimientos($campos, $orders = null)
   {
-    $sql = "SELECT " . implode(", ", $campos) . " FROM establecimientos_v";
+    $sql = "SELECT " . implode(", ", $campos) . " FROM establecimientos";
     $sqlOrder = $orders ? getSqlOrderBy($orders) : "";
     $sql .= $sqlOrder;
 
@@ -92,8 +92,9 @@ class Establecimientos
       dis_prov_dep,
       telefono,
       email,
+      campo_stock,
       estado
-      FROM establecimientos_v
+      FROM establecimientos
       WHERE id = :id
     ";
     $dbh = Conexion::conectar();

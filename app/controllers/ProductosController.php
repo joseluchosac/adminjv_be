@@ -50,6 +50,58 @@ class ProductosController
 
     $campos = [
       'id',
+      'codigo',
+      'barcode',
+      'descripcion',
+      'marca_id',
+      'marca',
+      'laboratorio_id',
+      'laboratorio',
+      'stocks',
+      'unidad_medida_cod',
+      'estado'
+    ];
+
+    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
+
+
+    $paramWhere = [
+      "paramLike" => [
+        'descripcion' => $search, 
+      ],
+      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
+      "paramBetween" => [
+        "campo" => $p['between']['field_name'],
+        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
+      ]
+    ];
+
+    // $paramOrders = $p['orders'];
+    $paramOrders = count($p['orders']) 
+      ? $p['orders'] 
+      : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
+      
+    $pagination = [
+      "page" => $_GET["page"] ?? "1",
+      "offset" => $p['offset']
+    ];
+  
+    $inicio = microtime(true);
+    $res = Productos::filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $fin = microtime(true);
+    $tiempo_transcurrido = $fin - $inicio;
+    $res['tiempo'] = "Tiempo de ejecución de la consulta: " . $tiempo_transcurrido . " segundos";
+    // print_r($res);
+    return $res;
+  }
+
+  public function filter_productos_($isPaginated = true)
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+
+    $campos = [
+      'id',
       'establecimiento_id',
       'codigo',
       'barcode',

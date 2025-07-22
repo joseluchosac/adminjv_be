@@ -21,24 +21,21 @@ class Config
 
   static function getEmpresa(){
     $sql = "SELECT
-        e.razon_social,
-        e.nombre_comercial,
-        e.ruc,
-        e.direccion,
-        e.ubigeo_inei,
-        IFNULL(u.departamento, '') as departamento,
-        IFNULL(u.provincia, '') as provincia,
-        IFNULL(u.distrito, '') as distrito,
-        e.telefono,
-        e.email,
-        e.simbolo_moneda,
-        e.logo,
-        e.certificado_digital,
-        e.clave_certificado,
-        e.usuario_sol,
-        e.clave_sol
-      FROM empresa e
-      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
+        razon_social,
+        nombre_comercial,
+        ruc,
+        direccion,
+        ubigeo_inei,
+        dis_prov_dep,
+        telefono,
+        email,
+        simbolo_moneda,
+        logo,
+        certificado_digital,
+        clave_certificado,
+        usuario_sol,
+        clave_sol
+      FROM empresa
       WHERE id = 1
     ";
       $dbh = Conexion::conectar();
@@ -55,18 +52,15 @@ class Config
 
   static function getEmpresaSession(){
     $sql = "SELECT
-        e.razon_social,
-        e.nombre_comercial,
-        e.ruc,
-        e.direccion,
-        IFNULL(u.departamento, '') as departamento,
-        IFNULL(u.provincia, '') as provincia,
-        IFNULL(u.distrito, '') as distrito,
-        e.telefono,
-        e.email,
-        e.logo
-      FROM empresa e
-      LEFT JOIN ubigeos u ON e.ubigeo_inei = u.ubigeo_inei
+        razon_social,
+        nombre_comercial,
+        ruc,
+        direccion,
+        dis_prov_dep,
+        telefono,
+        email,
+        logo
+      FROM empresa
       WHERE id = 1
     ";
       $dbh = Conexion::conectar();

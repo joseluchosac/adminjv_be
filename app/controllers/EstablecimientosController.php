@@ -58,7 +58,6 @@ class EstablecimientosController
 
   public function get_establecimientos()
   {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $campos = [
       "id",
       "tipo",
@@ -69,6 +68,7 @@ class EstablecimientosController
       "dis_prov_dep",
       "telefono",
       "email",
+      "campo_stock",
       "estado"
     ];
     $establecimientos = Establecimientos::getEstablecimientos($campos);
@@ -117,8 +117,10 @@ class EstablecimientosController
       "descripcion" => $descripcion,
       "direccion" => trimSpaces($p['direccion']),
       "ubigeo_inei" => $p['ubigeo_inei'],
+      "dis_prov_dep" => $p['dis_prov_dep'],
       "telefono" => trimSpaces($p['telefono']),
       "email" => trimSpaces($p['email']),
+      "campo_stock" => $p['campo_stock'],
     ];
     // Validacion
     $this->validateEstablecimiento($paramCampos);
@@ -157,9 +159,11 @@ class EstablecimientosController
       "descripcion" => $descripcion,
       "direccion" => trimSpaces($p['direccion']),
       "ubigeo_inei" => $p['ubigeo_inei'],
+      "dis_prov_dep" => $p['dis_prov_dep'],
       "telefono" => trimSpaces($p['telefono']),
       "email" => trimSpaces($p['email']),
       "estado" => trimSpaces($p['estado']),
+      "campo_stock" => $p['campo_stock'],
     ];
 
     $this->validateEstablecimiento($paramCampos);

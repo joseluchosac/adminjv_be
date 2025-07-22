@@ -2,15 +2,45 @@
 require_once('../../app/models/Laboratorios.php');
 require_once('../../app/models/Productos.php');
 require_once('../../app/models/Proveedores.php');
+require_once('../../app/models/Test.php');
 
 class TestController
 {
   public function test(){
-    $p = json_decode(file_get_contents('php://input'), true);
-    // $campos = ["tipo_documento_cod"=>"1", "nro_documento"=> "20604998396"];
-    $data = Proveedores::getProveedoresBy($p);
-    if(!$data) throwMiExcepcion("no se encontraron registros", "warning", 200);
-    return $data;
+
+    $prev1 = '';
+    $prev2 = '[{"e":1,"s":155}]';
+    $prev3 = '[{"e":1,"s":100},{"e":3,"s":300}]';
+    $esId = 3;
+    $stock = 20;
+
+    function up($prevJson, $establecimientoId, $stock){
+      $currentStock = ["e"=>$establecimientoId, "s"=>$stock];
+      if(!$prevJson){
+          return json_encode([$currentStock]);
+      }
+      $prevStocks = json_decode($prevJson, true);
+      // Verificar si existe el establecimiento en el previo
+      $idx = null;
+      foreach ($prevStocks as $indice => $el) {
+        if ($el['e'] == $establecimientoId) {
+            $idx = $indice;
+            break;
+        }
+      }
+      if($idx === null){// Insertar
+        $prevStocks[] = $currentStock;
+      }else{// Actualizar
+        $prevStocks[$idx] = $currentStock;
+      }
+      return json_encode($prevStocks);
+    }
+
+    $json = up($prev1,$esId,$stock);
+    var_dump($json);
+    echo "<br>";
+    // print_r(json_decode($prev2, true));
+    echo "<br>";
   }
   public function filter_laboratorios($isPaginated = true)
   {
@@ -91,7 +121,12 @@ class TestController
       "offset" => $p['offset']
     ];
   
-    $res = Productos::filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $inicio = microtime(true);
+    $res = Test::filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $fin = microtime(true);
+    $tiempo_transcurrido = $fin - $inicio;
+    $res['tiempo'] = "Tiempo de ejecución de la consulta: " . $tiempo_transcurrido . " segundos";
+
     // print_r($res);
     return $res;
   }

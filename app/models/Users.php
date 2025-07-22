@@ -126,7 +126,7 @@ class Users
     return $record;
   }
  
-  static function getProfile(){
+  static function getUserSession(){
     $sql = "SELECT
         id,
         nombres,
@@ -141,8 +141,28 @@ class Users
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute(['id' => self::$curUser['id']]);
-    $record = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $record;
+    $userSession = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $userSession;
+  }
+
+  static function getProfile(){
+    $sql = "SELECT
+        id,
+        nombres,
+        apellidos,
+        username,
+        ifnull(email,'') AS email,
+        rol_id,
+        caja_id,
+        estado
+      FROM users
+      WHERE id = :id;
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(['id' => self::$curUser['id']]);
+    $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $profile;
   }
 
   static function updateUser($table, $paramCampos, $paramWhere)
@@ -278,6 +298,7 @@ class Users
   static function setCurEstab($curEstab){
     self::$curEstab = $curEstab;
   }
+  // Devuelve el id del establecimiento actual
   static function getCurEstab(){
     return self::$curEstab;
   }

@@ -8,7 +8,11 @@ class ConfigController
     $response["content"] = $empresa;
     return $response;
   }
-
+  public function get_empresa_session(){
+    $empresaSession = Config::getEmpresaSession();
+    $response['content'] = $empresaSession;
+    return $response;
+  }
   public function update_empresa(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
 
@@ -18,6 +22,7 @@ class ConfigController
       "ruc" => $_POST["ruc"],
       "direccion" => $_POST["direccion"],
       "ubigeo_inei" => $_POST["ubigeo_inei"],
+      "dis_prov_dep" => $_POST["dis_prov_dep"],
       "telefono" => $_POST["telefono"],
       "email" => $_POST["email"],
       "clave_certificado" => $_POST["clave_certificado"],
@@ -79,6 +84,7 @@ class ConfigController
     $response['registro'] = $registro;
     return $response;
   }
+
   
   public function get_cpe_fact(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);

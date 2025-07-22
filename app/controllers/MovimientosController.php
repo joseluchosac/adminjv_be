@@ -2,6 +2,7 @@
 require_once('../../app/models/Movimientos.php');
 require_once('../../app/models/Numeraciones.php');
 require_once('../../app/models/Inventarios.php');
+require_once('../../app/models/Productos.php');
 
 use Valitron\Validator;
 
@@ -55,23 +56,28 @@ class MovimientosController
   public function create_movimiento()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 400);
-    $params = json_decode(file_get_contents('php://input'), true);
+    $p = json_decode(file_get_contents('php://input'), true);
 
-    if (!$params) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     // VALIDACIONES
-    $this->validateCreateMovimiento($params);
+    $this->validateCreateMovimiento($p);
 
-    $mov1 = $this->prepareMovimiento($params);
-    $mov2 = null;
 
-    if(strtolower($params['concepto']) === "traspaso"){
-      $params['establecimiento_id'] = $params['destino_id'];
-      $params['tipo'] = 'entrada';
-      $mov2 = $this->prepareMovimiento($params);
+    $mov1 = $this->prepareMovimiento($p);
+    $mov2 = null; // $mov2 solo para ingreso en traspasos
+
+    if(strtolower($p['concepto']) === "traspaso"){ // Si es traspaso
+      $p['establecimiento_id'] = $p['destino_id'];
+      $p['tipo'] = 'entrada';
+      $mov2 = $this->prepareMovimiento($p);
     }
 
+    // print_r($mov1);
+    // print_r($mov2);
+    // exit();
     Movimientos::createMovimiento($mov1, $mov2);
+
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Movimiento registrado";
@@ -79,32 +85,31 @@ class MovimientosController
     return $response;
   }
 
-  private function prepareMovimiento($params){
-
-    $serie = Numeraciones::getSerie($params['serie_pre'], $params['establecimiento_id']);
+  private function prepareMovimiento($p){
+    $serie = Numeraciones::getSerie($p['serie_pre'], $p['establecimiento_id']);
     $serie = $serie['serie'];
   
     $fechaActual = date("Y-m-d");
     // OBTENIENDO CORRELATIVO
     $pwhereCorrelativo = [
-      'establecimiento_id' => $params['establecimiento_id'],
+      'establecimiento_id' => $p['establecimiento_id'],
       'serie' => $serie,
     ];
     $correlativo = Numeraciones::getCorrelativo($pwhereCorrelativo);
 
-    // PARAMETROS CAMPOS MOVIMIENTOS
+    // PARAMETROS CAMPOS MOVIMIENTOS, INSERT
     $movimiento = [
-      "establecimiento_id" => $params['establecimiento_id'],
-      "tipo" => $params['tipo'], // tras
-      "concepto" => $params['concepto'],
+      "establecimiento_id" => $p['establecimiento_id'],
+      "tipo" => $p['tipo'], // tras
+      "concepto" => $p['concepto'],
       "fecha" => $fechaActual,
       "numeracion" => $serie . "-" . $correlativo, // tras
-      "observacion" => $params['observacion'],
+      "observacion" => $p['observacion'],
     ];
 
-    // PARAMETROS CAMPOS MOVIMIENTOS_DETALLE
+    // PARAMETROS CAMPOS MOVIMIENTOS_DETALLE, INSERT
     $movimientoDetalle = [];
-    foreach ($params['detalle'] as $value) {
+    foreach ($p['detalle'] as $value) {
       $itemDetalle = [
         'movimiento_id' => 0, // Se actualizara despues
         'producto_id' => $value['producto_id'],
@@ -116,25 +121,27 @@ class MovimientosController
     }
 
     // PARAMETROS CAMPOS INVENTARIOS y STOCKS
-    $inventarios = [];
-    $stocks = [];
-    foreach ($params['detalle'] as $value) {
-      $ultimoInventario = Inventarios::getUltimoInventario($params['establecimiento_id'], $value['producto_id']); // tras
+    $inventarios = []; // Insert
+    $productos = []; // Update
+    $stocks = []; // Insert o update
+    foreach ($p['detalle'] as $el) {
+      $ultimoInventario = Inventarios::getUltimoInventario($p['establecimiento_id'], $el['producto_id']); // tras
       $exUnidadesAnterior = $ultimoInventario ? $ultimoInventario['ex_unidades'] : 0;
       $exCostoTotalAnterior = $ultimoInventario ? $ultimoInventario['ex_costo_total']:0;
-      $costoUnitario = $value['precio_costo'];
-      $tipo = $params['tipo'];
-      $inUnidades = $tipo == "entrada" ? floatval($value['cantidad']) : 0;
-      $outUnidades = $tipo == "salida" ? floatval($value['cantidad']) : 0;
-      $exUnidades = $exUnidadesAnterior + $inUnidades - $outUnidades;
-      $exCostoTotal = $exCostoTotalAnterior + ($inUnidades * $costoUnitario) - ($outUnidades * $costoUnitario);
+      $costoUnitario = floatval($el['precio_costo']);
+      $tipo = $p['tipo'];
+      $inUnidades = $tipo == "entrada" ? floatval($el['cantidad']) : 0; // Ingreso productos
+      $outUnidades = $tipo == "salida" ? floatval($el['cantidad']) : 0; // Salida productos
+      $exUnidades = floatval($exUnidadesAnterior) + $inUnidades - floatval($outUnidades); // nuevo stock
+      $exCostoTotal = floatval($exCostoTotalAnterior) + ($inUnidades * $costoUnitario) - ($outUnidades * $costoUnitario);
+      // PARAMETROS PARA AGREGAR EN LA TABLA INVENTARIOS
       $inventario = [
-        'establecimiento_id' => $params['establecimiento_id'],
+        'establecimiento_id' => $p['establecimiento_id'],
         'fecha' => $fechaActual,
         "numeracion" => $serie . "-" . $correlativo,
-        "producto_id" => $value['producto_id'],
+        "producto_id" => $el['producto_id'],
         "tipo_movimiento" => $tipo,
-        "concepto_movimiento" => $params['concepto'],
+        "concepto_movimiento" => $p['concepto'],
         "in_unidades" => $inUnidades,
         "in_costo_unitario" => $tipo == "entrada" ? $costoUnitario : 0,
         "in_costo_total" => $inUnidades * $costoUnitario,
@@ -145,25 +152,67 @@ class MovimientosController
         "ex_costo_unitario" => round($exCostoTotal/$exUnidades,2),
         "ex_costo_total" => $exCostoTotal,
       ];
-
+      // PARAMETROS PARA ACTUALIZAR CAMPO STOCKS DE CADA PRODUCTO EN LA TABLA PRODUCTOS
+      // Si el movimiento del producto no es traspaso y entrada para
+      // que no se envie los parametros en $mov2 y no se ejecute 2 veces en caso de traspaso
+      if(!(strtolower($p['concepto']) === "traspaso" && $p['tipo'] === 'entrada')){
+        $prevStocksJson = Productos::getStocks($el['producto_id']); // stocks actual
+        $newsStocksJson = $this::updateStocksJson($prevStocksJson, $p['establecimiento_id'], $exUnidades);
+        // Si el concepto es traspaso se vuelve a acualizar $newsStocksJson para actualizar el stock del destino
+        if(strtolower($p['concepto']) === "traspaso"){
+          $ultimoInventarioDest = Inventarios::getUltimoInventario($p['destino_id'], $el['producto_id']);
+          $inUnidades = floatval($el['cantidad']); // Ingreso productos
+          $exUnidadesAnteriorDes = $ultimoInventarioDest ? $ultimoInventarioDest['ex_unidades'] : 0;
+          $exUnidadesDes = floatval($exUnidadesAnteriorDes) + $inUnidades; // nuevo stock para el destino
+          $newsStocksJson = $this::updateStocksJson($newsStocksJson, $p['destino_id'], $exUnidadesDes);
+        }
+        $producto = [
+          'id' => $el['producto_id'],
+          'stocks' => $newsStocksJson,
+        ];
+        array_push($productos, $producto);
+      }
+      // PARAMETROS PARA AGREGAR O ACTUALIZAR TABLA STOCK
       $stock = [
-        'establecimiento_id' => $params['establecimiento_id'],
-        'producto_id' => $value['producto_id'],
+        'establecimiento_id' => $p['establecimiento_id'],
+        'producto_id' => $el['producto_id'],
         'stock' => $exUnidades,
       ];
 
-      array_push($stocks, $stock);
       array_push($inventarios, $inventario);
+      array_push($stocks, $stock);
     }
-
-    // PARAMETROS PARA STOCK
 
     return [
       'movimiento' => $movimiento,
       'movimientoDetalle' => $movimientoDetalle,
       'inventarios' => $inventarios,
+      'productos' => $productos,
       'stocks' => $stocks,
     ];
+  }
+
+  // Devuelve la actualizacion del valor del capo stocks de la tabla productos
+  private function updateStocksJson($prevJson, $establecimientoId, $nuevoStock){
+    $currentStock = ["e"=>$establecimientoId, "s"=>$nuevoStock];
+    if(!$prevJson){
+      return json_encode([$currentStock]);
+    }
+    $prevStocks = json_decode($prevJson, true);
+    // Verificar si existe el establecimiento en el previo
+    $idx = null;
+    foreach ($prevStocks as $indice => $el) {
+      if ($el['e'] == $establecimientoId) {
+        $idx = $indice;
+        break;
+      }
+    }
+    if($idx === null){// Inserta
+      $prevStocks[] = $currentStock;
+    }else{// Actualiza
+      $prevStocks[$idx] = $currentStock;
+    }
+    return json_encode($prevStocks);
   }
 
   private function validateCreateMovimiento($params){
@@ -191,4 +240,6 @@ class MovimientosController
     }
 
   }
+
+
 }
