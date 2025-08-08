@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require __DIR__ . '/../vendor/autoload.php';
 require_once '../../app/libs/helpers.php';
 require_once '../../app/libs/sqlGenerador.php';
+require_once '../../app/libs/MyORM.php';
 require_once '../../app/libs/Exepcions.php';
 require_once '../../app/services/MailerHostinger.php';
 require_once('../../app/models/Users.php');
@@ -74,16 +75,18 @@ try {
   $response['error'] = true;
   $response['msg'] = $e->getMessage();
   $response['msgType'] = $params['msgType'];
+  $response['errorType'] = $params['errorType'];
   $response['content'] = $params['content'];
   if($e->getMessage() === "Expired token"){
     $response['errorType'] = "errorToken";
   }
 }catch (\Throwable $e) {
   http_response_code(400);
-  $response['content'] = null;
   $response['error'] = true;
-  $response['msgType'] = "error";
   $response['msg'] = $e->getMessage();
+  $response['msgType'] = "error";
+  $response['errorType'] = null;
+  $response['content'] = null;
 }
 
 echo json_encode($response);

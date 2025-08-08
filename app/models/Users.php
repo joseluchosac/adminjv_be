@@ -8,39 +8,26 @@ class Users
   static private $curEstab = 0; // establecimiento de sesion actual
   static private $activity = [];
 
-  static public function filterUsers($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
-  {
+  static public function filterUsers($campos, $where, $orderBy, $pagination, $isPaginated = true){
     $table = "users_v";
-
-    $sqlWhere = SqlWhere::and([
-      SqlWhere::likeOr($paramWhere['paramLike']),
-      SqlWhere::equalAnd($paramWhere['paramEquals']),
-      SqlWhere::between($paramWhere['paramBetween']),
-    ]);
-
-    $bindWhere = SqlWhere::arrMerge([
-      "like" => $paramWhere['paramLike'], 
-      "equal" => $paramWhere['paramEquals'], 
-      "between" => $paramWhere['paramBetween']
-    ]);
+    $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
-    $sqlOrderBy = getSqlOrderBy($paramOrders);
+
     $page = intval($pagination["page"]);
     $offset = intval($pagination["offset"]);
 
-    $num_regs = self::num_regs($table, $sqlWhere, $bindWhere);
+    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $offset);
-    if($page > $pages && $pages != 0)  throwMiExcepcion("Págian fuera de rango", "error", 200);
+    if ($page > $pages && $pages != 0)  throwMiExcepcion("Págian fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $offset * ($page - 1);
 
     $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
-    $sql = $sqlSelect . " FROM $table" . $sqlWhere . $sqlOrderBy . $sqlLimit;
+    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
 
-    $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute($bindWhere);
+    $stmt->execute($where["params"]);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $response['filas'] = $filas;
@@ -95,11 +82,11 @@ class Users
     return $record;
   }
 
-  // $campos de la forma ["campo1"=>"valor1", "campo2"=>"valor2"]
-  static function getUserBy($campos){
+  // $whereEqual de la forma ["campo1"=>"valor1", "campo2"=>"valor2"]
+  static function getUserBy($whereEqual){
     $sqlWhere = implode(" AND ", array_map(function($el){
       return "u.$el = :$el";
-    },array_keys($campos)));
+    },array_keys($whereEqual)));
     $sqlWhere = $sqlWhere ? " WHERE " . $sqlWhere : "";
     $sql = "SELECT
         u.id,
@@ -121,7 +108,7 @@ class Users
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute($campos);
+    $stmt->execute($whereEqual);
     $record = $stmt->fetch(PDO::FETCH_ASSOC);
     return $record;
   }
@@ -152,11 +139,10 @@ class Users
         apellidos,
         username,
         ifnull(email,'') AS email,
-        rol_id,
-        caja_id,
-        estado
-      FROM users
-      WHERE id = :id;
+        rol,
+        caja
+      FROM users_v
+      WHERE id = :id and estado = 1;
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

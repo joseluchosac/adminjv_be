@@ -51,17 +51,6 @@ class ClientesController
     return $res;
   }
 
-  public function filter_users_full() // sin paginacion
-  {
-    $res =  self::filter_clientes(false);
-    unset($res["next"]);
-    unset($res["offset"]);
-    unset($res["page"]);
-    unset($res["pages"]);
-    unset($res["previous"]);
-    return $res;
-  }
-
   public function create_cliente()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);

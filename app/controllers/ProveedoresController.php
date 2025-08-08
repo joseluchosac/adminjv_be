@@ -51,17 +51,6 @@ class ProveedoresController
     return $res;
   }
 
-  public function filter_users_full() // sin paginacion
-  {
-    $res =  self::filter_proveedores(false);
-    unset($res["next"]);
-    unset($res["offset"]);
-    unset($res["page"]);
-    unset($res["pages"]);
-    unset($res["previous"]);
-    return $res;
-  }
-
   public function create_proveedor()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);

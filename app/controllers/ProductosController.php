@@ -7,40 +7,7 @@ use Valitron\Validator;
 class ProductosController
 {
   public function prueba(){
-    // $p = json_decode(file_get_contents('php://input'), true);
-    // print_r($p);
-    // exit();
-    $equal = [
-      "nombre"=>"jose",
-      "edad"=>25,
-      "pais"=>["peru", "chile"]
-    ];
-    $or=[];
-    $whereOr="";
 
-    // foreach($equal as $campo => $valorAnd){
-    //   if(gettype($valorAnd)=== "array"){
-    //     foreach($valorAnd as $idx => $valorOr){
-    //       $or[$campo.$idx] = $valorOr;
-    //     }
-    //     $arrayOr = array_map(function($el)use($campo){
-    //       return "$campo = :$el";
-    //     }, array_keys($or));
-    //     $whereOr = "(".implode(" OR ", $arrayOr).")";
-    //   }
-    // }
-    $equalOr = array_filter($equal, function($el){
-      return gettype($el) === "array";
-    });
-
-    $equalAnd = array_filter($equal, function($el){
-      return gettype($el) !== "array";
-    });
-    $arrayAnd = array_map(function($el){
-      return "$el = :$el";
-    },array_keys($equalAnd));
-    $whereAnd = implode(" AND ", $arrayAnd);
-    print_r($whereAnd);
   }
 
   public function filter_productos($isPaginated = true)
@@ -91,57 +58,6 @@ class ProductosController
     $fin = microtime(true);
     $tiempo_transcurrido = $fin - $inicio;
     $res['tiempo'] = "Tiempo de ejecución de la consulta: " . $tiempo_transcurrido . " segundos";
-    // print_r($res);
-    return $res;
-  }
-
-  public function filter_productos_($isPaginated = true)
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $p = json_decode(file_get_contents('php://input'), true);
-
-    $campos = [
-      'id',
-      'establecimiento_id',
-      'codigo',
-      'barcode',
-      'descripcion',
-      'marca_id',
-      'marca',
-      'laboratorio_id',
-      'laboratorio',
-      'stock',
-      'unidad',
-      'estado',
-      'created_at',
-      'updated_at',
-    ];
-
-    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
-
-
-    $paramWhere = [
-      "paramLike" => [
-        'descripcion' => $search, 
-      ],
-      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
-      "paramBetween" => [
-        "campo" => $p['between']['field_name'],
-        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
-      ]
-    ];
-
-    // $paramOrders = $p['orders'];
-    $paramOrders = count($p['orders']) 
-      ? $p['orders'] 
-      : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
-      
-    $pagination = [
-      "page" => $_GET["page"] ?? "1",
-      "offset" => $p['offset']
-    ];
-  
-    $res = Productos::filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
     // print_r($res);
     return $res;
   }

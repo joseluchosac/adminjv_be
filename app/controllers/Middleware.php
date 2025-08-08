@@ -26,6 +26,7 @@ class Middleware{
           if($route['accion'] == 'get_email_by_username') break; // Para recuperar cuenta
         }
         case 'test':{
+          if($route['accion'] == 'sql_creator') break;
           if($route['accion'] == 'filter_laboratorios') break;
           if($route['accion'] == 'filter_productos') break;
           if($route['accion'] == 'test') break;
