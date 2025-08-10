@@ -30,27 +30,26 @@ function route($url)
   //   $route['accionParam'] = $urlArr[2] ?? '';
   return $route;
 }
-// Funcion que devuelve http o https: https://josvelsac.com
 function getBaseUrl()
 {
+  // Funcion que devuelve http o https: https://josvelsac.com
   $protocolo = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
   return $protocolo . $_SERVER['SERVER_NAME'];
 }
-// Función que devuelve un nuevo arreglo quitando
-// los elementos que tengan como valor vacio o null
 function limpiarArreglo($array)
 {
+  // Función que devuelve un nuevo arreglo quitando
+  // los elementos que tengan como valor vacio o null
   $newArray = array();
   foreach ($array as $key => $value) {
     if ($value !== null && $value !== "") $newArray[$key] = $value;
   }
   return $newArray;
 }
-
-// trimSpaces elimina mas de dos espacios en el inicio, final y entre palabras
-// puede recibir como parámetro una cadena o un arreglo, (este último solo toma en cuenta las cadenas)
 function trimSpaces($variable)
 {
+  // trimSpaces elimina mas de dos espacios en el inicio, final y entre palabras
+  // puede recibir como parámetro una cadena o un arreglo, (este último solo toma en cuenta las cadenas)
   if (!function_exists("trimear")) {
     function trimear($str)
     {
@@ -76,20 +75,18 @@ function trimSpaces($variable)
     }
   }
 }
-
 function removeSpecialChar($str)
 {
   $res = preg_replace('/[^A-Za-z0-9\-ñÑáéíóúÁÉÍÓÚüÜ\s]/', '', $str);
   return $res;
 }
-
 function validateEmail($str)
 {
   return filter_var($str, FILTER_VALIDATE_EMAIL);
 }
-// Genera una sentencia SQL INSERT
 function sqlInsert($table, $columns)
 {
+  // Genera una sentencia SQL INSERT
     if(!$columns || !$table) return "";
   $sql = "INSERT INTO $table";
   $camposArr = array_keys($columns);
@@ -101,14 +98,13 @@ function sqlInsert($table, $columns)
   $params = substr($params, 0, -2);
   return $sql . " (" . $campos . ") VALUES (" . $params . ")";
 }
-
-// Genera una sentencia SQL UPDATE
-// $table = 'usuarios'
-// $parSet = ["apellidos" => "velasquez","nombres" => "jose",];
-// $parWhere = ["id" => 3,"estado" => 1];
-// UPDATE usuarios SET apellidos=:apellidos, nombres=:nombres WHERE id=:id and estado=:estado 
 function sqlUpdate($table, $parSet, $parWhere)
 {
+  // Genera una sentencia SQL UPDATE
+  // $table = 'usuarios'
+  // $parSet = ["apellidos" => "velasquez","nombres" => "jose",];
+  // $parWhere = ["id" => 3,"estado" => 1];
+  // UPDATE usuarios SET apellidos=:apellidos, nombres=:nombres WHERE id=:id and estado=:estado 
   $sqlSet = '';
   forEach(array_keys($parSet) as $value){
       $sqlSet .= $value . " = :" . $value . ", ";
@@ -121,10 +117,28 @@ function sqlUpdate($table, $parSet, $parWhere)
   $sqlWhere = " WHERE ".substr($sqlWhere, 0, -5);
   return "UPDATE " . $table . $sqlSet .$sqlWhere; 
 }
-
-// Concatena elementos de un arreglo
+function getSqlOrderBy($orders)
+{
+  // ✅ CONSTRUCTION DE LA SENTENCIA ORDER BY EN MYSQL
+  // USO getSqlOrderBy
+    // $orders = [
+    //   ["field_name" => "apellidos", "order_dir" => "asc"],
+    //   ["field_name" => "nombres", "order_dir" => "desc"],
+    // ];
+  //
+  if (!$orders) {
+    return "";
+  }
+  $sql = "";
+  foreach ($orders as $valor) {
+    $sql = $sql . $valor['field_name'] . " " . $valor['order_dir'] . ", ";
+  }
+  $sql = " ORDER BY " . substr(trim($sql), 0, -1);
+  return $sql;
+}
 function concatenar($arg, $separator = ' ')
 {
+  // Concatena elementos de un arreglo
   $resultado = '';
   if (count($arg) === 0) return "";
   foreach ($arg as $key => $value) {
@@ -140,23 +154,20 @@ function concatenar($arg, $separator = ' ')
   }
   return $resultado;
 }
-
-// Devuelve numero de 25465.5458 a 25,465.55
 function numeroMoneda($numero)
 {
+  // Devuelve numero de 25465.5458 a 25,465.55
   return number_format(round($numero, 2), 2);
 }
-
-// Devuelve fecha en formato amigable ejem: 2013-03-15 15:45:02
-// "d/m/Y" -> 15/03/2013
-// "d/m/Y H:i:s" -> 15/03/2013 15:45:02
-// "d/m/Y h:i:s a" -> 15/03/2013 03:45:02 pm
-// "d/m/Y h:i a" -> 15/03/2013 03:45 pm
 function fechaFormato($fecha_str, $format = 'd/m/Y')
 {
+  // Devuelve fecha en formato amigable ejem: 2013-03-15 15:45:02
+  // "d/m/Y" -> 15/03/2013
+  // "d/m/Y H:i:s" -> 15/03/2013 15:45:02
+  // "d/m/Y h:i:s a" -> 15/03/2013 03:45:02 pm
+  // "d/m/Y h:i a" -> 15/03/2013 03:45 pm
   return date_format(date_create($fecha_str), $format);
 }
-
 function numeroALetra($arg)
 {
   function convertirNumeroLetra($numero)
@@ -460,9 +471,9 @@ function dateUTCToLocal($format, $strTimezone, $date = 'now')
   $fecha_utc->setTimezone(new DateTimeZone($strTimezone));
   return $fecha_utc->format($format);
 }
-// DEVUELVE FACHA DE LOCAL A UTC
 function dateLocalToUTC($format,  $strTimezone, $date = 'now')
 {
+  // DEVUELVE FACHA DE LOCAL A UTC
   // ej strTimezone = 'America/Lima'
   $fecha_utc = new DateTime($date, new DateTimeZone($strTimezone));
   $fecha_utc->setTimezone(new DateTimeZone('UTC'));
@@ -504,8 +515,9 @@ function encriptacion($type, $data){
     return null;
   }
 }
-// Busca el indice de un arreglo 
+
 function findIndex($array, $callback) {
+  // Busca el indice de un arreglo 
   foreach ($array as $index => $value) {
       if ($callback($value)) {
           return $index;
@@ -513,7 +525,6 @@ function findIndex($array, $callback) {
   }
   return -1; // Retorna -1 si no se encuentra el valor
 }
-
 
 function transponerArreglo($arreglo)
 {
@@ -540,18 +551,18 @@ function normalize_url_path($path) {
 }
 
 
-// ✅ FUNCION RECURSIVA QUE DEVUELVE UN NUEVO ARREGLO DE LOS ANCESTROS DE UN
-// ELEMENTO A PARTIR DE UN ARREGLO DE ELEMENTOS
-// [..., elementoAbuelo, elementoPadre, ElementoHijo]
-// $arreglo = [
-//     ['id'=>1, 'desc'=>'medicinas', "padre_id"=>0],
-//     ['id'=>2, 'desc'=>'de marca', "padre_id"=>1],
-//     ['id'=>3, 'desc'=>'generico', "padre_id"=>1],
-//     ['id'=>4, 'desc'=>'antibioticos', "padre_id"=>2],
-//     ['id'=>5, 'desc'=>'antibioticos', "padre_id"=>3],
-//     ['id'=>6, 'desc'=>'ciprofloxacino', "padre_id"=>4],
-// ];
 function getBranch($id, $arreglo, $branch=[]){
+  // ✅ FUNCION RECURSIVA QUE DEVUELVE UN NUEVO ARREGLO DE LOS ANCESTROS DE UN
+  // ELEMENTO A PARTIR DE UN ARREGLO DE ELEMENTOS
+  // [..., elementoAbuelo, elementoPadre, ElementoHijo]
+  // $arreglo = [
+  //     ['id'=>1, 'desc'=>'medicinas', "padre_id"=>0],
+  //     ['id'=>2, 'desc'=>'de marca', "padre_id"=>1],
+  //     ['id'=>3, 'desc'=>'generico', "padre_id"=>1],
+  //     ['id'=>4, 'desc'=>'antibioticos', "padre_id"=>2],
+  //     ['id'=>5, 'desc'=>'antibioticos', "padre_id"=>3],
+  //     ['id'=>6, 'desc'=>'ciprofloxacino', "padre_id"=>4],
+  // ];
     $elemento = [];
     foreach($arreglo as $value){
         if($value["id"] === $id){
@@ -566,24 +577,25 @@ function getBranch($id, $arreglo, $branch=[]){
         return $branch;
     };
 };
+
 // ✅ UTILIDADES PARA CAMBIAR EL TEXTO A ARREGLO Y VICEVERSA DEL CAMPO categoria_ids DE LA TABLA productos
 // $texto = ",7,2,13,4,";
 // var_dump(array_map(function($el){
 //     return intval($el);
-// },array_filter(explode(",",$texto))));
+// },array_filter(explode(",",$texto)))); resultado: [7,2,13,4]
 
 // $arreglo = [7,2,13,4];
 // $dato = $arreglo ? ",".implode(",", $arreglo)."," : "";
-// var_dump($dato);
+// var_dump($dato); resultado: ",7,2,13,4,"
 
 
 
-// ✅ FUNCION QUE DEVUELVE UN SLUG A PARTIR DE UN STRING
-// $titulo = "Título de mi publicación con caracteres especiales, espacios y  ¡mucho más!";
-// $slug = generarSlug($titulo);
-// echo $slug; // Output: titulo-de-mi-publicacion-con-caracteres-especiales-espacios-y-mucho-mas
 function generarSlug(string $texto): string
 {
+  // ✅ FUNCION QUE DEVUELVE UN SLUG A PARTIR DE UN STRING
+  // $titulo = "Título de mi publicación con caracteres especiales, espacios y  ¡mucho más!";
+  // $slug = generarSlug($titulo);
+  // echo $slug; // Output: titulo-de-mi-publicacion-con-caracteres-especiales-espacios-y-mucho-mas
   $slug = strtolower($texto);  // 1. Convertir a minúsculas
   $slug = preg_replace('/[^a-z0-9\-_\s]/', '', $slug);  // 2. Eliminar caracteres especiales
   $slug = str_replace(' ', '-', $slug);  // 3. Reemplazar espacios con guiones
@@ -592,8 +604,8 @@ function generarSlug(string $texto): string
   return $slug;
 }
 
-// ✅ FUNCION QUE DEVUELVE UN ARREGLO JERARQUIZADO
 function generateTree($arreglo, $padre_id = 0) {
+  // ✅ FUNCION QUE DEVUELVE UN ARREGLO JERARQUIZADO
   $arbol = array();
   foreach ($arreglo as $categoria) {
       if ($categoria['padre_id'] == $padre_id) {
@@ -609,8 +621,8 @@ function generateTree($arreglo, $padre_id = 0) {
   return $arbol;
 }
 
-// ✅ FUNCION QUE APLANA UN ARREGLO JERARQUIZADO
 function flattenTree($tree, $padre_id = 0, &$resultado = []) {
+  // ✅ FUNCION QUE APLANA UN ARREGLO JERARQUIZADO
   foreach ($tree as $nodo) {
       // Extraemos los hijos si existen y los eliminamos del nodo actual
       $children = isset($nodo['children']) ? $nodo['children'] : [];
@@ -631,8 +643,8 @@ function flattenTree($tree, $padre_id = 0, &$resultado = []) {
   return $resultado;
 }
 
-// ✅ FUNCION QUE GENERA UNA CADENA ALFANUMERICA
 function generarCadenaAlfanumerica($longitud = 10) {
+  // ✅ FUNCION QUE GENERA UNA CADENA ALFANUMERICA
   $caracteres = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   $cadenaAleatoria = '';
   for ($i = 0; $i < $longitud; $i++) {
@@ -642,7 +654,38 @@ function generarCadenaAlfanumerica($longitud = 10) {
   return $cadenaAleatoria;
 }
 
-// ✅ FUNCION QUE RECORTA UNA CADENA LARGA EN UNA CORTA CON ELLPISIS
 function cropText($texto, $limite = 20) {
+  // ✅ FUNCION QUE RECORTA UNA CADENA LARGA EN UNA CORTA CON ELLPISIS
   return strlen($texto) > $limite ? substr($texto, 0, $limite) . '...' : $texto;
+}
+
+function infoFilter($p){
+  // ✅ FUNCION QUE DEVUELVE LA INFORMACION DEL FILTRADO EN LOS REPORTES
+  // Recibe el parametro de filtros
+  $between = $p['between'];
+  $equal = $p['equal'];
+  $infoBeetween = "";
+  $infoEqual = "";
+  if(count($between)){
+    $label = $between[0]['field_label'];
+    $from = explode(" ", $between[0]['from'])[0];
+    $to = explode(" ", $between[0]['to'])[0];
+    $infoBeetween = ($from === $to)
+      ? "$label: $to"
+      : "$label: del $from al $to";
+  }
+  if(count($equal)){
+    $maped = array_map(function($el){
+      if($el['field_name'] === "estado"){
+        $estado =  $el['field_value'] === "1" ? "Activo" : "Inactivo";
+        return $el['field_label'] . ': ' . $estado;
+      }else{
+        return $el['field_label'] . ': ' . $el['field_value'];
+      }
+    },$equal);
+    $infoEqual = (implode(', ', $maped));
+  }
+  $info['equal'] = $infoEqual;
+  $info['between'] = $infoBeetween;
+  return $info;
 }

@@ -1,0 +1,19 @@
+{
+    "saira condensed": {
+        "100": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/saira_condensed_100_1b25daeec722d6c294a134b5cd97e507",
+        "200": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/saira_condensed_200_a0c99dcef1e2842fd4df6961afbea559",
+        "300": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/saira_condensed_300_8306ec47f03587db5fb23e434e06ce56",
+        "500": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/saira_condensed_500_ef8b020db75ff2afe5776d04561cee6b",
+        "600": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/saira_condensed_600_0760b3d9cbafc7848769eaf3e2f8eec7",
+        "bold": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/saira_condensed_bold_18f119a3d0b21da922f8032eda4e5d6a",
+        "800": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/saira_condensed_800_b0bf4015a46e05b6e58a6b54cf0f662e",
+        "900": "saira_condensed_900_a0e08a1e332250b6a45d62c820bf2543"
+    },
+    "sairacondensed": {
+        "normal": "sairacondensed_normal_0b0d9771babd5fc1118642e7c19897f5"
+    },
+    "roboto condensed": {
+        "normal": "C:\\xampp\\htdocs\\adminjv_be\\public\\docs\\pdf\/..\/..\/assets\/fonts\/roboto_condensed_normal_5efef207d4127a05623b5ff97d92c160",
+        "bold": "roboto_condensed_bold_b98e5709fec1dbdf80a24e8c34c6e3c4"
+    }
+}

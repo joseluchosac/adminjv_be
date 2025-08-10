@@ -7,3 +7,4 @@ module.exports = {
   plugins: [],
 }
 
+// npx tailwindcss -i ./public/tailwind.css -o ./public/assets/css/style.css --watch

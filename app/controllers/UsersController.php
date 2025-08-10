@@ -30,7 +30,6 @@ class UsersController
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
-      // "offset" => $_GET["offset"] ?? "50",
       "offset" => $p['offset']
     ];
 
