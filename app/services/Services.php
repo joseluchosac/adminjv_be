@@ -55,35 +55,30 @@ class Services {
     if(!$response) throwMiExcepcion("Error en la petición");
     if(curl_errno($curl)) throwMiExcepcion("Error en cURL: " . curl_error($curl));
     curl_close($curl);
-    $nroDoc = [];
-    $content = null;
+    $data = [];
     if(isset($resp["message"])){
-      $nroDoc['error'] = true;
-      $nroDoc['msg'] = $resp['message'];
-      $nroDoc['msgType'] = "warning";
+      $data['error'] = true;
+      $data['msg'] = $resp['message'];
+      $data['msgType'] = "warning";
     }else{
       if($tipo_documento_cod == "1"){ // DNI
-        $content["nombre_razon_social"] = $resp["nombreCompleto"];
-        $content["condicion_sunat"] = "";
-        $content["estado_sunat"] = "";
-        $content["direccion"] = "";
-        $content["ubigeo"] = "";
+        $data["nombre_razon_social"] = $resp["nombreCompleto"];
+        $data["condicion_sunat"] = "";
+        $data["estado_sunat"] = "";
+        $data["direccion"] = "";
+        $data["ubigeo"] = "";
       }else if($tipo_documento_cod == "6"){ // RUC
-        $content["nombre_razon_social"] = $resp["razonSocial"];
-        $content["condicion_sunat"] = $resp["condicion"];
-        $content["estado_sunat"] = $resp["estado"];
-        $content["direccion"] = $resp["direccion"];
-        $content["ubigeo"] = $resp["ubigeo"];
+        $data["nombre_razon_social"] = $resp["razonSocial"];
+        $data["condicion_sunat"] = $resp["condicion"];
+        $data["estado_sunat"] = $resp["estado"];
+        $data["direccion"] = $resp["direccion"];
+        $data["ubigeo"] = $resp["ubigeo"];
       }
-      $content['tipo_documento_cod'] = $tipo_documento_cod;
-      $content['nro_documento'] = $nro_documento;
-      $content["dis_prov_dep"] = "";
-      $nroDoc['error'] = false;
-      $nroDoc['msg'] = "datos obtenidos";
-      $nroDoc['msgType'] = "success";
+      $data['tipo_documento_cod'] = $tipo_documento_cod;
+      $data['nro_documento'] = $nro_documento;
+      $data["dis_prov_dep"] = "";
     }
-    $nroDoc["content"] = $content;
-    return $nroDoc ;
+    return $data ;
   }
 
 }

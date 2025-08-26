@@ -3,8 +3,40 @@ require_once("Conexion.php");
 
 class Clientes
 {
+  static public function filterClientes($campos, $where, $orderBy, $pagination, $isPaginated = true)
+  {
+    $table = "clientes_v";
+    $dbh = Conexion::conectar();
 
-  static public function filterClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
+    $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
+
+    $page = intval($pagination["page"]);
+    $offset = intval($pagination["offset"]);
+
+    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
+    $pages = ceil($num_regs / $offset);
+    if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
+    $page = ($page <= $pages) ? $page : 1;
+    $start_reg = $offset * ($page - 1);
+
+    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
+    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
+
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($where["params"]);
+    $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $response['filas'] = $filas;
+    $response['num_regs'] = $num_regs;
+    $response['pages'] = $pages;
+    $response['page'] = ($pages != 0) ? $page : 0;
+    $response['next'] = ($pages > $page) ? $page + 1 : 0;
+    $response['previous'] = ($pages > 1) ? $page - 1 : 0;
+    $response['offset'] = $offset;
+    return $response;
+  }
+  
+ /*  static public function filterClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
   {
     $table = "clientes_v";
 
@@ -47,7 +79,7 @@ class Clientes
     $response['previous'] = ($pages > 1) ? $page - 1 : 0;
     $response['offset'] = $offset;
     return $response;
-  }
+  } */
 
   static function countRecordsBy($equal, $exclude = []){
     $where = " WHERE " . array_keys($equal)[0] . " = :". array_keys($equal)[0];
@@ -105,13 +137,13 @@ class Clientes
         c.nombre_razon_social,
         c.direccion,
         c.ubigeo_inei,
-        CONCAT(u.distrito, ', ', u.provincia, ', ', u.departamento) AS dis_prov_dep,
+        u.dis_prov_dep,
         c.email,
         c.telefono,
         c.api,
         c.estado
       FROM clientes c
-      LEFT JOIN ubigeos u ON c.ubigeo_inei = u.ubigeo_inei
+      LEFT JOIN ubigeos_v u ON c.ubigeo_inei = u.ubigeo_inei
       LEFT JOIN tipos_documento td ON c.tipo_documento_cod = td.codigo
       WHERE c.id = :id;
     ";

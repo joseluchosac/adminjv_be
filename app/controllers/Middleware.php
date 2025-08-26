@@ -32,7 +32,7 @@ class Middleware{
           if($route['accion'] == 'test') break;
         }
         case 'config':{
-          if($route['accion'] == 'get_empresa_session') break;
+          if($route['accion'] == 'get_empresa_info') break;
         }
         case 'establecimientos':{
           if($route['accion'] == 'get_establecimientos_options') break;

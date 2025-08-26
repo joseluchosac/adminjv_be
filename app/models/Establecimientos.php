@@ -47,27 +47,6 @@ class Establecimientos
     $response['offset'] = $offset;
     return $response;
   }
-  
-  // static function getEstablecimientos(){
-  //   $sql = "SELECT
-  //     id,
-  //     tipo,
-  //     codigo,
-  //     descripcion,
-  //     direccion,
-  //     ubigeo_inei,
-  //     dis_prov_dep,
-  //     telefono,
-  //     email,
-  //     estado
-  //     FROM establecimientos_v
-  //   ";
-  //   $dbh = Conexion::conectar();
-  //   $stmt = $dbh->prepare($sql);
-  //   $stmt->execute();
-  //   $establecimiento = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  //   return $establecimiento;
-  // }
 
   static function getEstablecimientos($campos, $orders = null)
   {

@@ -3,41 +3,30 @@ require_once('../../app/models/Marcas.php');
 
 class MarcasController
 {
-  public function filter_marcas($isPaginated = true)
+  public function filter_marcas()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);
-
     $campos = [
       'id',
       'nombre',
       'estado',
     ];
 
-    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
-
-    $paramWhere = [
-      "paramLike" => ['nombre' => $search],
-      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
-      "paramBetween" => [
-        "campo" => $p['between']['field_name'],
-        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
-      ]
+    $p["search"] = [
+      "fieldsName" => ["nombre"],
+      "like" => trim($p["search"])
     ];
 
-    $paramOrders = count($p['orders']) 
-      ? $p['orders'] 
-      : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
-    // $paramOrders = $p['orders'];
-
-    // var_dump($paramOrders);
-    // exit();
     $pagination = [
       "page" => $_GET["page"] ?? "1",
       "offset" => $p['offset']
     ];
 
-    $res = Marcas::filterMarcas($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $where = MyORM::getWhere($p);
+    $orderBy = MyORM::getOrder($p["order"]);
+
+    $res = Marcas::filterMarcas($campos, $where, $orderBy, $pagination);
     return $res;
   }
 
@@ -121,7 +110,38 @@ class MarcasController
     $response['msg'] = "Registro actualizado";
     return $response;
   }
+  public function set_state_marca()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
 
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+
+    $paramCampos = [
+      "estado" => $p['estado'],
+    ];
+
+    $paramWhere = ["id" => $p['id']];
+
+    $resp = Marcas::updateMarca("marcas", $paramCampos, $paramWhere);
+    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+    
+    // Obteniendo el laboratorio actualizado
+    $campos = [
+      'id',
+      'nombre',
+      'estado',
+    ];
+    $equals = [
+      ["field_name" => "id", "field_value" => $p['id']],
+    ];
+    $marca = Marcas::getMarcas("marcas", $campos, $equals)[0];
+
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['content'] = $marca;
+    return $response;
+  }
   public function delete_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);

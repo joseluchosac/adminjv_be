@@ -6,7 +6,7 @@ use PHPMailer\PHPMailer\Exception;
 // require 'vendor/autoload.php';
 // require '../../vendor/autoload.php';
 
-class Mailer
+class MailerHostinger
 {
   private static $host = 'smtp.hostinger.com';
   private static $username = 'info@josvelsac.com';
@@ -15,6 +15,8 @@ class Mailer
 
   public static function sendMail($to, $subject, $body, $from = 'info@josvelsac.com', $fromName = 'josvelsac')
   {
+    // Ejemplo de uso:
+    // Mailer::sendMail('destinatario@example.com', 'Asunto del correo', 'Cuerpo del correo');
     $mail = new PHPMailer(true);
 
     try {
@@ -51,5 +53,4 @@ class Mailer
   }
 }
 
-// Ejemplo de uso:
-// Mailer::sendMail('destinatario@example.com', 'Asunto del correo', 'Cuerpo del correo');
+

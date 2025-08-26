@@ -19,7 +19,7 @@ class Users
 
     $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $offset);
-    if ($page > $pages && $pages != 0)  throwMiExcepcion("Págian fuera de rango", "error", 200);
+    if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $offset * ($page - 1);
 

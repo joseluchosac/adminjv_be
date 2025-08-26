@@ -57,6 +57,22 @@ class Ubigeos
     return $record;
   }
   
+  static function getUbigeoByUbigeoInei($ubigeo_inei){
+    $sql = "SELECT
+        ubigeo_inei,
+        ubigeo_reniec,
+        dis_prov_dep,
+        dep_prov_dis
+      FROM ubigeos_v
+      WHERE ubigeo_inei = :ubigeo_inei
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["ubigeo_inei" => $ubigeo_inei]);
+    $ubigeo = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $ubigeo;
+  }
+  
     // $paramsEqual de la forma ["campo1"=>"valor1", "campo2"=>"valor2"]
   static function getUbigeosBy($paramsEqual){
     $sqlWhere = implode(" AND ", array_map(function($el){

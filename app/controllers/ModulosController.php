@@ -168,8 +168,8 @@ class ModulosController
   public function get_modulos_sesion()
   {
     $modulosSesion = Modulos::getModulosSesion();
-    $res['content'] = $modulosSesion;
-    return $res;
+    // $res['content'] = $modulosSesion;
+    return $modulosSesion;
   }
 
   public function update_modulos_roles()

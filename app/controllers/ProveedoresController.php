@@ -7,11 +7,10 @@ use Valitron\Validator;
 
 class ProveedoresController
 {
-  public function filter_proveedores($isPaginated = true)
+  public function filter_proveedores()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);
-
     $campos = [
       'id',
       'tipo_documento',
@@ -24,31 +23,31 @@ class ProveedoresController
       'estado',
     ];
 
-    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
-
-    $paramWhere = [
-      "paramLike" => [
-        'nro_documento' => $search, 
-        'nombre_razon_social' => $search, 
-      ],
-      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
-      "paramBetween" => [
-        "campo" => $p['between']['field_name'],
-        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
-      ]
+    $p["search"] = [
+      "fieldsName" => ["nro_documento", "nombre_razon_social", "email", "telefono"],
+      "like" => trim($p["search"])
     ];
-
-    $paramOrders = count($p['orders']) 
-      ? $p['orders'] 
-      : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
       "offset" => $p['offset']
     ];
 
-    $res = Proveedores::filterProveedores($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $where = MyORM::getWhere($p);
+    $orderBy = MyORM::getOrder($p["order"]);
+
+    $res = Proveedores::filterProveedores($campos, $where, $orderBy, $pagination);
     return $res;
+  }
+
+  public function get_proveedor()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+
+    $proveedor = Proveedores::getProveedor($p['id']);
+    return $proveedor;
   }
 
   public function create_proveedor()
@@ -78,11 +77,11 @@ class ProveedoresController
       if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning",200);
     }
     $lastId = Proveedores::createProveedor($params);
-    if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
-    $registro = Proveedores::getProveedor($lastId);
+    if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning", 200);
+    $proveedor = Proveedores::getProveedor($lastId);
     $response['msgType'] = "success";
     $response['msg'] = "Proveedor registrado";
-    $response['content'] = $registro;
+    $response['proveedor'] = $proveedor;
 
     return $response;
   }
@@ -122,11 +121,11 @@ class ProveedoresController
     $resp = Proveedores::updateProveedor("proveedores", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("No hay cambios para guardar", "warning", 200);
     
-    $registro = Proveedores::getProveedor($p['id']);
+    $proveedor = Proveedores::getProveedor($p['id']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['content'] = $registro;
+    $response['proveedor'] = $proveedor;
     return $response;
   }
 
@@ -138,24 +137,15 @@ class ProveedoresController
 
     // OJO, antes de eliminar verificar si el proveedor tiene una venta asociada
     $params = [ "id" => $p['id'] ];
+    $proveedor = Proveedores::getProveedor($p['id']);
     $resp = Proveedores::deleteProveedor($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";
     $response['id'] = $p['id'];
+    $response['proveedor'] = $proveedor;
     return $response;
-  }
-
-  public function get_proveedor()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $p = json_decode(file_get_contents('php://input'), true);
-    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
-    $registro = Proveedores::getProveedor($p['id']);
-    $res['content'] = $registro;
-    return $res;
   }
 
   public function consultar_nro_documento()
@@ -167,27 +157,25 @@ class ProveedoresController
     $nro_documento = trim($p["nro_documento"]);
     $nroDoc = Services::consultarNroDoc($nro_documento, $tipo_documento_cod);
     
-    if(!$nroDoc["error"]){
+    if(isset($nroDoc["nro_documento"])){
       // Verificar si el proveedor ya esta registrado
       $paramsEqual = ["tipo_documento_cod" => $p['tipo_documento_cod'], "nro_documento" => $nro_documento];
       $prov = Proveedores::getProveedoresBy($paramsEqual);
       if($prov){
-        $c = $nroDoc["content"];
-        $nroDoc["content"]["direccion"] = $c["direccion"] ? $c["direccion"] : $prov[0]["direccion"];
-        $nroDoc["content"]["ubigeo"] = $c["ubigeo"] ? $c["ubigeo"] : $prov[0]["ubigeo_inei"];
-        $nroDoc["content"]["id"] = $prov[0]["id"];
-        $nroDoc["content"]["email"] = $prov[0]["email"];
-        $nroDoc["content"]["telefono"] = $prov[0]["telefono"];
+        $nroDoc["direccion"] = $nroDoc["direccion"] ? $nroDoc["direccion"] : $prov[0]["direccion"];
+        $nroDoc["ubigeo"] = $nroDoc["ubigeo"] ? $nroDoc["ubigeo"] : $prov[0]["ubigeo_inei"];
+        $nroDoc["id"] = $prov[0]["id"];
+        $nroDoc["email"] = $prov[0]["email"];
+        $nroDoc["telefono"] = $prov[0]["telefono"];
       }else{
-        $nroDoc["content"]["id"] = 0;
-        $nroDoc["content"]["email"] = "";
-        $nroDoc["content"]["telefono"] = "";
+        $nroDoc["id"] = 0;
+        $nroDoc["email"] = "";
+        $nroDoc["telefono"] = "";
       }
       // Buscar en ubigeo el campo dis_prov_dep
-      if($nroDoc["content"]["ubigeo"]){
-        $paramsEqual = ["ubigeo_inei" => $nroDoc["content"]["ubigeo"]];
-        $ubig = Ubigeos::getUbigeosBy($paramsEqual);
-        $nroDoc["content"]["dis_prov_dep"] = $ubig[0]['dis_prov_dep'];
+      if($nroDoc["ubigeo"]){
+        $ubig = Ubigeos::getUbigeoByUbigeoInei($nroDoc["ubigeo"]);
+        $nroDoc["dis_prov_dep"] = $ubig['dis_prov_dep'];
       }
     }
     return $nroDoc;

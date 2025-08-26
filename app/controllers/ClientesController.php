@@ -7,11 +7,10 @@ use Valitron\Validator;
 
 class ClientesController
 {
-  public function filter_clientes($isPaginated = true)
+  public function filter_clientes()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);
-
     $campos = [
       'id',
       'tipo_documento',
@@ -24,31 +23,31 @@ class ClientesController
       'estado',
     ];
 
-    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
-
-    $paramWhere = [
-      "paramLike" => [
-        'nro_documento' => $search, 
-        'nombre_razon_social' => $search, 
-      ],
-      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
-      "paramBetween" => [
-        "campo" => $p['between']['field_name'],
-        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
-      ]
+    $p["search"] = [
+      "fieldsName" => ["nro_documento", "nombre_razon_social", "email", "telefono"],
+      "like" => trim($p["search"])
     ];
-
-    $paramOrders = count($p['orders']) 
-      ? $p['orders'] 
-      : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
       "offset" => $p['offset']
     ];
 
-    $res = Clientes::filterClientes($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $where = MyORM::getWhere($p);
+    $orderBy = MyORM::getOrder($p["order"]);
+
+    $res = Clientes::filterClientes($campos, $where, $orderBy, $pagination);
     return $res;
+  }
+
+  public function get_cliente()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+
+    $cliente = Clientes::getCliente($p['id']);
+    return $cliente;
   }
 
   public function create_cliente()
@@ -58,6 +57,10 @@ class ClientesController
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     $nro_documento = trim($p['nro_documento']) ? trim($p['nro_documento']) : null;
+    echo "<pre>";
+    print_r($p);
+    echo "</pre>";
+    exit();
     $params = [
       "tipo_documento_cod" => $p['tipo_documento_cod'],
       "nro_documento" => $nro_documento,
@@ -81,10 +84,10 @@ class ClientesController
     $lastId = Clientes::createCliente($params);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
     Users::setActivityLog("Creación de registro en la tabla clientes con nro doc: " . $params["nro_documento"]);
-    $registro = Clientes::getCliente($lastId);
+    $cliente = Clientes::getCliente($lastId);
     $response['msgType'] = "success";
     $response['msg'] = "Cliente registrado";
-    $response['content'] = $registro;
+    $response['cliente'] = $cliente;
 
     return $response;
   }
@@ -124,11 +127,11 @@ class ClientesController
     $resp = Clientes::updateCliente("clientes", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("No hay cambios para guardar", "warning", 200);
     
-    $registro = Clientes::getCliente($p['id']);
+    $cliente = Clientes::getCliente($p['id']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['content'] = $registro;
+    $response['cliente'] = $cliente;
     return $response;
   }
 
@@ -142,23 +145,16 @@ class ClientesController
     $params = [ "id" => $p['id'] ];
     $resp = Clientes::deleteCliente($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
+    $cliente = Clientes::getCliente($p['id']);
 
     $response['msgType'] = "success";
     $response['error'] = false;
     $response['msg'] = "Registro eliminado";
+    $response['cliente'] = $cliente;
     return $response;
   }
 
-  public function get_cliente()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $p = json_decode(file_get_contents('php://input'), true);
-    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $registro = Clientes::getCliente($p['id']);
-    $res['content'] = $registro;
-    return $res;
-  }
 
   public function consultar_nro_documento()
   {
@@ -169,27 +165,25 @@ class ClientesController
     $nro_documento = trim($p["nro_documento"]);
     $nroDoc = Services::consultarNroDoc($nro_documento, $tipo_documento_cod);
 
-    if(!$nroDoc["error"]){
+    if(isset($nroDoc["nro_documento"])){
       // Verificar si el cliente ya esta registrado
       $paramsEqual = ["tipo_documento_cod" => $p['tipo_documento_cod'], "nro_documento" => $nro_documento];
       $cli = Clientes::getClientesBy($paramsEqual);
       if($cli){
-        $c = $nroDoc["content"];
-        $nroDoc["content"]["direccion"] = $c["direccion"] ? $c["direccion"] : $cli[0]["direccion"];
-        $nroDoc["content"]["ubigeo"] = $c["ubigeo"] ? $c["ubigeo"] : $cli[0]["ubigeo_inei"];
-        $nroDoc["content"]["id"] = $cli[0]["id"];
-        $nroDoc["content"]["email"] = $cli[0]["email"];
-        $nroDoc["content"]["telefono"] = $cli[0]["telefono"];
+        $nroDoc["direccion"] = $nroDoc["direccion"] ? $nroDoc["direccion"] : $cli[0]["direccion"];
+        $nroDoc["ubigeo"] = $nroDoc["ubigeo"] ? $nroDoc["ubigeo"] : $cli[0]["ubigeo_inei"];
+        $nroDoc["id"] = $cli[0]["id"];
+        $nroDoc["email"] = $cli[0]["email"];
+        $nroDoc["telefono"] = $cli[0]["telefono"];
       }else{
-        $nroDoc["content"]["id"] = 0;
-        $nroDoc["content"]["email"] = "";
-        $nroDoc["content"]["telefono"] = "";
+        $nroDoc["id"] = 0;
+        $nroDoc["email"] = "";
+        $nroDoc["telefono"] = "";
       }
       // Buscar en ubigeo el campo dis_prov_dep
-      if($nroDoc["content"]["ubigeo"]){
-        $paramsEqual = ["ubigeo_inei" => $nroDoc["content"]["ubigeo"]];
-        $ubig = Ubigeos::getUbigeosBy($paramsEqual);
-        $nroDoc["content"]["dis_prov_dep"] = $ubig[0]['dis_prov_dep'];
+      if($nroDoc["ubigeo"]){
+        $ubig = Ubigeos::getUbigeoByUbigeoInei($nroDoc["ubigeo"]);
+        $nroDoc["dis_prov_dep"] = $ubig['dis_prov_dep'];
       }
     }
     return $nroDoc;

@@ -8,7 +8,7 @@ class UsersController
 {
   public function filter_users()
   {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
     $p = json_decode(file_get_contents('php://input'), true);
     $campos = [
       'id',
@@ -54,13 +54,14 @@ class UsersController
   public function get_user()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    // throwMiExcepcion("Error de prueba", "error", 200);
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $registro = Users::getUser($p['id']);
     if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
-    $response["content"] = $registro;
-    return $response;
+    // $response["content"] = $registro;
+    return $registro;
   }
 
   public function get_user_session()
@@ -68,9 +69,9 @@ class UsersController
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
 
     $userSession = Users::getUserSession();
-    $response["content"] = $userSession;
-    return $response;
+    return $userSession;
   }
+
   public function get_profile()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
@@ -78,13 +79,11 @@ class UsersController
     // if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
     $profile = Users::getProfile();
-    $response["content"] = $profile;
-    return $response;
+    return $profile;
   }
 
   public function create_user()
   {
-    
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
 
     $p = json_decode(file_get_contents('php://input'), true);
@@ -102,7 +101,7 @@ class UsersController
     // Validacion
     $this->validateCreateUser($params);
 
-    $params["password"] = crypt($params['password'], $_ENV['SALT_PSW']);
+    $params["password"] = password_hash($p['password'], PASSWORD_DEFAULT);
     unset($params["confirm_password"]);
 
     // Buscando duplicados
@@ -150,10 +149,6 @@ class UsersController
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    // Validacion de user
-    if (trim($p['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
-    if (trim($p['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
-
     // Buscando duplicados
     $count = Users::countRecordsBy(["username" => $p['username']]);
     if ($count) throwMiExcepcion("El usuario: " . $p['username'] . ", ya existe!", "warning");
@@ -163,14 +158,18 @@ class UsersController
     }
 
     $params = [
-      "nombres" => trimSpaces($p['nombres']),
-      "apellidos" => trimSpaces($p['apellidos']),
       "username" => $p['username'],
-      "password" => crypt($p['password'], $_ENV['SALT_PSW']),
+      "password" => $p['password'],
+      "confirm_password" => $p['confirm_password'],
       "email" => $p['email'] ? $p['email'] : null,
       "rol_id" => 19,
       "caja_id" => 1,
     ];
+
+    // validation
+    $this->validateSignUp($params);
+    unset($params['confirm_password']);
+    $params['password'] = password_hash($p['password'], PASSWORD_DEFAULT);
 
     $lastId = Users::createUser($params);
     $curUser = ["id" => $lastId, "rol_id" => $params["rol_id"]];
@@ -178,17 +177,62 @@ class UsersController
 
     $jwt = $this->generateToken($lastId, $params["rol_id"]);
     Users::setToken($jwt, $lastId);
-    $modulosSesion = Modulos::getModulosSesion();
-    unset($params["password"]);
-    $params["id"] = $lastId;
 
     $response['error'] = false;
     $response['msg'] = "Registro satisfactorio";
     $response['msgType'] = "success";
-    $response['content']['token'] = $jwt;
-    // $response['content']['registro'] = $params;
-    // $response['content']['modulosSesion'] = $modulosSesion;
+    $response['token'] = $jwt;
     
+    return $response;
+  }
+
+  public function sign_in() // Logeaese
+  {
+    //--> Inicia sesion, devuelve al user y los modulos asociados a su rol
+    $p = json_decode(file_get_contents('php://input'), true);
+    $username = $p['username'] ?? '';
+    $password = $p['password'] ?? '';
+    if (!$username || !$password) throwMiExcepcion("Usuario y password requeridos", "warning", 200);
+
+    $campos = [
+      "id", 
+      "username", 
+      "password",
+      "email", 
+      "rol_id", 
+    ];
+
+    // Obteniendo al user
+    $equals = [
+      ["field_name" => "username", "field_value" => $username],
+      ["field_name" => "estado", "field_value" => 1],
+    ];
+
+    $registros = Users::getUsers("users", $campos, $equals);
+    // echo "<br>";
+    // print_r($p);
+    // exit();
+    if (!$registros) throwMiExcepcion("Usuario o contraseña incorrectos", "error", 200);
+    if($registros[0]['password'] === ""){
+      if($p['password'] !== "123456") throwMiExcepcion("Usuario o contraseña incorrectos", "error", 200);
+    }else if(!password_verify($p['password'], $registros[0]['password'])){
+      throwMiExcepcion("Usuario o contraseña incorrectos", "error", 200);
+    }
+
+    $id = $registros[0]['id'];
+    $rol_id = $registros[0]['rol_id'];
+    // Generacion del token
+    $jwt = $this->generateToken($id, $rol_id);
+    // Guardando el token
+    Users::setToken($jwt, $id);
+    $curUser = ["id" => $id, "rol_id"=>$rol_id];
+    Users::setCurUser($curUser);
+
+    $response['error'] = false;
+    $response['msg'] = "Usuario logueado";
+    $response['msgType'] = "success";
+    $response['token'] = $jwt;
+
     return $response;
   }
 
@@ -311,9 +355,9 @@ class UsersController
       "email" => $p['email'],
     ];
 
-    // Validar
+    // Validar password si se desea cambiar
     if ($p['new_password']) {
-      $paramCampos["new_password"] = crypt($p['new_password'], $_ENV['SALT_PSW']);
+      $paramCampos["password"] = password_hash($p['new_password'], PASSWORD_DEFAULT);
     }
 
     $paramWhere = ["id" => $p['id']];
@@ -359,14 +403,14 @@ class UsersController
     $params = ["username" => $p['username'],];
 
     $userByUsername = Users::getUserBy($params);
-    if (!$userByUsername) throwMiExcepcion("No se encontró al usuario " . $p['username'], "error");
+    if (!$userByUsername) throwMiExcepcion("No se encontró al usuario " . $p['username'], "error", 200 );
 
-    if (!$userByUsername["email"]) throwMiExcepcion("El usuario " . $p['username'] . " no tiene una cuenta de correo asociada", "error");
+    if (!$userByUsername["email"]) throwMiExcepcion("El usuario " . $p['username'] . " no tiene una cuenta de correo asociada", "error", 200);
 
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "El usuario " . $p['username'] . " tiene una cuenta de correo asociada";
-    $response['content'] = $userByUsername["email"];
+    $response['email'] = $userByUsername["email"];
     return $response;
   }
 
@@ -383,12 +427,12 @@ class UsersController
     $code = rand(100000, 999999);
     // Enviando código al email.
     $body = "Esta es la clave para restablecer su contraseña: <strong>$code</strong>";
-    $respuesta = Mailer::sendMail($email, "Restablecer contraseña", $body);
-    if ($respuesta['error']) throwMiExcepcion($respuesta['msg'], "error");
+    $respuesta = MailerHostinger::sendMail($email, "Restablecer contraseña", $body);
+    if ($respuesta['error']) throwMiExcepcion($respuesta['msg'], "error", 200);
 
     // Actualizando el usuario con el código de restauración
     $count = Users::updateUser("users", ["code_restore" => $code], ["username" => $username]);
-    if (!$count) throwMiExcepcion("No se pudo completar la operación", "error");
+    if (!$count) throwMiExcepcion("No se pudo completar la operación", "error", 200);
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Se envió el código de restauración al correo: " . $email;
@@ -410,7 +454,7 @@ class UsersController
 
     // Actualizando el usuario con el código de restauración
     $id = $userByCode["id"];
-    $password = crypt($new_password, $_ENV['SALT_PSW']);
+    $password = password_hash($new_password, PASSWORD_DEFAULT);
     $paramCampos = [
       "password" => $password,
       "code_restore" => null
@@ -422,106 +466,39 @@ class UsersController
     $response['msg'] = "Se cambió la contraseña con éxito.";
     return $response;
   }
-  //--> Inicia sesion, devuelve al user y los modulos asociados a su rol
-  public function sign_in() // Logeaese
-  {
-    $p = json_decode(file_get_contents('php://input'), true);
-
-    $username = $p['username'] ?? '';
-    $password = $p['password'] ?? '';
-    if (!$username || !$password) throwMiExcepcion("Usuario y password requeridos", "warning", 200);
-
-    $campos = [
-      "id", 
-      "nombres", 
-      "apellidos", 
-      "username", 
-      "email", 
-      "rol_id", 
-      "caja_id", 
-      "created_at", 
-      "updated_at", 
-      "estado"
-    ];
-    // Encriptando el password
-    $password = crypt($p['password'], $_ENV['SALT_PSW']);
-
-    // Obteniendo al user
-    $equals = [
-      ["field_name" => "username", "field_value" => $username],
-      ["field_name" => "password", "field_value" => $password],
-      ["field_name" => "estado", "field_value" => 1],
-    ];
-
-    $registros = Users::getUsers("users", $campos, $equals);
-
-    if (!$registros) throwMiExcepcion("Usuario o contrasenña incorrectos", "error", 200);
-
-    $id = $registros[0]['id'];
-    $rol_id = $registros[0]['rol_id'];
-    // Generacion del token
-    $jwt = $this->generateToken($id, $rol_id);
-    // Guardando el token
-    Users::setToken($jwt, $id);
-    $curUser = ["id" => $id, "rol_id"=>$rol_id];
-    Users::setCurUser($curUser);
-    // Obteniendo el usuario y los modulos asociados al rol
-    $registro = Users::getProfile();
-    $modulosSesion = Modulos::getModulosSesion();
-
-    $empresaSession = Config::getEmpresaSession();
-
-    $response['error'] = false;
-    $response['msg'] = "Usuario logueado";
-    $response['msgType'] = "success";
-    $response['content']['token'] = $jwt;
-    // $response['content']['registro'] = $registro;
-    // $response['content']['empresaSession'] = $empresaSession;
-    // $response['content']['modulosSesion'] = $modulosSesion;
-
-    return $response;
-  }
+  
 
   //--> Chekea token, devuelve al user del token y
   //--> los modulos asociados a su rol
   public function check_auth()
   {
-    $userSession = Users::getProfile();
-
-    $empresaSession = Config::getEmpresaSession();
-
+    $profile = Users::getProfile();
     $response['msgType'] = "success";
     $response['error'] = false;
     $response['msg'] = "Usuario autorizado";
-    $response['content']['registro'] = $userSession;
-    $response['content']['empresaSession'] = $empresaSession;
+    $response['profile'] = $profile;
     return $response;
   }
 
-  //--> Chekea token,
-  public function check_token()
-  {
-    $response['msgType'] = "success";
-    $response['error'] = false;
-    $response['msg'] = "Session validada";
-  }
 
   public function check_password()
   {
     $p = json_decode(file_get_contents('php://input'), true);
-    $password = $p['password'] ?? '';
 
-    $campos = ["id"];
+    $campos = ["id", "password"];
     // Encriptando el password
-    $password = crypt($p['password'], $_ENV['SALT_PSW']);
     $user_id = Users::getCurUser()["id"];
     $equals = [
       ["field_name" => "id", "field_value" => $user_id],
-      ["field_name" => "password", "field_value" => $password],
     ];
 
     $registros = Users::getUsers("users", $campos, $equals);
     if (!$registros) throwMiExcepcion("Contraseña incorrecta", "error", 200);
+    if($registros[0]['password'] === ""){
+      if($p['password'] !== "123456") throwMiExcepcion("Contraseña incorrecta", "error", 200);
+    }else if(!password_verify($p['password'], $registros[0]['password'])){
+      throwMiExcepcion("Contraseña incorrecta", "error", 200);
+    }
     $response["msg"] = "Contraseña correcta";
     $response["msgType"] = "success";
     return $response;
@@ -547,6 +524,27 @@ class UsersController
     return $jwt;
   }
 
+  private function validateSignUp($params){
+        $v = new Validator($params);
+    $v->addRule('iguales', function ($field, $value, array $params, array $fields) {
+      return $fields['password'] === $fields["confirm_password"];
+    });
+    $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
+      return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
+    });
+    $v->rule('required', 'username')->message('El usuario es requerido');
+    $v->rule('lengthMin', 'username', 2)->message('El usuario debe tener al menos 2 caracteres.');
+    $v->rule('lengthMax', 'username', 15)->message('El usuario no puede exceder los 15 caracteres.');
+    $v->rule('sinEspacios', 'username')->message('El usuario no puede tener espacios');
+    $v->rule('email', 'email')->message('Ingrese un formato de email válido');
+    $v->rule('required', 'password')->message('La contraseña es obligatoria');
+    $v->rule('regex', 'password', '/^[A-Za-z\d@$!%*?&]{6,}$/')->message('La contraseña debe tener al menos 6 caracteres, sin espacios');
+    $v->rule('iguales', 'password')->message('Los passwords no son iguales');;
+    if (!$v->validate()) {
+      $errors = $v->errors();
+      throwMiExcepcion("Error de validación", "warning", 200, "validation" , $errors);
+    }
+  }
   private function validateCreateUser($params){
     $v = new Validator($params);
     $v->addRule('iguales', function ($field, $value, array $params, array $fields) {

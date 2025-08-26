@@ -50,7 +50,7 @@ class Config
       return $empresa;
   }
 
-  static function getEmpresaSession(){
+  static function getEmpresaInfo(){
     $sql = "SELECT
         razon_social,
         nombre_comercial,

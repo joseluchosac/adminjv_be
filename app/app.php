@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require(__DIR__ . '/../vendor/autoload.php');
 require_once('../../app/libs/helpers.php');
 require_once('../../app/libs/MyClasses.php');
-require_once('../../app/services/MailerHostinger.php');
+require_once('../../app/services/MailerServices.php');
 require_once('../../app/models/Users.php');
 require_once('../../app/models/Modulos.php');
 require_once('../../app/controllers/Middleware.php');

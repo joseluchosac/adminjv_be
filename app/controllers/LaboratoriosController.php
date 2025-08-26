@@ -3,36 +3,30 @@ require_once('../../app/models/Laboratorios.php');
 
 class LaboratoriosController
 {
-  public function filter_laboratorios($isPaginated = true)
+  public function filter_laboratorios()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);
-
     $campos = [
       'id',
       'nombre',
       'estado',
     ];
 
-    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
-
-    $paramWhere = [
-      "paramLike" => ['nombre' => $search],
-      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
-      "paramBetween" => [
-        "campo" => $p['between']['field_name'],
-        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
-      ]
+    $p["search"] = [
+      "fieldsName" => ["nombre"],
+      "like" => trim($p["search"])
     ];
-
-    $paramOrders = $p['orders'];
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
       "offset" => $p['offset']
     ];
 
-    $res = Laboratorios::filterLaboratorios($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+    $where = MyORM::getWhere($p);
+    $orderBy = MyORM::getOrder($p["order"]);
+
+    $res = Laboratorios::filterLaboratorios($campos, $where, $orderBy, $pagination);
     return $res;
   }
 
@@ -103,6 +97,39 @@ class LaboratoriosController
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
     $response['registro'] = $registro;
+    return $response;
+  }
+
+  public function set_state_laboratorio()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
+
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+
+    $paramCampos = [
+      "estado" => $p['estado'],
+    ];
+
+    $paramWhere = ["id" => $p['id']];
+
+    $resp = Laboratorios::updateLaboratorio("laboratorios", $paramCampos, $paramWhere);
+    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+    
+    // Obteniendo el laboratorio actualizado
+    $campos = [
+      'id',
+      'nombre',
+      'estado',
+    ];
+    $equals = [
+      ["field_name" => "id", "field_value" => $p['id']],
+    ];
+    $laboratorio = Laboratorios::getLaboratorios("laboratorios", $campos, $equals)[0];
+
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['content'] = $laboratorio;
     return $response;
   }
 

@@ -5,15 +5,9 @@ require_once('../../app/models/Roles.php');
 class RolesController
 {
   public function get_roles(){
-    $campos = [
-      "id",
-      "rol",
-      "estado",
-    ];
-
+    $campos = [ "id", "rol", "estado", ];
     $roles = Roles::getRoles($campos, null);
-    $resp['content'] = $roles;
-    return $resp;
+    return $roles;
   }
 
   public function create_rol()
@@ -37,12 +31,12 @@ class RolesController
     $lastId = Roles::createRol( $params );
     if(!$lastId) throwMiExcepcion("Ningún registro ingresado", "warning");
 
-    $roles = $this->get_roles()['content'];
+    $rol = Roles::getRol($lastId);
 
     $res['error'] = false;
     $res['msgType'] = "success";
     $res['msg'] = "Rol registrado";
-    $res['content'] = $roles;
+    $res['rol'] = $rol;
     return $res;
   }
   
@@ -68,12 +62,12 @@ class RolesController
     $resp = Roles::updateRol( $params );
     if(!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $roles = $this->get_roles()['content'];
+    $rol = Roles::getRol($p['id']);
 
     $res['error'] = false;
     $res['msgType'] = "success";
     $res['msg'] = "Registro actualizado";
-    $res['content'] = $roles;
+    $res['rol'] = $rol;
     return $res;
   }
 
@@ -93,14 +87,14 @@ class RolesController
     $params = [
       "id" => $p['id'],
     ];
+    $rol = Roles::getRol($p['id']);
     $resp = Roles::deleteRol( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
-    $roles = $this->get_roles()['content'];
 
     $res['error'] = false;
     $res['msgType'] = "success";
     $res['msg'] = "Registro eliminado";
-    $res['content'] = $roles;
+    $res['rol'] = $rol;
     return $res;
   }
 }

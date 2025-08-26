@@ -77,19 +77,19 @@ class EstablecimientosController
     return $res;
   }
 
-  public function get_establecimientos_options()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $campos = [
-      "id",
-      "codigo",
-      "descripcion",
-    ];
-    $establecimientos = Establecimientos::getEstablecimientos($campos);
-    $res['content'] = $establecimientos;
-    unset($establecimientos);
-    return $res;
-  }
+  // public function get_establecimientos_options()
+  // {
+  //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+  //   $campos = [
+  //     "id",
+  //     "codigo",
+  //     "descripcion",
+  //   ];
+  //   $establecimientos = Establecimientos::getEstablecimientos($campos);
+  //   $res['content'] = $establecimientos;
+  //   unset($establecimientos);
+  //   return $res;
+  // }
 
   public function get_establecimiento()
   {

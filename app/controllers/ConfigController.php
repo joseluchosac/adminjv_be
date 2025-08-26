@@ -8,11 +8,13 @@ class ConfigController
     $response["content"] = $empresa;
     return $response;
   }
-  public function get_empresa_session(){
-    $empresaSession = Config::getEmpresaSession();
-    $response['content'] = $empresaSession;
-    return $response;
+  public function get_empresa_info(){
+    $empresaInfo = Config::getEmpresaInfo();
+    $establecimientosOpc = Establecimientos::getEstablecimientos(["id", "codigo", "descripcion"]);
+    $empresaInfo["establecimientosOpc"] = $establecimientosOpc;
+    return $empresaInfo;
   }
+
   public function update_empresa(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
 
