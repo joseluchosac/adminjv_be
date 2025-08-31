@@ -5,56 +5,6 @@ use Valitron\Validator;
 
 class EstablecimientosController
 {
-  public function filter_establecimientos($isPaginated = true)
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $p = json_decode(file_get_contents('php://input'), true);
-
-    $campos = [
-      'id',
-      'tipo',
-      'codigo',
-      'descripcion',
-      'direccion',
-      'ubigeo_inei',
-      'dis_prov_dep',
-      'telefono',
-      'email',
-      'estado',
-    ];
-
-    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
-
-    $paramWhere = [
-      "paramLike" => ['descripcion' => $search],
-      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
-      "paramBetween" => [
-        "campo" => $p['between']['field_name'],
-        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
-      ]
-    ];
-
-    $paramOrders = $p['orders'];
-
-    $pagination = [
-      "page" => $_GET["page"] ?? "1",
-      "offset" => $p['offset']
-    ];
-
-    $res = Establecimientos::filterEstablecimientos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
-    return $res;
-  }
-
-  public function filter_establecimientos_full() // sin paginacion
-  {
-    $res =  self::filter_establecimientos(false);
-    unset($res["next"]);
-    unset($res["offset"]);
-    unset($res["page"]);
-    unset($res["pages"]);
-    unset($res["previous"]);
-    return $res;
-  }
 
   public function get_establecimientos()
   {
@@ -76,20 +26,6 @@ class EstablecimientosController
     unset($establecimientos);
     return $res;
   }
-
-  // public function get_establecimientos_options()
-  // {
-  //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-  //   $campos = [
-  //     "id",
-  //     "codigo",
-  //     "descripcion",
-  //   ];
-  //   $establecimientos = Establecimientos::getEstablecimientos($campos);
-  //   $res['content'] = $establecimientos;
-  //   unset($establecimientos);
-  //   return $res;
-  // }
 
   public function get_establecimiento()
   {

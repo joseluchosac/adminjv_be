@@ -3,6 +3,7 @@ require_once('../../app/models/Categorias.php');
 
 class CategoriasController
 {
+  
   public function get_categorias(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $campos = [
@@ -14,15 +15,17 @@ class CategoriasController
     $orders = [
       ["field_name" => "orden", "order_dir" => "asc"],
     ];
-    $resp['content'] = Categorias::getCategorias($campos, $orders);
-    return $resp;
+    $categorias = Categorias::getCategorias($campos, $orders);
+    return $categorias;
   }
 
-  // public function get_categorias_tree(){
-  //   $response['data']=generateTree($this->get_categorias());
-  //   return $response;
-  // }
-
+  public function get_categorias_pack(){
+    $categorias = $this->get_categorias();
+    $response['tree'] = generateTree($categorias);
+    $response['list'] = flattenTree($response["tree"]);
+    return $response;
+  }
+  
   public function sort_categorias()
   {
     if($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 200);
@@ -32,7 +35,7 @@ class CategoriasController
     Categorias::sortCategorias($params);
 
     $_SERVER["REQUEST_METHOD"] = "POST";
-    $categorias_tree = generateTree($this->get_categorias()['content']);
+    $categorias_tree = generateTree($this->get_categorias());
 
     $response['error'] = false;
     $response['msgType'] = "success";
@@ -64,7 +67,7 @@ class CategoriasController
     $lastId = Categorias::createCategoria( $params );
     if(!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
 
-    $categorias_tree = generateTree($this->get_categorias()['content']);
+    $categorias_tree = generateTree($this->get_categorias());
     $response['msgType'] = "success";
     $response['msg'] = "Módulo registrado";
     $response['content'] = $categorias_tree;
@@ -94,7 +97,7 @@ class CategoriasController
     $resp = Categorias::updateCategoria( $params );
     if(!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     $_SERVER["REQUEST_METHOD"] = "POST";
-    $categorias_tree = generateTree($this->get_categorias()['content']);
+    $categorias_tree = generateTree($this->get_categorias());
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
@@ -120,7 +123,7 @@ class CategoriasController
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $_SERVER["REQUEST_METHOD"] = "POST";
-    $categorias_tree = generateTree($this->get_categorias()['content']);
+    $categorias_tree = generateTree($this->get_categorias());
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro eliminado";

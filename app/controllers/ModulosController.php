@@ -4,17 +4,6 @@
 
 class ModulosController
 {
-  public function test(){
-
-    $p = json_decode(file_get_contents('php://input'), true);
-    $response['msg'] = 'ok';
-    $response['server_REQUEST_METHOD'] = $_SERVER['REQUEST_METHOD'];
-    $response['GET'] = $_GET;
-    $response['POST'] = $_POST;
-    $response['parJson'] = $p;
-    return $response;
-  }
-
   public function get_modulos()
   {
     $campos = [

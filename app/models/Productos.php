@@ -60,6 +60,37 @@ class Productos
     return $response;
   }
 
+  static public function filterProductos2($campos, $where, $orderBy, $pagination, $isPaginated = true){
+    $table = "productos_v";
+    $dbh = Conexion::conectar();
+
+    $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
+
+    $page = intval($pagination["page"]);
+    $offset = intval($pagination["offset"]);
+
+    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
+    $pages = ceil($num_regs / $offset);
+    if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
+    $page = ($page <= $pages) ? $page : 1;
+    $start_reg = $offset * ($page - 1);
+
+    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
+    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
+
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($where["params"]);
+    $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $response['filas'] = $filas;
+    $response['num_regs'] = $num_regs;
+    $response['pages'] = $pages;
+    $response['page'] = ($pages != 0) ? $page : 0;
+    $response['next'] = ($pages > $page) ? $page + 1 : 0;
+    $response['previous'] = ($pages > 1) ? $page - 1 : 0;
+    $response['offset'] = $offset;
+    return $response;
+  }
   static function getProductos($tabla, $campos, $whereEquals = null)
   {
     $sql = "SELECT " . implode(", ", $campos) . " FROM $tabla";

@@ -156,7 +156,7 @@ class ClientesController
 
 
 
-  public function consultar_nro_documento()
+  public function query_document()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);

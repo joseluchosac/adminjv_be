@@ -59,9 +59,9 @@ class Users
   static function getUser($id){
     $sql = "SELECT
         u.id,
+        u.username,
         u.nombres,
         u.apellidos,
-        u.username,
         ifnull(u.email,'') AS email,
         u.rol_id,
         r.rol,
@@ -135,9 +135,9 @@ class Users
   static function getProfile(){
     $sql = "SELECT
         id,
+        username,
         nombres,
         apellidos,
-        username,
         ifnull(email,'') AS email,
         rol,
         caja

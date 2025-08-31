@@ -604,24 +604,25 @@ function generarSlug(string $texto): string
   return $slug;
 }
 
-function generateTree($arreglo, $padre_id = 0) {
+function generateTree($arreglo, $padre_id = 0, $nivel = 0) {
   // ✅ FUNCION QUE DEVUELVE UN ARREGLO JERARQUIZADO
   $arbol = array();
   foreach ($arreglo as $categoria) {
       if ($categoria['padre_id'] == $padre_id) {
-          $children = generateTree($arreglo, $categoria['id']);
+          $children = generateTree($arreglo, $categoria['id'], $nivel+1);
           if ($children) {
               $categoria['children'] = $children;
           }else{
             $categoria['children'] = [];
           }
+          $categoria["nivel"] = $nivel;
           $arbol[] = $categoria;
       }
   }
   return $arbol;
 }
 
-function flattenTree($tree, $padre_id = 0, &$resultado = []) {
+function flattenTree($tree, $padre_id = 0, &$resultado = [] ) {
   // ✅ FUNCION QUE APLANA UN ARREGLO JERARQUIZADO
   foreach ($tree as $nodo) {
       // Extraemos los hijos si existen y los eliminamos del nodo actual

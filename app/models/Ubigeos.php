@@ -3,39 +3,27 @@ require_once("Conexion.php");
 
 class Ubigeos
 {
-  static public function filterUbigeos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
-  {
+
+  static public function filterUbigeos($campos, $where, $orderBy, $pagination, $isPaginated = true){
     $table = "ubigeos_v";
-
-    $sqlWhere = SqlWhere::and([
-      SqlWhere::likeOr($paramWhere['paramLike']),
-      SqlWhere::equalAnd($paramWhere['paramEquals']),
-      SqlWhere::between($paramWhere['paramBetween']),
-    ]);
-
-    $bindWhere = SqlWhere::arrMerge([
-      "like" => $paramWhere['paramLike'], 
-      "equal" => $paramWhere['paramEquals'], 
-      "between" => $paramWhere['paramBetween']
-    ]);
+    $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
-    $sqlOrderBy = getSqlOrderBy($paramOrders);
+
     $page = intval($pagination["page"]);
     $offset = intval($pagination["offset"]);
 
-    $num_regs = self::num_regs($table, $sqlWhere, $bindWhere);
+    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $offset);
-    if($page > $pages && $pages != 0)  throwMiExcepcion("Págian fuera de rango", "error", 200);
+    if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $offset * ($page - 1);
 
     $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
-    $sql = $sqlSelect . " FROM $table" . $sqlWhere . $sqlOrderBy . $sqlLimit;
+    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
 
-    $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
-    $stmt->execute($bindWhere);
+    $stmt->execute($where["params"]);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $response['filas'] = $filas;
@@ -47,6 +35,7 @@ class Ubigeos
     $response['offset'] = $offset;
     return $response;
   }
+
 
   static function getUbigeo($id){
     $sql = "SELECT ubigeo_inei, ubigeo_reniec, departamento, provincia, distrito FROM ubigeos WHERE ubigeo_inei = :ubigeo_inei;";

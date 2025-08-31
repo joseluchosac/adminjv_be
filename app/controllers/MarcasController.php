@@ -30,28 +30,17 @@ class MarcasController
     return $res;
   }
 
-  public function filter_marcas_full() // sin paginacion
-  {
-    $res =  self::filter_marcas(false);
-    unset($res["next"]);
-    unset($res["offset"]);
-    unset($res["page"]);
-    unset($res["pages"]);
-    unset($res["previous"]);
-    return $res;
-  }
-  
   public function get_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     
-    $registro = Marcas::getMarca($p['id']);
-    if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
-    $response["content"] = $registro;
-    return $response;
+    $marca = Marcas::getMarca($p['id']);
+    if (!$marca) throwMiExcepcion("No se encontró el registro", "error", 404);
+    return $marca;
   }
+
   public function create_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
@@ -73,7 +62,7 @@ class MarcasController
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Marca registrado";
-    $response['content'] = $registro;
+    $response['marca'] = $registro;
     return $response;
   }
 
@@ -105,11 +94,12 @@ class MarcasController
     $registro = Marcas::getMarca($p['id']);
     Users::setActivityLog("Modificación de registro en la tabla marcas: " . $registro["nombre"]);
 
-    $response['content'] = $registro;
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
+    $response['marca'] = $registro;
     return $response;
   }
+
   public function set_state_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
@@ -126,22 +116,13 @@ class MarcasController
     $resp = Marcas::updateMarca("marcas", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    // Obteniendo el laboratorio actualizado
-    $campos = [
-      'id',
-      'nombre',
-      'estado',
-    ];
-    $equals = [
-      ["field_name" => "id", "field_value" => $p['id']],
-    ];
-    $marca = Marcas::getMarcas("marcas", $campos, $equals)[0];
-
+    $marca = Marcas::getMarca($p['id']);
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['content'] = $marca;
+    $response['marca'] = $marca;
     return $response;
   }
+
   public function delete_marca()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
@@ -150,15 +131,14 @@ class MarcasController
 
     // OJO, antes de eliminar verificar si el marca tiene una venta asociada
     $params = [ "id" => $p['id'] ];
+    $marca = Marcas::getMarca($p['id']);
     $resp = Marcas::deleteMarca($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $response['msgType'] = "success";
     $response['error'] = false;
     $response['msg'] = "Registro eliminado";
+    $response['marca'] = $marca;
     return $response;
   }
-
-
-
 }

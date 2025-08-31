@@ -60,8 +60,28 @@ class UsersController
 
     $registro = Users::getUser($p['id']);
     if (!$registro) throwMiExcepcion("No se encontró el registro", "error", 404);
-    // $response["content"] = $registro;
     return $registro;
+  }
+
+  public function get_user_item($id)
+  {
+    $campos = [
+      'id',
+      'nombres',
+      'apellidos',
+      'username',
+      'email',
+      'rol',
+      'caja',
+      'estado',
+      'created_at',
+      'updated_at'
+    ];
+    $equals = [
+      ["field_name" => "id", "field_value" => $id],
+    ];
+    $user = Users::getUsers("users_v", $campos, $equals)[0];
+    return $user;
   }
 
   public function get_user_session()
@@ -75,11 +95,49 @@ class UsersController
   public function get_profile()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    // $p = json_decode(file_get_contents('php://input'), true);
-    // if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
     $profile = Users::getProfile();
     return $profile;
+  }
+
+  public function update_profile()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
+
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+
+    if (trim($p['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
+    if (trim($p['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
+    if (trim($p['username']) == "") throwMiExcepcion("El usuario es requerido", "warning", 200);
+
+    // Buscando duplicados
+    $exclude = ["id" => $p['id']];
+    $count = Users::countRecordsBy(["email" => $p['email']], $exclude);
+    if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning");
+
+    $paramCampos = [
+      "nombres" => trimSpaces($p['nombres']),
+      "apellidos" => trimSpaces($p['apellidos']),
+      "email" => $p['email'],
+    ];
+
+    // Validar password si se desea cambiar
+    if ($p['new_password']) {
+      $paramCampos["password"] = password_hash($p['new_password'], PASSWORD_DEFAULT);
+    }
+
+    $paramWhere = ["id" => $p['id']];
+
+
+    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
+    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+
+    $profile = Users::getProfile($p['id']);
+
+    $response['msgType'] = "success";
+    $response['msg'] = "Datos actualizados";
+    $response['content'] = $profile;
+    return $response;
   }
 
   public function create_user()
@@ -117,26 +175,65 @@ class UsersController
     Users::setActivityLog("Creación de registro en la tabla usuarios: " . $params["username"]);
 
     // Obteniendo el usuaro actualizado
-    $campos = [
-      'id',
-      'nombres',
-      'apellidos',
-      'username',
-      'email',
-      'rol',
-      'caja',
-      'estado',
-      'created_at',
-      'updated_at'
-    ];
-    $equals = [
-      ["field_name" => "id", "field_value" => $lastId],
-    ];
-    $user = Users::getUsers("users_v", $campos, $equals)[0];
-
+    $user = $this->get_user_item($lastId);
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Usuario registrado";
+    $response['content'] = $user;
+    return $response;
+  }
+
+  public function update_user()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
+
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
+
+    $paramCampos = [
+      "nombres" => trimSpaces($p['nombres']),
+      "apellidos" => trimSpaces($p['apellidos']),
+      "rol_id" => $p['rol_id'],
+      "caja_id" => $p['caja_id'],
+    ];
+
+    // Validacion
+    $this->validateUpdateUser($paramCampos);
+
+    // Buscando duplicados
+    $exclude = ["id" => $p['id']];
+    $count = Users::countRecordsBy(["username" => $p['username']], $exclude);
+    if ($count) throwMiExcepcion("El usuario: " . $p['username'] . ", ya existe!", "warning", 200);
+    $count = Users::countRecordsBy(["email" => $p['email']], $exclude);
+    if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning", 200);
+
+    $paramWhere = ["id" => $p['id']];
+
+    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
+    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+
+    $user = $this->get_user_item($p['id']);
+
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro actualizado";
+    $response['content'] = $user;
+    return $response;
+  }
+
+  public function delete_user()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+
+    $params = ["id" => $p['id']];
+    $user = $this->get_user_item($p['id']);
+    $resp = Users::deleteUser($params);
+    if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
+
+    $response['error'] = "false";
+    $response['msgType'] = "success";
+    $response['msg'] = "Registro eliminado";
     $response['content'] = $user;
     return $response;
   }
@@ -177,16 +274,12 @@ class UsersController
 
     $jwt = $this->generateToken($lastId, $params["rol_id"]);
     Users::setToken($jwt, $lastId);
-
-    $response['error'] = false;
-    $response['msg'] = "Registro satisfactorio";
-    $response['msgType'] = "success";
     $response['token'] = $jwt;
     
     return $response;
   }
 
-  public function sign_in() // Logeaese
+  public function sign_in() // Logearse
   {
     //--> Inicia sesion, devuelve al user y los modulos asociados a su rol
     $p = json_decode(file_get_contents('php://input'), true);
@@ -223,71 +316,8 @@ class UsersController
     $rol_id = $registros[0]['rol_id'];
     // Generacion del token
     $jwt = $this->generateToken($id, $rol_id);
-    // Guardando el token
     Users::setToken($jwt, $id);
-    $curUser = ["id" => $id, "rol_id"=>$rol_id];
-    Users::setCurUser($curUser);
-
-    $response['error'] = false;
-    $response['msg'] = "Usuario logueado";
-    $response['msgType'] = "success";
     $response['token'] = $jwt;
-
-    return $response;
-  }
-
-  public function update_user()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
-
-    $p = json_decode(file_get_contents('php://input'), true);
-    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-
-    $paramCampos = [
-      "nombres" => trimSpaces($p['nombres']),
-      "apellidos" => trimSpaces($p['apellidos']),
-      "rol_id" => $p['rol_id'],
-      "caja_id" => $p['caja_id'],
-    ];
-
-    // Validacion
-    $this->validateUpdateUser($paramCampos);
-
-    // Buscando duplicados
-    $exclude = ["id" => $p['id']];
-    $count = Users::countRecordsBy(["username" => $p['username']], $exclude);
-    if ($count) throwMiExcepcion("El usuario: " . $p['username'] . ", ya existe!", "warning", 200);
-    $count = Users::countRecordsBy(["email" => $p['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning", 200);
-
-    $paramWhere = ["id" => $p['id']];
-
-    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
-    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
-    
-    // $registro = Users::getUser($p['id']);
-    // Obteniendo el usuaro actualizado
-    $campos = [
-      'id',
-      'nombres',
-      'apellidos',
-      'username',
-      'email',
-      'rol',
-      'caja',
-      'estado',
-      'created_at',
-      'updated_at'
-    ];
-    $equals = [
-      ["field_name" => "id", "field_value" => $p['id']],
-    ];
-    $user = Users::getUsers("users_v", $campos, $equals)[0];
-    Users::setActivityLog("Modificación de registro en la tabla usuarios: " . $user["username"]);
-
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro actualizado";
-    $response['content'] = $user;
     return $response;
   }
 
@@ -333,65 +363,7 @@ class UsersController
     return $response;
   }
 
-  public function update_profile()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'PUT') throwMiExcepcion("Método no permitido", "error", 405);
-
-    $p = json_decode(file_get_contents('php://input'), true);
-    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-
-    if (trim($p['nombres']) == "") throwMiExcepcion("Nombres son requeridos", "warning", 200);
-    if (trim($p['apellidos']) == "") throwMiExcepcion("Apellidos son requeridos", "warning", 200);
-    if (trim($p['username']) == "") throwMiExcepcion("El usuario es requerido", "warning", 200);
-
-    // Buscando duplicados
-    $exclude = ["id" => $p['id']];
-    $count = Users::countRecordsBy(["email" => $p['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning");
-
-    $paramCampos = [
-      "nombres" => trimSpaces($p['nombres']),
-      "apellidos" => trimSpaces($p['apellidos']),
-      "email" => $p['email'],
-    ];
-
-    // Validar password si se desea cambiar
-    if ($p['new_password']) {
-      $paramCampos["password"] = password_hash($p['new_password'], PASSWORD_DEFAULT);
-    }
-
-    $paramWhere = ["id" => $p['id']];
-
-
-    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
-    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
-
-    $registro = Users::getProfile($p['id']);
-
-    $response['msgType'] = "success";
-    $response['msg'] = "Datos actualizados";
-    $response['content'] = $registro;
-    return $response;
-  }
-
-  public function delete_user()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'DELETE') throwMiExcepcion("Método no permitido", "error", 405);
-    $p = json_decode(file_get_contents('php://input'), true);
-    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
-
-    $params = [
-      "id" => $p['id'],
-    ];
-    $resp = Users::deleteUser($params);
-    if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
-
-    $response['error'] = "false";
-    $response['msgType'] = "success";
-    $response['msg'] = "Registro eliminado";
-    $response['content'] = $p['id'];
-    return $response;
-  }
+  
 
   public function get_email_by_username()
   {
@@ -467,16 +439,13 @@ class UsersController
     return $response;
   }
   
-
-  //--> Chekea token, devuelve al user del token y
-  //--> los modulos asociados a su rol
   public function check_auth()
   {
-    $profile = Users::getProfile();
+    // $profile = Users::getProfile();
     $response['msgType'] = "success";
     $response['error'] = false;
     $response['msg'] = "Usuario autorizado";
-    $response['profile'] = $profile;
+    // $response['profile'] = $profile;
     return $response;
   }
 

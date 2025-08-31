@@ -138,46 +138,5 @@ class NumeracionesController
     $response['msg'] = "Registro eliminado";
     return $response;
   }
-  // EVALUAR
-  // public function get_establecimiento()
-  // {
-  //   if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-  //   $p = json_decode(file_get_contents('php://input'), true);
-  //   if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-  //   $establecimiento = Establecimientos::getEstablecimiento($p['id']);
-  //   $res['content'] = $establecimiento;
-  //   unset($establecimiento);
-  //   return $res;
-  // }
-
-
-
-
-
-
-
-
-
-  // private function validateSucursal($params){
-  //   $v = new Validator($params);
-  //   $v->addRule('sinEspacios', function ($field, $value, array $params, array $fields) {
-  //     return strpos($value, ' ') === false; // Verificar que no haya espacios en el valor
-  //   });
-  //   $v->rule('required', 'codigo')->message('Ingrese el código');
-  //   $v->rule('sinEspacios', 'codigo')->message('El código no debe tener espacios');
-  //   $v->rule('required', 'descripcion')->message('Ingrese la descripción');
-  //   $v->rule('required', 'direccion')->message('Ingrese la dirección');
-  //   $v->rule('required', 'ubigeo_inei')->message('Ingrese el ubigeo');
-  //   if($params['email']){
-  //     $v->rule('email', 'email')->message('Ingrese un formato de email válido');
-  //   }
-  //   if (!$v->validate()) {
-  //     foreach ($v->errors() as $campo => $errores) {
-  //       foreach ($errores as $error) {
-  //         throwMiExcepcion($error, "warning", 200);
-  //       }
-  //     }
-  //   }
-  // }
 }

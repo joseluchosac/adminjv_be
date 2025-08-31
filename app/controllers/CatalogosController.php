@@ -82,79 +82,71 @@ class CatalogosController
     return $response;
   }
 
-  public function get_distritos(){
-    $params = json_decode(file_get_contents('php://input'), true);
-    $distritos = Catalogos::getDistritos($params['departamento'], $params['provincia']);
-    return $distritos;
+  public function get_cajas(){
+    // throwMiExcepcion("Error de prueba", "error", 200);
+    $cajas = Catalogos::getCajas();
+    return $cajas;
   }
 
-  public function get_cajas(){
-    $cajas = Catalogos::getCajas();
-    $res['content'] = $cajas;
-    return $res;
+  // public function get_categorias(){
+  //   $categorias = Catalogos::getCategorias();
+  //   $response['tree'] = generateTree($categorias);
+  //   $response['list'] = flattenTree($response["tree"]);
+  //   return $response;
+  // }
+
+  public function get_formas_pago(){
+    $formasPago = Catalogos::getFormasPago();
+    return $formasPago;
   }
   
-  public function get_categorias_tree(){
-    $categoriasTree = Catalogos::getCategoriasTree();
-    $res['content'] = $categoriasTree;
-    return $res;
+  public function get_impuestos(){
+    $impuestos = Catalogos::getImpuestos();
+    return $impuestos;
+  }
+
+  public function get_motivos_nota(){
+    $motivosNota = Catalogos::getMotivosNota();
+    return $motivosNota;
+  }
+
+  public function get_tipos_comprobante(){
+    $tiposComprobante = Catalogos::getTiposComprobante();
+    return $tiposComprobante;
+  }
+
+  public function get_tipos_documento(){
+    $tiposDocumento = Catalogos::getTiposDocumento();
+    return $tiposDocumento;
+  }
+
+  public function get_tipos_establecimiento(){
+    return ['SUCURSAL', 'DEPOSITO'];
+  }
+
+  public function get_tipos_moneda(){
+    $tiposMoneda = Catalogos::getTiposMoneda();
+    return $tiposMoneda;
+  }
+
+  public function get_tipos_movimiento(){
+    $tiposMovimiento = Catalogos::getTiposMovimiento();
+    return $tiposMovimiento;
+  }
+
+  public function get_tipos_movimiento_caja(){
+    $tiposMovimientoCaja = Catalogos::getTiposMovimientoCaja();
+    return $tiposMovimientoCaja;
+  }
+
+  public function get_tipos_operacion(){
+    $tiposOperacion = Catalogos::getTiposOperacion();
+    return $tiposOperacion;
   }
 
   public function get_unidades_medida(){
     $unidadesMedida = Catalogos::getUnidadesMedida();
-    $res['content'] = $unidadesMedida;
-    return $res;
+    return $unidadesMedida;
   }
-
-  public function get_impuestos(){
-    $impuestos = Catalogos::getImpuestos();
-    $res['content'] = $impuestos;
-    return $res;
-  }
-  public function get_motivos_nota(){
-    $motivosNota = Catalogos::getMotivosNota();
-    $res['content'] = $motivosNota;
-    return $res;
-  }
-  public function get_tipos_comprobante(){
-    $tiposComprobante = Catalogos::getTiposComprobante();
-    $res['content'] = $tiposComprobante;
-    return $res;
-  }
-  public function get_tipos_documento(){
-    $tiposDocumento = Catalogos::getTiposDocumento();
-    $res['content'] = $tiposDocumento;
-    return $res;
-  }
-  public function get_tipos_movimiento(){
-    $tiposMovimiento = Catalogos::getTiposMovimiento();
-    $res['content'] = $tiposMovimiento;
-    return $res;
-  }
-  public function get_tipos_movimiento_caja(){
-    $tiposMovimientoCaja = Catalogos::getTiposMovimientoCaja();
-    $res['content'] = $tiposMovimientoCaja;
-    return $res;
-  }
-  public function get_tipos_operacion(){
-    $tiposOperacion = Catalogos::getTiposOperacion();
-    $res['content'] = $tiposOperacion;
-    return $res;
-  }
-  public function get_formas_pago(){
-    $formasPago = Catalogos::getFormasPago();
-    $res['content'] = $formasPago;
-    return $res;
-  }
-  public function get_tipos_moneda(){
-    $tiposMoneda = Catalogos::getTiposMoneda();
-    $res['content'] = $tiposMoneda;
-    return $res;
-  }
-  public function get_tipos_establecimiento(){
-    $res['content'] = ['SUCURSAL', 'DEPOSITO'];
-    return $res;
-  }
-
 }
 

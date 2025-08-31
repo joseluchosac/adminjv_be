@@ -62,7 +62,7 @@ class Catalogos
  
   static function getCajas()
   {
-    $sql = "SELECT id, descripcion, estado FROM cajas;
+    $sql = "SELECT id, establecimiento_id, descripcion, estado FROM cajas;
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
@@ -70,6 +70,23 @@ class Catalogos
     $cajas = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $cajas;
   }
+
+  // static function getCategorias()
+  // {
+  //   $sql = "SELECT 
+  //       id, 
+  //       descripcion, 
+  //       padre_id,
+  //       orden
+  //     FROM categorias ORDER BY orden;
+  //   ";
+  //   $dbh = Conexion::conectar();
+  //   $stmt = $dbh->prepare($sql);
+  //   $stmt->execute();
+  //   $categorias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  //   return $categorias; 
+  // }
+
   static function getCategoriasTree()
   {
     $sql = "SELECT 
@@ -85,6 +102,7 @@ class Catalogos
     $categoriasTree = generateTree($stmt->fetchAll(PDO::FETCH_ASSOC));
     return $categoriasTree; 
   }
+
   static function getUnidadesMedida()
   {
     $sql = "SELECT 
@@ -243,17 +261,5 @@ class Catalogos
     $tiposMoneda = $stmt->fetchAll(PDO::FETCH_ASSOC);
     return $tiposMoneda;
   }
-  static function getDistritos($departamento, $provincia){
-    $sql = "SELECT
-        ubigeo_inei,
-        distrito 
-      FROM ubigeos WHERE departamento = :departamento AND provincia = :provincia;
-    ";
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute(array("departamento" => $departamento, "provincia" => $provincia));
-    $distritos = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $distritos;
 
-  }
 }

@@ -30,15 +30,14 @@ class LaboratoriosController
     return $res;
   }
 
-  public function filter_laboratorios_full() // sin paginacion
+  public function get_laboratorio()
   {
-    $res =  self::filter_laboratorios(false);
-    unset($res["next"]);
-    unset($res["offset"]);
-    unset($res["page"]);
-    unset($res["pages"]);
-    unset($res["previous"]);
-    return $res;
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+
+    $laboratorio = Laboratorios::getLaboratorio($p['id']);
+    return $laboratorio;
   }
 
   public function create_laboratorio()
@@ -58,11 +57,11 @@ class LaboratoriosController
     $lastId = Laboratorios::createLaboratorio($params);
     if (!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
     Users::setActivityLog("Creación de nuevo laboratorio: " . $params["nombre"]);
-    $registro = Laboratorios::getLaboratorio($lastId);
+    $laboratorio = Laboratorios::getLaboratorio($lastId);
     $response['error'] = false;
     $response['msgType'] = "success";
     $response['msg'] = "Laboratorio registrado";
-    $response['content'] = $registro;
+    $response['laboratorio'] = $laboratorio;
     return $response;
   }
 
@@ -91,12 +90,11 @@ class LaboratoriosController
     $resp = Laboratorios::updateLaboratorio("laboratorios", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
     
-    $registro = Laboratorios::getLaboratorio($p['id']);
-    Users::setActivityLog("Modificación de registro en la tabla laboratorios: " . $registro["nombre"]);
+    $laboratorio = Laboratorios::getLaboratorio($p['id']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $registro;
+    $response['laboratorio'] = $laboratorio;
     return $response;
   }
 
@@ -115,21 +113,11 @@ class LaboratoriosController
 
     $resp = Laboratorios::updateLaboratorio("laboratorios", $paramCampos, $paramWhere);
     if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
-    
-    // Obteniendo el laboratorio actualizado
-    $campos = [
-      'id',
-      'nombre',
-      'estado',
-    ];
-    $equals = [
-      ["field_name" => "id", "field_value" => $p['id']],
-    ];
-    $laboratorio = Laboratorios::getLaboratorios("laboratorios", $campos, $equals)[0];
 
+    $laboratorio = Laboratorios::getLaboratorio($p['id']);
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['content'] = $laboratorio;
+    $response['laboratorio'] = $laboratorio;
     return $response;
   }
 
@@ -141,23 +129,17 @@ class LaboratoriosController
 
     // OJO, antes de eliminar verificar si el laboratorio tiene una venta asociada
     $params = [ "id" => $p['id'] ];
+    $laboratorio = Laboratorios::getLaboratorio($p['id']);
     $resp = Laboratorios::deleteLaboratorio($params);
     if (!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $response['msgType'] = "success";
     $response['error'] = false;
     $response['msg'] = "Registro eliminado";
+    $response['laboratorio'] = $laboratorio;
     return $response;
   }
 
-  public function get_laboratorio()
-  {
-    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
-    $p = json_decode(file_get_contents('php://input'), true);
-    if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
-    $registro = Laboratorios::getLaboratorio($p['id']);
-    return $registro;
-  }
 
 }

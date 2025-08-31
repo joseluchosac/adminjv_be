@@ -62,6 +62,41 @@ class ProductosController
     return $res;
   }
 
+  public function filter_productos2()
+  {
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 200);
+    $p = json_decode(file_get_contents('php://input'), true);
+    $campos = [
+      'id',
+      'codigo',
+      'barcode',
+      'descripcion',
+      'marca_id',
+      'marca',
+      'laboratorio_id',
+      'laboratorio',
+      'stocks',
+      'unidad_medida_cod',
+      'estado'
+    ];
+
+    $p["search"] = [
+      "fieldsName" => ["descripcion"],
+      "like" => trim($p["search"])
+    ];
+
+    $pagination = [
+      "page" => $_GET["page"] ?? "1",
+      "offset" => $p['offset']
+    ];
+
+    $where = MyORM::getWhere($p);
+    $orderBy = MyORM::getOrder($p["order"]);
+
+    $res = Productos::filterProductos2($campos, $where, $orderBy, $pagination);
+    return $res;
+  }
+
   public function filter_productos_full() // sin paginacion
   {
     $res =  self::filter_productos(false);
