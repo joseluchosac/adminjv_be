@@ -56,7 +56,7 @@ class MyORM
 {
   // EJEMPLO DE PARAMETROS JSON
     /* $pJson = '{
-      "offset":25,
+      "per_page":25,
       "search": {
         "fieldsName":["apellidos","nombres"],
         "like":"cabrera"

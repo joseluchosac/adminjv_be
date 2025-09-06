@@ -28,7 +28,8 @@ class Modulos
         descripcion,
         padre_id,
         icon_menu,
-        orden
+        orden,
+        allowed_roles
       FROM modulos
       WHERE id = :id;
     ";
@@ -71,6 +72,19 @@ class Modulos
     return $resp;
   }
 
+  static function updateAllowedRoles($params)
+  {
+    $sql = "UPDATE modulos SET
+        allowed_roles = :allowed_roles
+      WHERE id = :id
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($params);
+    $resp = $stmt->rowCount();
+    return $resp;
+  }
+
   static function deleteModulo($params){
     $sql = "DELETE FROM modulos WHERE id = :id";
     $sql2 = "DELETE FROM modulos_roles WHERE modulo_id = :modulo_id";
@@ -102,7 +116,11 @@ class Modulos
     }
   }
 
-  static function getModuloRol($rol_id){
+  static function getMosulosRol2($rol_id){
+
+  }
+
+  static function getModulosRol($rol_id){
     $sql = "SELECT
         m.id,
         ifnull(m.nombre,'') AS nombre,
@@ -113,7 +131,7 @@ class Modulos
         ifnull(mr.rol_id, 0) AS assign
       FROM modulos m
       LEFT JOIN (
-	      SELECT * FROM modulos_roles 
+	      SELECT modulo_id, rol_id FROM modulos_roles 
 	      WHERE rol_id = :rol_id
       ) mr ON m.id = mr.modulo_id
       ORDER BY m.orden
@@ -130,6 +148,24 @@ class Modulos
       }
     }
     return $records;
+  }
+
+  static function createModuloRol($modulo_id, $rol_id){
+    $sql = "INSERT INTO modulos_roles 
+      (modulo_id, rol_id) VALUES (:modulo_id, :rol_id)
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["modulo_id" => $modulo_id, "rol_id" => $rol_id ]);
+  }
+
+  static function deleteModuloRol($modulo_id, $rol_id){
+    $sql = "DELETE FROM modulos_roles 
+      WHERE modulo_id = :modulo_id AND rol_id = :rol_id
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["modulo_id" => $modulo_id, "rol_id" => $rol_id ]);
   }
 
   static function getModulosSesion(){
@@ -167,25 +203,38 @@ class Modulos
     return $records;
   }
 
-  static function updateModulosRoles($rol_id, $modulos){
-    try {
-      $sqlDelete = "DELETE FROM modulos_roles WHERE rol_id = :rol_id";
-      $sqlInsert = "INSERT INTO modulos_roles
-        (modulo_id, rol_id) values (:modulo_id, :rol_id)
-      ";
-      $dbh = Conexion::conectar();
-      $dbh->beginTransaction();
-      $stmt = $dbh->prepare($sqlDelete);
-      $stmt->execute(['rol_id' => $rol_id]);
-      $stmt = $dbh->prepare($sqlInsert);
-      foreach ($modulos as $fila) {
-        $stmt->execute(["modulo_id" => $fila["modulo_id"], "rol_id" => $rol_id]);
-      }
-      $dbh->commit();
-    } catch (PDOException $e) {
-      $dbh->rollBack();
-      throwMiExcepcion($e->getMessage(), "error", 200);
-    }
+  // static function updateModulosRoles($rol_id, $modulos){
+  //   try {
+  //     $sqlDelete = "DELETE FROM modulos_roles WHERE rol_id = :rol_id";
+  //     $sqlInsert = "INSERT INTO modulos_roles
+  //       (modulo_id, rol_id) values (:modulo_id, :rol_id)
+  //     ";
+  //     $dbh = Conexion::conectar();
+  //     $dbh->beginTransaction();
+  //     $stmt = $dbh->prepare($sqlDelete);
+  //     $stmt->execute(['rol_id' => $rol_id]);
+  //     $stmt = $dbh->prepare($sqlInsert);
+  //     foreach ($modulos as $fila) {
+  //       $stmt->execute(["modulo_id" => $fila["modulo_id"], "rol_id" => $rol_id]);
+  //     }
+  //     $dbh->commit();
+  //   } catch (PDOException $e) {
+  //     $dbh->rollBack();
+  //     throwMiExcepcion($e->getMessage(), "error", 200);
+  //   }
+  // }
+
+  static function countModulosRoles($modulo_id, $rol_id){
+    $sql = "SELECT COUNT(*) AS cantidad 
+      FROM modulos_roles
+      WHERE modulo_id = :modulo_id AND rol_id = :rol_id
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["modulo_id" => $modulo_id, "rol_id" => $rol_id ]);
+    $registro = $stmt->fetch(PDO::FETCH_ASSOC);
+    $cantidad = $registro['cantidad'];
+    return $cantidad;
   }
 
   static function countRecordsBy($equal, $exclude = []){

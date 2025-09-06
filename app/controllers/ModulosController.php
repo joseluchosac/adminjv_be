@@ -131,31 +131,54 @@ class ModulosController
     return $res;
   }
 
-  public function get_modulo_rol()
+  public function get_modulos_rol()
   {
-    setcookie("nombre", "Panchito",[
-      'expires' => time() + 60*20,
-      'path' => '/',
-      // 'domain' => 'http://localhost:5173', // Dominio del backend (se puede usar un subdominio comodín)
-      'secure' => true, // Solo enviar la cookie sobre HTTPS
-      // 'httponly' => true, // No accesible desde JavaScript
-      'samesite' => 'None', // Permitir cookies en solicitudes entre dominios
-    ]);
-    // setcookie("nombre", "steve", time() + 60*2, "/");
+
+    // Obtiene todos los módulos indicando cuales estan asignados al rol indicado   
     $p = json_decode(file_get_contents('php://input'), true);
-    $rol_id = $p["rol_id"];
-    if($rol_id){
-      $res['content'] = Modulos::getModuloRol($rol_id);
-    }else{
-      $res['msg'] = "No se obtuvieron datos";
-      $res['msgType'] = "info";
-      $res['content'] = null;
-    }
-    return $res;
+    if(!$p["rol_id"]) throwMiExcepcion("Falta asignar el rol", "warning", 200);
+    $modulosRol = Modulos::getModulosRol($p["rol_id"]);
+    if(!$modulosRol) throwMiExcepcion("No se obtuvieron satos", "warning", 200);
+    $modulosRol;
+
+
+
+
+
+    // EXPERIMENTAL: Sin utilizar la tabla modulos_roles
+    // $modulos = $this->get_modulos();
+    // $rolId = $p["rol_id"];
+
+    // $modulos2 = array_map(function($modulo) use($rolId){
+    //   $allowedRoles = json_decode($modulo['allowed_roles']) ?? [];
+    //   $modulo['assign'] = in_array($rolId, $allowedRoles) ? true : false;
+    //   unset($modulo['allowed_roles']);
+    //   return $modulo;
+    // }, $modulos);
+    
+    // $modulosSesionHijos = array_filter($modulos, function($modulo) use($rolId){
+    //   $allowedRoles = json_decode($modulo['allowed_roles']) ?? [];
+    //   return in_array($rolId, $allowedRoles);
+    // });
+    // $padresId = array_filter($modulosSesionHijos, function($el){
+    //   return $el['padre_id'] !== 0;
+    // });
+    // $padresId = array_values(array_unique(array_map(function($el){return $el['padre_id'];},$padresId)));
+
+    // $modulosSesionPadres = array_filter($modulos, function($el) use($padresId){
+    //   return in_array($el['id'], $padresId);
+    // });
+    // $modulosSesion = array_merge($modulosSesionPadres, $modulosSesionHijos);
+    // $res['content2'] = $modulos2;
+    // $res['modulosSesion'] = array_values($modulosSesion);
+
+
+    return $modulosRol;
   }
 
   public function get_modulos_sesion()
   {
+    // Obtiene solo los módulos asignados al rol de la sesión activa
     $modulosSesion = Modulos::getModulosSesion();
     // $res['content'] = $modulosSesion;
     return $modulosSesion;
@@ -165,12 +188,48 @@ class ModulosController
   {
     $p = json_decode(file_get_contents('php://input'), true);
     $rol_id = $p["rol_id"];
+    $modulo_id = $p["modulo_id"];
+    // $curUser = Users::getCurUser();
+    // print_r($curUser);
     if(!$rol_id) throwMiExcepcion("No se guardaron los cambios", "warning", 200);
-    $modulos = $p["modulos"];
-    Modulos::updateModulosRoles($rol_id, $modulos);
+
+    $cantidad = Modulos::countModulosRoles($modulo_id, $rol_id);
+
+    if($cantidad){
+      if($modulo_id == 1 || $modulo_id == 2) throwMiExcepcion("No es posible desactivar estor roles", "warning", 200);
+      Modulos::deleteModuloRol($modulo_id, $rol_id);
+    }else{
+      Modulos::createModuloRol($modulo_id, $rol_id);
+    }
+
+
+
+
+    // EXPERIMENTAL
+    // Toggle allow role en la tabla modulos
+    // $modulo = Modulos::getModulo($modulo_id);
+    // $allowedRoles = json_decode($modulo['allowed_roles']) ?? [];
+    // $idx = array_search($rol_id, $allowedRoles);
+    // if($idx === false){
+    //   array_push($allowedRoles, $rol_id);
+    // }else{
+    //   unset($allowedRoles[$idx]);
+    // }
+    // $params = [
+    //   'allowed_roles' => json_encode(array_values($allowedRoles)),
+    //   'id' => $modulo_id,
+    // ];
+    // Modulos::updateAllowedRoles($params);
+
+
+
+
+
+
+
     $res['error'] = false;
     $res['msgType'] = "success";
-    $res['msg'] = "Modulos del rol actualizados";
+    $res['msg'] = "Módulos del rol actualizados";
     return $res;
   }
 

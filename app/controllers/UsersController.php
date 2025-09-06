@@ -30,24 +30,13 @@ class UsersController
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
-      "offset" => $p['offset']
+      "per_page" => $p['per_page']
     ];
 
     $where = MyORM::getWhere($p);
     $orderBy = MyORM::getOrder($p["order"]);
 
     $res = Users::filterUsers($campos, $where, $orderBy, $pagination);
-    return $res;
-  }
-
-  public function filter_users_full() // sin paginacion
-  {
-    $res =  self::filter_users(false);
-    unset($res["next"]);
-    unset($res["offset"]);
-    unset($res["page"]);
-    unset($res["pages"]);
-    unset($res["previous"]);
     return $res;
   }
 

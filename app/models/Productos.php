@@ -4,78 +4,22 @@ require_once("Conexion.php");
 class Productos
 {
 
-  static public function filterProductos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated = true)
-  {
-    $table = "productos_v";
-
-    $sqlWhere = SqlWhere::and([
-      SqlWhere::likeOr($paramWhere['paramLike']),
-      SqlWhere::equalAnd($paramWhere['paramEquals']),
-      SqlWhere::between($paramWhere['paramBetween']),
-    ]);
-    $bindWhere = SqlWhere::arrMerge([
-      "like" => $paramWhere['paramLike'], 
-      "equal" => $paramWhere['paramEquals'], 
-      "between" => $paramWhere['paramBetween']
-    ]);    
-
-    $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
-    $sqlOrderBy = getSqlOrderBy($paramOrders);
-    $page = intval($pagination["page"]);
-    $offset = intval($pagination["offset"]);
-
-    $dbh = Conexion::conectar();
-    $num_regs = self::num_regs($table, $sqlWhere, $bindWhere, $dbh);
-    
-    $pages = ceil($num_regs / $offset);
-    if($page > $pages && $pages != 0)  throwMiExcepcion("Págian fuera de rango", "error", 200);
-    $page = ($page <= $pages) ? $page : 1;
-    $start_reg = $offset * ($page - 1);
-
-    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
-    $sql = $sqlSelect . " FROM $table" . $sqlWhere . $sqlOrderBy . $sqlLimit;
-
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($bindWhere);
-    $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Decodificar el contenido del campo stocks de json a array?
-    foreach ($filas as $idx => $producto) {
-      foreach ($producto as $key => $el) {
-        if($key === "stocks"){
-          $filas[$idx]['stocks'] = $el ? json_decode($el, true) : [];
-        }
-      }
-    }
-
-    $response['filas'] = $filas;
-    $response['num_regs'] = $num_regs;
-    $response['pages'] = $pages;
-    $response['page'] = ($pages != 0) ? $page : 0;
-    $response['next'] = ($pages > $page) ? $page + 1 : 0;
-    $response['previous'] = ($pages > 1) ? $page - 1 : 0;
-    $response['offset'] = $offset;
-    $response['statement'] = $sql;
-
-    return $response;
-  }
-
-  static public function filterProductos2($campos, $where, $orderBy, $pagination, $isPaginated = true){
+  static public function filterProductos($campos, $where, $orderBy, $pagination, $isPaginated = true){
     $table = "productos_v";
     $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
 
     $page = intval($pagination["page"]);
-    $offset = intval($pagination["offset"]);
+    $per_page = intval($pagination["per_page"]);
 
     $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
-    $pages = ceil($num_regs / $offset);
+    $pages = ceil($num_regs / $per_page);
     if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
-    $start_reg = $offset * ($page - 1);
+    $start_reg = $per_page * ($page - 1);
 
-    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
+    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
     $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
 
     $stmt = $dbh->prepare($sql);
@@ -88,7 +32,7 @@ class Productos
     $response['page'] = ($pages != 0) ? $page : 0;
     $response['next'] = ($pages > $page) ? $page + 1 : 0;
     $response['previous'] = ($pages > 1) ? $page - 1 : 0;
-    $response['offset'] = $offset;
+    $response['per_page'] = $per_page;
     return $response;
   }
   static function getProductos($tabla, $campos, $whereEquals = null)

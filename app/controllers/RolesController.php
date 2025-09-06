@@ -80,21 +80,17 @@ class RolesController
 
     // Comprobando dependencias
     $count = Users::countRecordsBy(["rol_id" => $p['id']]);
-    if($count) throwMiExcepcion("Este rol depende de algunos usuarios !", "warning");
-    $count = ModulosRoles::countRecordsBy(["rol_id" => $p['id']]);
-    if($count) throwMiExcepcion("Este rol depende de algunos usuarios !", "warning");
+    if($count) throwMiExcepcion("No se puede eliminar, Este rol está siendo utilizado!", "warning", 200, "isDependent");
     
     $params = [
       "id" => $p['id'],
     ];
-    $rol = Roles::getRol($p['id']);
     $resp = Roles::deleteRol( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 
     $res['error'] = false;
     $res['msgType'] = "success";
     $res['msg'] = "Registro eliminado";
-    $res['rol'] = $rol;
     return $res;
   }
 }

@@ -8,11 +8,11 @@ use Valitron\Validator;
 
 class MovimientosController
 {
-  public function filter_movimientos($isPaginated = true)
+
+  public function filter_movimientos()
   {
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);
-
     $campos = [
       'id',
       'establecimiento_id',
@@ -25,31 +25,20 @@ class MovimientosController
       'created_at',
     ];
 
-    $search = $p['search'] ? "%" . $p['search'] . "%" : "";
-
-    $paramWhere = [
-      "paramLike" => [
-        'fecha' => $search, 
-        'numeracion' => $search, 
-      ],
-      "paramEquals" => $p['equals'], // [["field_name" => "id", "field_value"=>1]] 
-      "paramBetween" => [
-        "campo" => $p['between']['field_name'],
-        "rango" => $p['between']['range'] // "2024-12-18 00:00:00, 2024-12-19 23:59:59"
-      ]
+    $p["search"] = [
+      "fieldsName" => ["fecha", "numeracion"],
+      "like" => trim($p["search"])
     ];
 
-    // $paramOrders = $p['orders'];
-    $paramOrders = count($p['orders']) 
-      ? $p['orders'] 
-      : [["field_name"=>"id","order_dir"=>"DESC", "text" => "Id"]];
-      
     $pagination = [
       "page" => $_GET["page"] ?? "1",
-      "offset" => $p['offset']
+      "per_page" => $p['per_page']
     ];
-  
-    $res = Movimientos::filterMovimientos($campos, $paramWhere, $paramOrders, $pagination, $isPaginated);
+
+    $where = MyORM::getWhere($p);
+    $orderBy = MyORM::getOrder($p["order"]);
+
+    $res = Movimientos::filterMovimientos($campos, $where, $orderBy, $pagination);
     return $res;
   }
 

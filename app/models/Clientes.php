@@ -11,15 +11,15 @@ class Clientes
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
 
     $page = intval($pagination["page"]);
-    $offset = intval($pagination["offset"]);
+    $per_page = intval($pagination["per_page"]);
 
     $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
-    $pages = ceil($num_regs / $offset);
+    $pages = ceil($num_regs / $per_page);
     if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
-    $start_reg = $offset * ($page - 1);
+    $start_reg = $per_page * ($page - 1);
 
-    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
+    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
     $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
 
     $stmt = $dbh->prepare($sql);
@@ -32,7 +32,7 @@ class Clientes
     $response['page'] = ($pages != 0) ? $page : 0;
     $response['next'] = ($pages > $page) ? $page + 1 : 0;
     $response['previous'] = ($pages > 1) ? $page - 1 : 0;
-    $response['offset'] = $offset;
+    $response['per_page'] = $per_page;
     return $response;
   }
   
@@ -55,15 +55,15 @@ class Clientes
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
     $sqlOrderBy = getSqlOrderBy($paramOrders);
     $page = intval($pagination["page"]);
-    $offset = intval($pagination["offset"]);
+    $per_page = intval($pagination["per_page"]);
 
     $num_regs = self::num_regs($table, $sqlWhere, $bindWhere);
-    $pages = ceil($num_regs / $offset);
+    $pages = ceil($num_regs / $per_page);
     if($page > $pages && $pages != 0)  throwMiExcepcion("Págian fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
-    $start_reg = $offset * ($page - 1);
+    $start_reg = $per_page * ($page - 1);
 
-    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $offset" : "";
+    $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
     $sql = $sqlSelect . " FROM $table" . $sqlWhere . $sqlOrderBy . $sqlLimit;
 
     $dbh = Conexion::conectar();
@@ -77,7 +77,7 @@ class Clientes
     $response['page'] = ($pages != 0) ? $page : 0;
     $response['next'] = ($pages > $page) ? $page + 1 : 0;
     $response['previous'] = ($pages > 1) ? $page - 1 : 0;
-    $response['offset'] = $offset;
+    $response['per_page'] = $per_page;
     return $response;
   } */
 

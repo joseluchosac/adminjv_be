@@ -32,7 +32,7 @@
 
   $pagination = [
     "page" => $_GET["page"] ?? "1",
-    "offset" => $params['offset']
+    "per_page" => $params['per_page']
   ];
 
   $where = MyORM::getWhere($params);

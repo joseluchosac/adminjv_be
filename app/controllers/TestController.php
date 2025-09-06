@@ -68,7 +68,7 @@ class TestController
 
     $pagination = [
       "page" => $_GET["page"] ?? "1",
-      "offset" => $p['offset']
+      "per_page" => $p['per_page']
     ];
 
     $where = MyORM::getWhere($p);

@@ -43,6 +43,15 @@ class Roles
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
     $lastId = $dbh->lastInsertId();
+    // agregar los modulos predeterminados al rol
+    $sql = "INSERT INTO modulos_roles
+      (modulo_id, rol_id) values (:modulo_id, :rol_id)
+    ";
+    $stmt = $dbh->prepare($sql);
+    foreach ([1,2] as $modulo_id) {
+      $stmt->execute(["modulo_id" => $modulo_id, "rol_id" => $lastId]);
+    }
+
     return $lastId;
   }
 
@@ -64,8 +73,12 @@ class Roles
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
     $stmt->execute($params);
-    $resp = $stmt->rowCount();
-    return $resp;
+    $count = $stmt->rowCount();
+    // borrande en modulos_roles
+    $sql = "DELETE FROM modulos_roles WHERE rol_id = :rol_id";
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(["rol_id" => $params['id']]);
+    return $count;
   }
   
   static function countRecordsBy($equal, $exclude = []){
