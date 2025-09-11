@@ -55,10 +55,10 @@ class ModulosController
     $lastId = Modulos::createModulo( $params );
     if(!$lastId) throwMiExcepcion("Ningún registro guardado", "warning");
 
-    $registro = Modulos::getModulo($lastId);
+    // $registro = Modulos::getModulo($lastId);
     $response['msgType'] = "success";
     $response['msg'] = "Módulo registrado";
-    $response['registro'] = $registro;
+    // $response['registro'] = $registro;
     return $response;
   }
 
@@ -89,11 +89,11 @@ class ModulosController
     $resp = Modulos::updateModulo( $params );
     if(!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
 
-    $registro = Modulos::getModulo($params['id']);
+    // $registro = Modulos::getModulo($params['id']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
-    $response['registro'] = $registro;
+    // $response['registro'] = $registro;
     return $response;
   }
 

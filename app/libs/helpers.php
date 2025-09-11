@@ -455,7 +455,7 @@ function numeroALetra($arg)
 }
 
 
-function array_find($array, $callback) {
+function array_buscar($array, $callback) {
   foreach ($array as $value) {
       if ($callback($value)) {
           return $value;

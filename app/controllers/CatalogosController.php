@@ -5,6 +5,14 @@ require_once('../../app/models/Catalogos.php');
 class CatalogosController
 {
 
+  public function get_tipo_comprobante(){
+    if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
+    $p = json_decode(file_get_contents('php://input'), true);
+
+    $tipoComprobante = Catalogos::getTipoComprobante(["id" => $p['id']]);
+    return $tipoComprobante;
+  }
+
   public function create_tipo_comprobante(){
     if ($_SERVER['REQUEST_METHOD'] != 'POST') throwMiExcepcion("Método no permitido", "error", 405);
     $p = json_decode(file_get_contents('php://input'), true);

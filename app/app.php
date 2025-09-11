@@ -3,10 +3,16 @@
 
 $allowedOrigins = [
   'http://localhost:5173',
-  'https://admincli.josvelsac.com',
+  'http://localhost/build_react/',
+  'http://localhost',
+  'http://adminjv.test',
+  'http://192.168.18.62',
 ];
+
 ////// Obtener el dominio de origen de la solicitud
-$origin = $_SERVER['HTTP_ORIGIN'];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? 'Origen desconocido';
+// print_r($origin);
+// exit();
 ////// Verificar si el dominio de origen está en la lista de permitidos
 if (in_array($origin, $allowedOrigins)) {
   header("Access-Control-Allow-Origin: $origin");
@@ -16,10 +22,10 @@ if (in_array($origin, $allowedOrigins)) {
 ////// Permite peticiones desde cualquier origen
 header("Access-Control-Allow-Credentials: true"); // Permitir el envío de credenciales (cookies)
 ////// Permite todos los encabezados
-// header("Access-Control-Allow-Headers: *");
 
 ////// Permite encabezados específicos
 header("Access-Control-Allow-Headers: Authorization, attached-data, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
+// header("Access-Control-Allow-Headers: *");
 
 // header("Content-Type:application/json");
 
@@ -45,12 +51,8 @@ $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . "/..");
 $dotenv->load();
 
 $authorization = apache_request_headers()['Authorization'] ?? null;
-$nombreModulo = apache_request_headers()["nombre-modulo"] ?? null;
 $attachedDataJson = apache_request_headers()["attached-data"] ?? null;
-// echo "<pre>";
-// print_r($authorization);
-// echo "</pre>";
-// exit;
+
 
 try {
   $url = $_GET['url'] ?? '';

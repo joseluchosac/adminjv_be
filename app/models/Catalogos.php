@@ -18,7 +18,23 @@ class Catalogos
     return $res;
   }
 
-
+  static function getTipoComprobante($param){
+    $sql = "SELECT 
+        id, 
+        codigo, 
+        descripcion, 
+        serie_pre, 
+        descripcion_doc, 
+        estado
+      FROM tipos_comprobante
+      WHERE id = :id
+    ";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($param);
+    $tipoComprobante = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $tipoComprobante;
+  }
 
   static function createTipoComprobante($paramCampos){
     $sql = sqlInsert("tipos_comprobante", $paramCampos);

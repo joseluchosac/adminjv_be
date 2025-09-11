@@ -1,1 +1,11 @@
 Options -Indexes
+
+RewriteEngine On
+
+# En algunos servidores de PHP no se puede obtener Authorizarion bearer token
+# Pasar Authorization header a HTTP_AUTHORIZATION
+RewriteCond %{HTTP:Authorization} .+
+RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# También asegurar que PHP reciba el header
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
