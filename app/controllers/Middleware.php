@@ -11,7 +11,7 @@ class Middleware{
 
     if($authorization){
       $token = explode(" ", $authorization)[1];
-      $userSession = Users::checkToken($token); //['id'],['rol_id']
+      $userSession = Users::checkToken($token); // devuelve ['id'],['rol_id']
       $activity = [
         "prefixController" => $route["prefixController"],
         "accion" => $route["accion"],

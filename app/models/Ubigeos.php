@@ -5,22 +5,25 @@ class Ubigeos
 {
 
   static public function filterUbigeos($campos, $where, $orderBy, $pagination, $isPaginated = true){
-    $table = "ubigeos_v";
+    $table = "ubigeos";
     $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
-
+    $join = " INNER JOIN (
+      SELECT ubigeo_inei as ubigeo_inei2, CONCAT_WS(' - ', distrito, provincia, departamento) AS dis_prov_dep FROM ubigeos) u2 
+	    ON ubigeo_inei = u2.ubigeo_inei2
+    ";
     $page = intval($pagination["page"]);
     $per_page = intval($pagination["per_page"]);
 
-    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
+    $num_regs = self::num_regs($table, $join, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $per_page);
     if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $per_page * ($page - 1);
 
     $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
-    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
+    $sql = $sqlSelect . " FROM $table" . $join . $where["sql"] . $orderBy . $sqlLimit;
 
     $stmt = $dbh->prepare($sql);
     $stmt->execute($where["params"]);
@@ -50,9 +53,9 @@ class Ubigeos
     $sql = "SELECT
         ubigeo_inei,
         ubigeo_reniec,
-        dis_prov_dep,
-        dep_prov_dis
-      FROM ubigeos_v
+        CONCAT_WS(' - ', distrito, provincia, departamento) AS dis_prov_dep,
+	      CONCAT_WS(' - ', departamento, provincia, distrito) AS dep_prov_dis
+      FROM ubigeos
       WHERE ubigeo_inei = :ubigeo_inei
     ";
     $dbh = Conexion::conectar();
@@ -62,26 +65,6 @@ class Ubigeos
     return $ubigeo;
   }
   
-    // $paramsEqual de la forma ["campo1"=>"valor1", "campo2"=>"valor2"]
-  static function getUbigeosBy($paramsEqual){
-    $sqlWhere = implode(" AND ", array_map(function($el){
-      return "$el = :$el";
-    },array_keys($paramsEqual)));
-    $sqlWhere = $sqlWhere ? " WHERE " . $sqlWhere : "";
-    $sql = "SELECT 
-        ubigeo_inei,
-        ubigeo_reniec,
-        dis_prov_dep,
-        dep_prov_dis
-      FROM ubigeos_v
-      $sqlWhere;
-    ";
-    $dbh = Conexion::conectar();
-    $stmt = $dbh->prepare($sql);
-    $stmt->execute($paramsEqual);
-    $record = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    return $record;
-  }
 
   static function countRecordsBy($equal, $exclude = []){
     $where = " WHERE " . array_keys($equal)[0] . " = :". array_keys($equal)[0];
@@ -132,10 +115,10 @@ class Ubigeos
 
 
 
-  static private function num_regs($table, $sqlWhere, $bindWhere)
+  static private function num_regs($table, $join, $sqlWhere, $bindWhere)
   {
     // Extraemos la cantidad de registros en total
-    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $sqlWhere;
+    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $join . $sqlWhere;
 
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

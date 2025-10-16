@@ -16,6 +16,7 @@ class UsersController
       'apellidos',
       'username',
       'email',
+      'rol_id',
       'rol',
       'caja',
       'estado',
@@ -55,21 +56,21 @@ class UsersController
   public function get_user_item($id)
   {
     $campos = [
-      'id',
-      'nombres',
-      'apellidos',
-      'username',
-      'email',
+      'u.id',
+      'u.nombres',
+      'u.apellidos',
+      'u.username',
+      'u.email',
       'rol',
       'caja',
-      'estado',
+      'u.estado',
       'created_at',
       'updated_at'
     ];
     $equals = [
       ["field_name" => "id", "field_value" => $id],
     ];
-    $user = Users::getUsers("users_v", $campos, $equals)[0];
+    $user = Users::getUsers("users u", $campos, $equals)[0];
     return $user;
   }
 
@@ -135,6 +136,12 @@ class UsersController
 
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
+
+    $curUser = Users::getCurUser();
+    if ($curUser['rol_id'] !== 1 && $p['rol_id'] === 1) {
+      throwMiExcepcion("Elija otro rol", "error", 200);
+    }
+
     $params = [
       "nombres" => trimSpaces($p['nombres']),
       "apellidos" => trimSpaces($p['apellidos']),
@@ -179,33 +186,36 @@ class UsersController
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
+    $user = Users::getUser($p['id']);
+    $curUser = Users::getCurUser();
+    if($user['rol_id'] === 1 && $curUser['rol_id'] !== 1) { // Evitar actualizar a usuarios dev
+      throwMiExcepcion("Acción denegada", "warning", 200);
+    }
+    if($curUser['id'] === $p['id'] && $curUser['rol_id'] !== $p['rol_id']) { // Evita cambiarse de rol
+      throwMiExcepcion("No puedes cambiarte de rol", "warning", 200);
+    }
+    if ($curUser['rol_id'] !== 1 && $p['rol_id'] === 1) { // Evita actuaizar el rol a dev
+      throwMiExcepcion("No es posible asignar rol dev", "warning", 200);
+    }
     $paramCampos = [
       "nombres" => trimSpaces($p['nombres']),
       "apellidos" => trimSpaces($p['apellidos']),
       "rol_id" => $p['rol_id'],
       "caja_id" => $p['caja_id'],
     ];
-
+    
     // Validacion
     $this->validateUpdateUser($paramCampos);
 
-    // Buscando duplicados
-    $exclude = ["id" => $p['id']];
-    $count = Users::countRecordsBy(["username" => $p['username']], $exclude);
-    if ($count) throwMiExcepcion("El usuario: " . $p['username'] . ", ya existe!", "warning", 200);
-    $count = Users::countRecordsBy(["email" => $p['email']], $exclude);
-    if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning", 200);
-
-    $paramWhere = ["id" => $p['id']];
-
-    $resp = Users::updateUser("users", $paramCampos, $paramWhere);
-    if (!$resp) throwMiExcepcion("Ningún registro modificado", "warning", 200);
+    $resp = Users::updateUser("users", $paramCampos, ["id" => $p['id']]);
+    if (!$resp) throwMiExcepcion("Ningún campo modificado", "warning", 200);
 
     $user = $this->get_user_item($p['id']);
 
     $response['msgType'] = "success";
     $response['msg'] = "Registro actualizado";
     $response['content'] = $user;
+    $response['curuser'] = $curUser;
     return $response;
   }
 
@@ -215,6 +225,14 @@ class UsersController
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
 
+    $user = Users::getUser($p['id']);
+    $curUser = Users::getCurUser();
+    if ($curUser['rol_id'] !== 1 && $user['rol_id'] === 1) {
+      throwMiExcepcion("Acción denegada", "error", 200);
+    }
+    if ($curUser['id'] === $p['id']) {
+      throwMiExcepcion("Acción denegada", "error", 200);
+    }
     $params = ["id" => $p['id']];
     $user = $this->get_user_item($p['id']);
     $resp = Users::deleteUser($params);
@@ -290,7 +308,7 @@ class UsersController
       ["field_name" => "estado", "field_value" => 1],
     ];
 
-    $registros = Users::getUsers("users", $campos, $equals);
+    $registros = Users::getUsers("users u", $campos, $equals);
     // echo "<br>";
     // print_r($p);
     // exit();
@@ -317,6 +335,15 @@ class UsersController
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
+    $user = Users::getUser($p['id']);
+    $curUser = Users::getCurUser();
+    if ($curUser['rol_id'] !== 1 && $user['rol_id'] === 1) {
+      throwMiExcepcion("Acción denegada", "error", 200);
+    }
+    if ($curUser['id'] === $p['id']) {
+      throwMiExcepcion("Acción denegada", "error", 200);
+    }
+
     $paramCampos = [
       "estado" => $p['estado'],
     ];
@@ -328,21 +355,21 @@ class UsersController
     
     // Obteniendo el usuaro actualizado
     $campos = [
-      'id',
-      'nombres',
-      'apellidos',
-      'username',
-      'email',
-      'rol',
-      'caja',
-      'estado',
-      'created_at',
-      'updated_at'
+      'u.id',
+      'u.nombres',
+      'u.apellidos',
+      'u.username',
+      'u.email',
+      'r.rol',
+      'c.caja',
+      'u.estado',
+      'u.created_at',
+      'u.updated_at'
     ];
     $equals = [
       ["field_name" => "id", "field_value" => $p['id']],
     ];
-    $user = Users::getUsers("users_v", $campos, $equals)[0];
+    $user = Users::getUsers("users u", $campos, $equals)[0];
 
     Users::setActivityLog("Modificación de registro en la tabla usuarios: " . $user["username"]);
 
@@ -450,7 +477,7 @@ class UsersController
       ["field_name" => "id", "field_value" => $user_id],
     ];
 
-    $registros = Users::getUsers("users", $campos, $equals);
+    $registros = Users::getUsers("users u", $campos, $equals);
     if (!$registros) throwMiExcepcion("Contraseña incorrecta", "error", 200);
     if($registros[0]['password'] === ""){
       if($p['password'] !== "123456") throwMiExcepcion("Contraseña incorrecta", "error", 200);

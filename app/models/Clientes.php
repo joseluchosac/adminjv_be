@@ -5,22 +5,23 @@ class Clientes
 {
   static public function filterClientes($campos, $where, $orderBy, $pagination, $isPaginated = true)
   {
-    $table = "clientes_v";
+    $table = "clientes c";
     $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
-
+    $join = " LEFT JOIN (SELECT codigo, descripcion as tipo_documento FROM tipos_documento) td 
+      ON c.tipo_documento_cod = td.codigo";
     $page = intval($pagination["page"]);
     $per_page = intval($pagination["per_page"]);
 
-    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
+    $num_regs = self::num_regs($table, $join, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $per_page);
     if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $per_page * ($page - 1);
 
     $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
-    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
+    $sql = $sqlSelect . " FROM $table" . $join . $where["sql"] . $orderBy . $sqlLimit;
 
     $stmt = $dbh->prepare($sql);
     $stmt->execute($where["params"]);
@@ -99,7 +100,8 @@ class Clientes
         c.api,
         c.estado
       FROM clientes c
-      LEFT JOIN ubigeos_v u ON c.ubigeo_inei = u.ubigeo_inei
+      LEFT JOIN (SELECT ubigeo_inei, CONCAT_WS(' - ', distrito, provincia, departamento) AS dis_prov_dep FROM ubigeos) u 
+		    ON c.ubigeo_inei = u.ubigeo_inei
       LEFT JOIN tipos_documento td ON c.tipo_documento_cod = td.codigo
       WHERE c.id = :id;
     ";
@@ -140,10 +142,10 @@ class Clientes
     return $record;
   }
 
-  static private function num_regs($table, $sqlWhere, $bindWhere)
+  static private function num_regs($table, $join, $sqlWhere, $bindWhere)
   {
     // Extraemos la cantidad de registros en total
-    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $sqlWhere;
+    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $join . $sqlWhere;
 
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

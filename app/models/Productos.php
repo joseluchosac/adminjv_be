@@ -5,22 +5,24 @@ class Productos
 {
 
   static public function filterProductos($campos, $where, $orderBy, $pagination, $isPaginated = true){
-    $table = "productos_v";
+    $table = "productos p";
     $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
+    $join = " LEFT JOIN (SELECT id as _laboratorio_id, nombre as laboratorio FROM laboratorios) l ON p.laboratorio_id = l._laboratorio_id";
+    $join .= " LEFT JOIN (SELECT id as _marca_id, nombre as marca FROM marcas) m ON p.marca_id = m._marca_id";
 
     $page = intval($pagination["page"]);
     $per_page = intval($pagination["per_page"]);
 
-    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
+    $num_regs = self::num_regs($table, $join, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $per_page);
     if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $per_page * ($page - 1);
 
     $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
-    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
+    $sql = $sqlSelect . " FROM $table" . $join . $where["sql"] . $orderBy . $sqlLimit;
 
     $stmt = $dbh->prepare($sql);
     $stmt->execute($where["params"]);
@@ -181,10 +183,10 @@ class Productos
 
 
   // Metodos privados
-  static private function num_regs($table, $sqlWhere, $bindWhere, $dbh)
+  static private function num_regs($table, $join, $sqlWhere, $bindWhere, $dbh)
   {
     // Extraemos la cantidad de registros en total
-    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $sqlWhere;
+    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $join . $sqlWhere;
 
     // $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

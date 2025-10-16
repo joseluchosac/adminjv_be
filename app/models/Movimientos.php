@@ -5,22 +5,24 @@ class Movimientos
 {
 
   static public function filterMovimientos($campos, $where, $orderBy, $pagination, $isPaginated = true){
-    $table = "movimientos_v";
+    $table = "movimientos m";
     $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
+    $join = " INNER JOIN (SELECT id as e_id, descripcion as establecimiento FROM establecimientos) e 
+      ON m.establecimiento_id = e.e_id";
 
     $page = intval($pagination["page"]);
     $per_page = intval($pagination["per_page"]);
 
-    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
+    $num_regs = self::num_regs($table, $join, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $per_page);
     if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $per_page * ($page - 1);
 
     $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
-    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
+    $sql = $sqlSelect . " FROM $table" . $join . $where["sql"] . $orderBy . $sqlLimit;
 
     $stmt = $dbh->prepare($sql);
     $stmt->execute($where["params"]);
@@ -263,10 +265,10 @@ class Movimientos
 
 
   // Metodos privados
-  static private function num_regs($table, $sqlWhere, $bindWhere)
+  static private function num_regs($table, $join, $sqlWhere, $bindWhere)
   {
     // Extraemos la cantidad de registros en total
-    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $sqlWhere;
+    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $join . $sqlWhere;
 
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);

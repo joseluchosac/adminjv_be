@@ -189,14 +189,13 @@ class ModulosController
     $p = json_decode(file_get_contents('php://input'), true);
     $rol_id = $p["rol_id"];
     $modulo_id = $p["modulo_id"];
-    // $curUser = Users::getCurUser();
-    // print_r($curUser);
     if(!$rol_id) throwMiExcepcion("No se guardaron los cambios", "warning", 200);
 
     $cantidad = Modulos::countModulosRoles($modulo_id, $rol_id);
 
     if($cantidad){
-      if($modulo_id == 1 || $modulo_id == 2) throwMiExcepcion("No es posible desactivar estor roles", "warning", 200);
+      if($modulo_id == 1 || $modulo_id == 2) throwMiExcepcion("No es posible desactivar este módulo", "warning", 200);
+      if($rol_id === 1) throwMiExcepcion("No es posible desactivar este módulo", "warning", 200);
       Modulos::deleteModuloRol($modulo_id, $rol_id);
     }else{
       Modulos::createModuloRol($modulo_id, $rol_id);

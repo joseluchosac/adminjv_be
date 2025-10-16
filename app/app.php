@@ -3,10 +3,13 @@
 
 $allowedOrigins = [
   'http://localhost:5173',
+  'http://localhost:4173',
+  'http://localhost:5174',
   'http://localhost/build_react/',
   'http://localhost',
   'http://adminjv.test',
-  'http://192.168.18.62',
+  'http://192.168.18.62:5173',
+  'http://192.168.18.62:4173',
 ];
 
 ////// Obtener el dominio de origen de la solicitud

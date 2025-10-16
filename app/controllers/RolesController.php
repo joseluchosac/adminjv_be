@@ -47,7 +47,7 @@ class RolesController
     $p = json_decode(file_get_contents('php://input'), true);
     if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
 
-    if(trim($p['rol']) == "") throwMiExcepcion("Rol requerido", "warning", 200);
+    if(trim($p['rol']) == "") throwMiExcepcion("Descripcion de rol requerida", "warning", 200);
 
     // Buscando duplicados
     $exclude = ["id" => $p['id']];
@@ -77,14 +77,13 @@ class RolesController
 
     $p = json_decode(file_get_contents('php://input'), true);
     if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-
-    // Comprobando dependencias
+    // Verificar si el rol es dev
+    if($p['id'] === 1) throwMiExcepcion("No se puede eliminar este rol", "error", 200);
+    // Comprobando si este rol se este usando
     $count = Users::countRecordsBy(["rol_id" => $p['id']]);
     if($count) throwMiExcepcion("No se puede eliminar, Este rol está siendo utilizado!", "warning", 200, "isDependent");
     
-    $params = [
-      "id" => $p['id'],
-    ];
+    $params = [ "id" => $p['id'],];
     $resp = Roles::deleteRol( $params );
     if(!$resp) throwMiExcepcion("Ningún registro eliminado", "warning");
 

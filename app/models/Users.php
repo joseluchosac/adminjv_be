@@ -9,7 +9,7 @@ class Users
   static private $activity = [];
 
   static public function filterUsers($campos, $where, $orderBy, $pagination, $isPaginated = true){
-    $table = "users_v";
+    $table = "users u";
     $dbh = Conexion::conectar();
 
     $sqlSelect = !empty($campos) ? "SELECT " . implode(", ", $campos)  : "";
@@ -17,14 +17,17 @@ class Users
     $page = intval($pagination["page"]);
     $per_page = intval($pagination["per_page"]);
 
-    $num_regs = self::num_regs($table, $where["sql"], $where["params"], $dbh);
+    $join = " LEFT JOIN (SELECT id as r_id, rol FROM roles) r ON u.rol_id = r.r_id";
+    $join .= " LEFT JOIN (SELECT id as c_id, descripcion as caja FROM cajas) c ON u.caja_id = c.c_id";
+
+    $num_regs = self::num_regs($table, $join, $where["sql"], $where["params"], $dbh);
     $pages = ceil($num_regs / $per_page);
     if ($page > $pages && $pages != 0)  throwMiExcepcion("Página fuera de rango", "error", 200);
     $page = ($page <= $pages) ? $page : 1;
     $start_reg = $per_page * ($page - 1);
 
     $sqlLimit = $isPaginated ? " LIMIT $start_reg, $per_page" : "";
-    $sql = $sqlSelect . " FROM $table" . $where["sql"] . $orderBy . $sqlLimit;
+    $sql = $sqlSelect . " FROM $table" . $join . $where["sql"] . $orderBy . $sqlLimit;
 
     $stmt = $dbh->prepare($sql);
     $stmt->execute($where["params"]);
@@ -44,10 +47,13 @@ class Users
   static function getUsers($tabla, $campos, $whereEquals = null)
   {
     $sql = "SELECT " . implode(", ", $campos) . " FROM $tabla";
+    $join = " LEFT JOIN (SELECT id as r_id, rol FROM roles) r ON u.rol_id = r.r_id";
+    $join .= " LEFT JOIN (SELECT id as c_id, descripcion as caja FROM cajas) c ON u.caja_id = c.c_id";
 
     $sqlWhere = $whereEquals ? SqlWhere::and([SqlWhere::equalAnd($whereEquals)]) : "";
     $bindWhere = $whereEquals ? SqlWhere::arrMerge(["equal" => $whereEquals]) : null;
 
+    $sql .= $join;
     $sql .= $sqlWhere;
 
     $dbh = Conexion::conectar();
@@ -135,15 +141,17 @@ class Users
 
   static function getProfile(){
     $sql = "SELECT
-        id,
-        username,
-        nombres,
-        apellidos,
-        ifnull(email,'') AS email,
-        rol,
-        caja
-      FROM users_v
-      WHERE id = :id and estado = 1;
+        u.id,
+        u.username,
+        u.nombres,
+        u.apellidos,
+        ifnull(u.email,'') AS email,
+        r.rol,
+        c.descripcion as caja
+      FROM users u
+      LEFT JOIN roles r ON u.rol_id = r.id
+      LEFT JOIN cajas c ON u.caja_id = c.id
+      WHERE u.id = :id and u.estado = 1;
     ";
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
@@ -290,10 +298,10 @@ class Users
     return self::$curEstab;
   }
   // Metodos privados
-  static private function num_regs($table, $sqlWhere, $bindWhere)
+  static private function num_regs($table, $join, $sqlWhere, $bindWhere)
   {
     // Extraemos la cantidad de registros en total
-    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $sqlWhere;
+    $sql = "SELECT COUNT(*) AS num_regs FROM $table" . $join . $sqlWhere;
 
     $dbh = Conexion::conectar();
     $stmt = $dbh->prepare($sql);
