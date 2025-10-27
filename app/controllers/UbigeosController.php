@@ -25,9 +25,42 @@ class UbigeosController
     ];
 
     $where = MyORM::getWhere($p);
-    $orderBy = MyORM::getOrder([["field_name" => "orden", "order_dir" => "ASC"]]);
+    $orderBy = MyORM::getOrder([
+      ["field_name" => "orden", "order_dir" => "ASC"],
+      ["field_name" => "departamento", "order_dir" => "ASC"],
+      ["field_name" => "provincia", "order_dir" => "ASC"],
+      ["field_name" => "distrito", "order_dir" => "ASC"],
+    ]);
 
     $res = Ubigeos::filterUbigeos($campos, $where, $orderBy, $pagination);
+    return $res;
+  }
+
+  public function get_departamentos()
+  {
+    $res = Ubigeos::getDepartamentos();
+    return $res;
+  }
+
+  public function get_provincias()
+  {
+    $departamento = $_GET["departamento"] ?? "";
+    $res = Ubigeos::getProvincias($departamento);
+    return $res;
+  }
+  public function get_distritos()
+  {
+    $departamento = $_GET["departamento"] ?? "";
+    $provincia = $_GET["provincia"] ?? "";
+    $res = Ubigeos::getDistritos($departamento, $provincia);
+    return $res;
+  }
+
+  public function get_ubigeos_options(){
+    $departamento = $_GET["departamento"] ?? "";
+    $provincia = $_GET["provincia"] ?? "";
+    $res['provincias'] = Ubigeos::getProvincias($departamento);
+    $res['distritos'] = Ubigeos::getDistritos($departamento, $provincia);
     return $res;
   }
 }

@@ -13,14 +13,18 @@ class ClientesController
     $p = json_decode(file_get_contents('php://input'), true);
     $campos = [
       'id',
+      'tipo_documento_cod',
       'tipo_documento',
       'nro_documento',
       'nombre_razon_social',
       'direccion',
+      'ubigeo_inei',
       'dis_prov_dep',
       'email',
       'telefono',
       'estado',
+      'created_at',
+      'updated_at',
     ];
 
     $p["search"] = [
@@ -57,10 +61,7 @@ class ClientesController
     $p = json_decode(file_get_contents('php://input'), true);
     if (!$p) throwMiExcepcion("No se enviaron parámetros", "error", 400);
     $nro_documento = trim($p['nro_documento']) ? trim($p['nro_documento']) : null;
-    echo "<pre>";
-    print_r($p);
-    echo "</pre>";
-    exit();
+
     $params = [
       "tipo_documento_cod" => $p['tipo_documento_cod'],
       "nro_documento" => $nro_documento,
@@ -72,12 +73,10 @@ class ClientesController
       "telefono" => $p['telefono'],
       "api" => $p['api'],
     ];
-
     // Validacion
     $this->validateCliente($params);
-
     // Buscando duplicados
-    if ($p['email']) {
+    if($p['email']) {
       $count = Clientes::countRecordsBy(["email" => $p['email']]);
       if ($count) throwMiExcepcion("El email: " . $p['email'] . ", ya existe!", "warning", 200);
     }
@@ -108,7 +107,9 @@ class ClientesController
       "ubigeo_inei" => $p['ubigeo_inei'],
       "email" => $p['email'],
       "telefono" => $p['telefono'],
+      "api" => $p['api'],
     ];
+
 
     // Validacion
     $this->validateCliente($paramCampos);

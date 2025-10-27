@@ -27,6 +27,12 @@ class Clientes
     $stmt->execute($where["params"]);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    //formateando fechas a formato ISO8601
+    foreach ($filas as $key => $value) {
+      $filas[$key]['created_at'] = dateToISO8601($value['created_at']);
+      $filas[$key]['updated_at'] = dateToISO8601($value['updated_at']);
+    }
+    
     $response['filas'] = $filas;
     $response['num_regs'] = $num_regs;
     $response['pages'] = $pages;
@@ -88,20 +94,18 @@ class Clientes
   static function getCliente($id){
     $sql = "SELECT 
         c.id,
-        c.tipo_documento_cod,
-        td.descripcion AS tipo_documento,
+        ifnull(c.tipo_documento_cod,'') AS tipo_documento_cod,
+        ifnull(td.descripcion,'') AS tipo_documento,
         ifnull(c.nro_documento,'') AS nro_documento,
         c.nombre_razon_social,
-        c.direccion,
-        c.ubigeo_inei,
-        u.dis_prov_dep,
-        c.email,
-        c.telefono,
+        ifnull(c.direccion,'') AS direccion,
+        ifnull(c.ubigeo_inei,'') AS ubigeo_inei,
+        c.dis_prov_dep,
+        ifnull(c.email,'') AS email,
+        ifnull(c.telefono,'') AS telefono,
         c.api,
         c.estado
       FROM clientes c
-      LEFT JOIN (SELECT ubigeo_inei, CONCAT_WS(' - ', distrito, provincia, departamento) AS dis_prov_dep FROM ubigeos) u 
-		    ON c.ubigeo_inei = u.ubigeo_inei
       LEFT JOIN tipos_documento td ON c.tipo_documento_cod = td.codigo
       WHERE c.id = :id;
     ";

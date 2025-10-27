@@ -103,10 +103,13 @@ class ModulosController
 
     $p = json_decode(file_get_contents('php://input'), true);
     if(!$p) throwMiExcepcion("No se enviaron parámetros", "error", 200);
-
+    $omitted_modules = [1,2,4,5,6,7];
+    if(in_array($p['id'], $omitted_modules)){ // home, profile, users, modulos, roles, config
+      throwMiExcepcion("No es posible eliminar este módulo", "warning", 200);
+    } 
     // Contar hijos
     $count = Modulos::countRecordsBy(["padre_id" => $p['id']]);
-    if($count) throwMiExcepcion("El módulo a eliminar no debe tener hijos", "warning");
+    if($count) throwMiExcepcion("El módulo a eliminar no debe tener hijos", "warning", 200);
 
     $params = [
       "id" => $p['id'],

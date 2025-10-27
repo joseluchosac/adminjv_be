@@ -113,8 +113,6 @@ class Ubigeos
     return $resp;
   }
 
-
-
   static private function num_regs($table, $join, $sqlWhere, $bindWhere)
   {
     // Extraemos la cantidad de registros en total
@@ -127,4 +125,31 @@ class Ubigeos
     return $rows['num_regs']; 
   }
 
+  static function getDepartamentos()
+  {
+    $sql = "SELECT DISTINCT departamento FROM ubigeos;";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute();
+    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $records;
+  }
+  static function getProvincias($departamento)
+  {
+    $sql = "SELECT DISTINCT provincia FROM ubigeos WHERE departamento = :departamento;";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(['departamento' => $departamento]);
+    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $records;
+  }
+  static function getDistritos($departamento, $provincia)
+  {
+    $sql = "SELECT DISTINCT distrito, ubigeo_inei FROM ubigeos WHERE departamento = :departamento AND provincia = :provincia;";
+    $dbh = Conexion::conectar();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute(['departamento' => $departamento, 'provincia' => $provincia]);
+    $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return $records;
+  }
 }

@@ -37,6 +37,12 @@ class Middleware{
         case 'establecimientos':{
           if($route['accion'] == 'get_establecimientos_options') break;
         }
+        case 'ubigeos':{
+          if($route['accion'] == 'get_departamentos') break;
+          if($route['accion'] == 'get_provincias') break;
+          if($route['accion'] == 'get_distritos') break;
+          if($route['accion'] == 'get_ubigeos_options') break;
+        }
         default:{
           throwMiExcepcion("authErr: token empty", "error", 200);  
         }

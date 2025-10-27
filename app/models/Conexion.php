@@ -1,5 +1,4 @@
 <?php
-date_default_timezone_set('America/Lima');
 // $localTimezone = Cfg::getLocalTimezone();
 class Conexion
 {
@@ -9,9 +8,7 @@ class Conexion
 
     $conn = new PDO($dsn, $_ENV['DB_USER'], $_ENV['DB_PASS']);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    // $conn->exec("SET time_zone = '+0:00'"); // UTC
-    $conn->exec("SET time_zone = '-05:00'"); // America/Lima
-
+    $conn->exec("SET time_zone = '+0:00'"); // UTC
     return $conn;
   }
 }

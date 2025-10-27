@@ -33,6 +33,12 @@ class Users
     $stmt->execute($where["params"]);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    //formateando fechas a formato ISO8601
+    foreach ($filas as $key => $value) {
+      $filas[$key]['created_at'] = dateToISO8601($value['created_at']);
+      $filas[$key]['updated_at'] = dateToISO8601($value['updated_at']);
+    }
+    
     $response['filas'] = $filas;
     $response['num_regs'] = $num_regs;
     $response['pages'] = $pages;

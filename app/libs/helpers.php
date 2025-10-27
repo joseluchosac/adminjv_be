@@ -464,6 +464,12 @@ function array_buscar($array, $callback) {
   return null; // Si no encuentra nada, retorna null.
 }
 
+function dateToISO8601($fecha){
+  // Devuelve: 2025-10-24 00:25:15 a 2025-10-24T00:25:15Z
+  if(!$fecha) return $fecha;
+  return date('Y-m-d\TH:i:s\Z', strtotime($fecha));
+}
+
 function dateUTCToLocal($format, $strTimezone, $date = 'now')
 {
   // ej strTimezone = 'America/Lima'
