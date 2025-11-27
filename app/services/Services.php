@@ -62,7 +62,7 @@ class Services {
       $data['msgType'] = "warning";
     }else{
       if($tipo_documento_cod == "1"){ // DNI
-        $data["nombre_razon_social"] = $resp["nombreCompleto"];
+        $data["nombre_razon_social"] = $resp["apellidoPaterno"] . " " . $resp["apellidoMaterno"] . " " . $resp["nombres"];
         $data["condicion_sunat"] = "";
         $data["estado_sunat"] = "";
         $data["direccion"] = "";

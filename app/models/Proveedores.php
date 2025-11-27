@@ -3,10 +3,8 @@ require_once("Conexion.php");
 
 class Proveedores
 {
-  static private $curUser = null;
-  static private $activity = [];
-
-  static public function filterProveedores($campos, $where, $orderBy, $pagination, $isPaginated = true){
+  static public function filterProveedores($campos, $where, $orderBy, $pagination, $isPaginated = true)
+  {
     $table = "proveedores p";
     $dbh = Conexion::conectar();
 
@@ -30,6 +28,12 @@ class Proveedores
     $stmt->execute($where["params"]);
     $filas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    //formateando fechas a formato ISO8601
+    foreach ($filas as $key => $value) {
+      $filas[$key]['created_at'] = dateToISO8601($value['created_at']);
+      $filas[$key]['updated_at'] = dateToISO8601($value['updated_at']);
+    }
+    
     $response['filas'] = $filas;
     $response['num_regs'] = $num_regs;
     $response['pages'] = $pages;
